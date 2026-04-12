@@ -5,7 +5,7 @@
 ### Overall status
 - `keymaps/reworked` is the real source of truth and currently the **best version so far**.
 - The core workflow already feels very good: selector, OLED, RGB, encoder behavior, and the `VSC` layer all work together cleanly.
-- Right now there are **no blocking issues being tracked** in this notes file — only polish ideas and future suggestions.
+- There are still a couple of unresolved hardware/behavior mismatches in the current build that need a focused debug pass.
 
 ### Hardware / setup
 - RP2040 / QMK macropad
@@ -36,6 +36,7 @@
 - Releasing `SEL` moves to the currently highlighted target layer.
 - Turning the encoder while in `SELECT` cycles through the available layer slots.
 - The selector correctly remembers the current layer when entering the grid instead of always snapping back to `BASE`.
+- Important current issue: a non-selector key still appears to be able to activate `SELECT` on hardware even after code-side guards were added.
 
 ### Encoder behavior by layer
 - `BASE` → mouse wheel up/down
@@ -52,12 +53,15 @@
 - Last-key view shows layer, key label, keycode, function, and matrix position.
 - While `SELECT` is active, the OLED intentionally forces the selector legend/grid view.
 - On the `VSC` layer, the OLED preview changes depending on whether `BAR` or `CHAT` is the current held/last-used mode.
+- The 128x32 OLED path was repaired and now has its own compact render flow.
+- Important current issue: the old stray `WIN` text on `TXT` was removed in code, but the user reported no visible change on hardware after flashing attempts.
 
 ### RGB
 - RGB is handled explicitly per key rather than relying only on stock global effects.
 - Layer visuals and selector visuals are timer-driven.
 - The center key in the selector grid toggles the FX profile (`RGB_PROFILE`).
 - Overall feel is already strong; this is now mostly a polish/taste area.
+- In `FX:Q` mode, the active `MEDIA` and `DEV` indicator positions were intentionally swapped.
 
 ### VSC layer
 - `VSC` is an extra working layer, not a replacement for `DEV`.
@@ -88,6 +92,33 @@
 - Keep behavior lightweight, direct, and non-blocking.
 - Prefer clear per-layer behavior over clever but hidden complexity.
 - Treat future work as refinement, not rescue.
+
+## Current Problems To Continue Later
+
+### Unresolved hardware-behavior mismatch
+- User reports that some recent code fixes produced **no visible change on hardware**.
+- This means the remaining problem is likely **not** a simple keycode-table mistake.
+- Most likely causes now:
+  - the flashed firmware is not the edited `keymaps/reworked` build,
+  - the physical matrix mapping does not match the assumed row/col layout,
+  - or a key is electrically reporting a different matrix position than expected.
+
+### Specifically still broken
+- `r0c2` / the physical key the user means by that still seems to activate selector on hardware.
+- `TXT` still showed unexpected status text on hardware even after the OLED text path was corrected in code.
+
+### Fixes already attempted in code
+- Restricted custom selector handling so only the configured selector matrix position should open `SELECT`.
+- Blocked stray `MO(_SELECT)` fallthrough from non-selector positions in `process_record_user`.
+- Removed the default `TXT WIN` OLED text from both OLED display paths.
+- Added the missing encoder button pull-up so TXT selection should only happen while the encoder button is actually pressed.
+- Moved `SELECTOR_BTN_PIN` from `GP12` to `GP11` in config.
+
+### Best next debug step
+- Add temporary matrix-debug output to OLED or another visible channel:
+  - show raw `row`, `col`, `keycode`, and active layer for the most recently pressed key.
+- Use that to confirm what the problematic physical keys are actually reporting.
+- Only after that should selector logic be changed again.
 
 ## Shortforms
 - layer legend for active layer (`btn`) = `LL`
