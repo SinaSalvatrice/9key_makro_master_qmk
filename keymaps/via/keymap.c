@@ -13,6 +13,7 @@ enum layers {
 };
 
 static bool     selector_active    = false;
+static uint8_t  selector_target    = _BASE;
 static uint32_t last_activity_time = 0;
 static bool     sleep_sent         = false;
 static uint16_t last_keycode       = KC_NO;
@@ -87,13 +88,54 @@ static void apply_layer_rgb(uint8_t layer) {
 }
 
 static void refresh_feedback(void) {
-    apply_layer_rgb(visual_layer());
+    apply_layer_rgb(selector_active ? selector_target : visual_layer());
+}
+
+static bool selector_keycode_to_layer(uint16_t keycode, uint8_t *layer) {
+    switch (keycode) {
+        case TO(_BASE):
+            *layer = _BASE;
+            return true;
+        case TO(_WIN):
+            *layer = _WIN;
+            return true;
+        case TO(_EDIT):
+            *layer = _EDIT;
+            return true;
+        case TO(_MEDIA):
+            *layer = _MEDIA;
+            return true;
+        case TO(_FN):
+            *layer = _FN;
+            return true;
+        case TO(_RGB):
+            *layer = _RGB;
+            return true;
+        default:
+            return false;
+    }
+}
+
+static void rotate_selector(bool clockwise) {
+    if (clockwise) {
+        selector_target = (selector_target + 1) % _SELECT;
+    } else {
+        selector_target = (selector_target == _BASE) ? (_SELECT - 1) : (selector_target - 1);
+    }
+
+    refresh_feedback();
 }
 
 static void begin_selector(void) {
     if (selector_active) {
         return;
     }
+
+    selector_target = active_layer();
+    if (selector_target >= _SELECT) {
+        selector_target = _BASE;
+    }
+
     selector_active = true;
     layer_on(_SELECT);
     refresh_feedback();
@@ -103,8 +145,10 @@ static void finish_selector(void) {
     if (!selector_active) {
         return;
     }
+
     selector_active = false;
     layer_off(_SELECT);
+    layer_move(selector_target);
     refresh_feedback();
 }
 
@@ -152,12 +196,20 @@ void matrix_scan_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    uint8_t selected_layer = _BASE;
+
     if (record->event.pressed) {
         last_activity_time = timer_read32();
         sleep_sent         = false;
         last_keycode       = keycode;
         last_row           = record->event.key.row;
         last_col           = record->event.key.col;
+
+        if (selector_active && selector_keycode_to_layer(keycode, &selected_layer)) {
+            selector_target = selected_layer;
+            refresh_feedback();
+            return false;
+        }
     }
 
     return true;
@@ -170,6 +222,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     sleep_sent         = false;
 
     if (selector_active) {
+        rotate_selector(clockwise);
         return false;
     }
 
@@ -209,7 +262,8 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 static void render_selector(void) {
     oled_write_ln_P(PSTR("BAS WIN EDT"), false);
     oled_write_ln_P(PSTR("MED FN  RGB"), false);
-    oled_write_ln_P(PSTR("pick a key "), false);
+    oled_write_P(PSTR("SEL -> "), false);
+    oled_write_ln(layer_name(selector_target), false);
     oled_write_P(PSTR("POS "), false);
     oled_write(get_u8_str(last_row, ' '), false);
     oled_write_P(PSTR(","), false);
