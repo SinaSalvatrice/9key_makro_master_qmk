@@ -997,17 +997,20 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     if (keycode == MO(_SELECT)) {
-        if (record->event.pressed) {
-            matrix_select_held = true;
-            selector_nav_activity = false;
-            fx_toggle_armed = false;
-            update_select_layer_state();
-        } else {
-            matrix_select_held = false;
-            selector_nav_activity = false;
-            fx_toggle_armed = false;
-            update_select_layer_state();
-            layer_move(selector_target);
+        if (record->event.key.row == SELECTOR_MATRIX_ROW
+            && record->event.key.col == SELECTOR_MATRIX_COL) {
+            if (record->event.pressed) {
+                matrix_select_held = true;
+                selector_nav_activity = false;
+                fx_toggle_armed = false;
+                update_select_layer_state();
+            } else {
+                matrix_select_held = false;
+                selector_nav_activity = false;
+                fx_toggle_armed = false;
+                update_select_layer_state();
+                layer_move(selector_target);
+            }
         }
         return false;
     }
@@ -1472,15 +1475,12 @@ static void render_legend_view(uint8_t layer) {
                  (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
                  (vsc_mode != VSC_MODE_NONE) ? " [HELD]" : "");
     } else if (layer == _TEXT) {
-        const char *mode = "WIN";
-        if (text_action_held) {
-            mode = "ACT";
-        } else if (text_edit_held) {
-            mode = "EDT";
+        if (text_action_held || text_edit_held) {
+            snprintf(line, sizeof(line), "TXT %s [HELD]",
+                     text_action_held ? "ACT" : "EDT");
+        } else {
+            snprintf(line, sizeof(line), "TXT move/cursor");
         }
-        snprintf(line, sizeof(line), "TXT %s%s",
-                 mode,
-                 (text_action_held || text_edit_held) ? " [HELD]" : "");
     } else if (layer == _WINDOW) {
         snprintf(line, sizeof(line), "WIN %s%s",
                  window_browser_held ? "BRO" : "WIN",
