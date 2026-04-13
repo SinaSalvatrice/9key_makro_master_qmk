@@ -68,6 +68,7 @@ enum custom_keycodes {
     VSC_5,
     VSC_6,
     RGB_PROFILE,
+    KC_SEL_HOLD,
     LAYER_LEGEND,
     KEY_FUNCTION_LEGEND,
     LAST_KEY_LEGEND
@@ -900,43 +901,43 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT),         KC_UP,              KC_BSPC,
+        KC_SEL_HOLD,         KC_UP,              KC_BSPC,
         KC_LEFT,             KC_ENT,             KC_RGHT,
         LCTL(KC_Z),          KC_DOWN,            LCTL(KC_Y)
     ),
 
     [_WINDOW] = LAYOUT(
-        MO(_SELECT),         WIN_BRO,            WIN_AUX,
+        KC_SEL_HOLD,         WIN_BRO,            WIN_AUX,
         WIN_1,               WIN_2,              WIN_3,
         WIN_4,               WIN_5,              WIN_6
     ),
 
     [_TEXT] = LAYOUT(
-        MO(_SELECT),         TXT_ACT,            TXT_EDT,
+        KC_SEL_HOLD,         TXT_ACT,            TXT_EDT,
         TXT_1,               TXT_2,              TXT_3,
         TXT_4,               TXT_5,              TXT_6
     ),
 
     [_MEDIA] = LAYOUT(
-        MO(_SELECT),         KC_MPRV,            KC_MNXT,
+        KC_SEL_HOLD,         KC_MPRV,            KC_MNXT,
         KC_MRWD,             KC_MPLY,            KC_MFFD,
         KC_VOLD,             KC_MUTE,            KC_VOLU
     ),
 
     [_RGB] = LAYOUT(
-        MO(_SELECT),         UG_SPDD,            UG_TOGG,
+        KC_SEL_HOLD,         UG_SPDD,            UG_TOGG,
         UG_HUEU,             UG_HUED,            UG_VALU,
         UG_SATU,             UG_SATD,            UG_VALD
     ),
 
     [_DEV] = LAYOUT(
-        MO(_SELECT),         MS_UP,              KC_LSFT,
+        KC_SEL_HOLD,         MS_UP,              KC_LSFT,
         MS_LEFT,             MS_BTN1,            MS_RGHT,
         KC_LALT,             MS_DOWN,            MS_BTN2
     ),
 
     [_VSC] = LAYOUT(
-        MO(_SELECT),         VSC_BAR,            VSC_CHAT,
+        KC_SEL_HOLD,         VSC_BAR,            VSC_CHAT,
         VSC_1,               VSC_2,              VSC_3,
         VSC_4,               VSC_5,              VSC_6
     ),
@@ -996,21 +997,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
-    if (keycode == MO(_SELECT)) {
-        if (record->event.key.row == SELECTOR_MATRIX_ROW
-            && record->event.key.col == SELECTOR_MATRIX_COL) {
-            if (record->event.pressed) {
-                matrix_select_held = true;
-                selector_nav_activity = false;
-                fx_toggle_armed = false;
-                update_select_layer_state();
-            } else {
-                matrix_select_held = false;
-                selector_nav_activity = false;
-                fx_toggle_armed = false;
-                update_select_layer_state();
-                layer_move(selector_target);
-            }
+    if (keycode == KC_SEL_HOLD) {
+        if (record->event.pressed) {
+            matrix_select_held = true;
+            selector_nav_activity = false;
+            fx_toggle_armed = false;
+            update_select_layer_state();
+        } else {
+            matrix_select_held = false;
+            selector_nav_activity = false;
+            fx_toggle_armed = false;
+            update_select_layer_state();
+            layer_move(selector_target);
         }
         return false;
     }
