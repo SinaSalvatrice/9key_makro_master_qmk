@@ -901,10 +901,10 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-    KC_1, KC_2, KC_3,
-    KC_4, KC_5, KC_6,
-    KC_7, KC_8, KC_9
-),
+        MO_SELECT,         KC_UP,              KC_BSPC,
+        KC_LEFT,             KC_ENT,             KC_RGHT,
+        LCTL(KC_Z),          KC_DOWN,            LCTL(KC_Y)
+    ),
 
     [_WINDOW] = LAYOUT(
         MO_SELECT,         WIN_BRO,            WIN_AUX,
