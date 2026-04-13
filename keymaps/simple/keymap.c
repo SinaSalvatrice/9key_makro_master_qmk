@@ -196,10 +196,10 @@ bool oled_task_user(void) {
 // ── Keymaps ──────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        LALT(KC_TAB),  KC_UP,         LGUI(KC_TAB),
-        KC_LEFT,       LALT(KC_SPC),  KC_RGHT,
-        KC_PGUP,       KC_DOWN,       KC_PGDN
-    ),
+    KC_1, KC_2, KC_3,
+    KC_4, KC_5, KC_6,
+    KC_7, KC_8, KC_9
+),
     [_L1] = LAYOUT(
         KC_SELECT,  KC_COPY,   KC_PASTE,
         KC_CUT,     MS_BTN1,   MS_BTN2,
