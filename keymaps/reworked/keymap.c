@@ -931,7 +931,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_DEV] = LAYOUT(
-        MO_SELECT,         MS_UP,              KC_LSFT,
+        MO_SELECT,           MS_UP,              KC_LSFT,
         MS_LEFT,             MS_BTN1,            MS_RGHT,
         KC_LALT,             MS_DOWN,            MS_BTN2
     ),
@@ -1191,7 +1191,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _RGB:
-            tap_code16(clockwise ? UG_VALU : UG_VALD);
+            tap_code16(clockwise ? BL_UP : BL_DOWN);
             break;
 
         case _DEV:
