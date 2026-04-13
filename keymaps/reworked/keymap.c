@@ -568,33 +568,6 @@ static void tap_text_target(uint8_t slot) {
     }
 }
 
-static void tap_window_target(uint8_t slot) {
-    if (slot >= 6) {
-        return;
-    }
-
-    if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
-        switch (slot) {
-            case 0: tap_code16(A(KC_LEFT)); break;
-            case 1: tap_code16(C(KC_R)); break;
-            case 2: tap_code16(A(KC_RGHT)); break;
-            case 3: tap_code16(C(S(KC_TAB))); break;
-            case 4: tap_code16(C(KC_T)); break;
-            case 5: tap_code16(C(KC_TAB)); break;
-        }
-        return;
-    }
-
-    switch (slot) {
-        case 0: tap_code16(G(C(KC_LEFT))); break;
-        case 1: tap_code16(G(KC_TAB)); break;
-        case 2: tap_code16(G(C(KC_RGHT))); break;
-        case 3: tap_code16(S(A(KC_TAB))); break;
-        case 4: tap_code16(G(KC_D)); break;
-        case 5: tap_code16(A(KC_TAB)); break;
-    }
-}
-
 static uint8_t lerp8(uint8_t a, uint8_t b, uint8_t t) {
     return (uint8_t)(a + (((int16_t)b - (int16_t)a) * t) / 255);
 }
@@ -824,9 +797,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_WINDOW] = LAYOUT(
-        MO_SELECT,         WIN_BRO,            WIN_AUX,
-        WIN_1,               WIN_2,              WIN_3,
-        WIN_4,               WIN_5,              WIN_6
+        MO_SELECT,           KC_NO,              KC_NO,
+        G(C(KC_LEFT)),       G(KC_TAB),          G(C(KC_RGHT)),
+        S(A(KC_TAB)),        G(KC_D),            A(KC_TAB)
     ),
 
     [_TEXT] = LAYOUT(
@@ -941,7 +914,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_row              = record->event.key.row;
         last_col              = record->event.key.col;
         last_key_text_mode    = current_text_preview_mode();
-        last_key_window_mode  = current_window_preview_mode();
         last_key_vsc_mode     = current_vsc_preview_mode();
     }
 
@@ -992,24 +964,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 selector_nav_activity = true;
                 select_target_layer(_VSC);
-            }
-            return false;
-
-        case WIN_BRO:
-            window_browser_held = record->event.pressed;
-            return false;
-
-        case WIN_AUX:
-            return false;
-
-        case WIN_1:
-        case WIN_2:
-        case WIN_3:
-        case WIN_4:
-        case WIN_5:
-        case WIN_6:
-            if (record->event.pressed) {
-                tap_window_target((uint8_t)(keycode - WIN_1));
             }
             return false;
 
@@ -1086,9 +1040,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _WINDOW:
-            if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
-                tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
-            } else if (clockwise) {
+            if (clockwise) {
                 tap_code16(A(KC_TAB));
             } else {
                 tap_code16(S(A(KC_TAB)));
@@ -1226,9 +1178,6 @@ static void render_header(uint8_t layer) {
     if (layer == _SELECT) {
         snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s",
                  layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
-    } else if (layer == _WINDOW) {
-        snprintf(line, sizeof(line), "WIN %-3s FX:%s",
-                 window_browser_held ? "BRO" : "WIN", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT) {
         if (text_action_held || text_edit_held) {
             snprintf(line, sizeof(line), "TXT %-3s FX:%s",
@@ -1412,9 +1361,7 @@ static void render_legend_view(uint8_t layer) {
             snprintf(line, sizeof(line), "TXT move/cursor");
         }
     } else if (layer == _WINDOW) {
-        snprintf(line, sizeof(line), "WIN %s%s",
-                 window_browser_held ? "BRO" : "WIN",
-                 window_browser_held ? " [HELD]" : "");
+        snprintf(line, sizeof(line), "WIN (VIA keys)");
     } else {
 #ifdef SELECTOR_BTN_PIN
         snprintf(line, sizeof(line), "GP12: Lay <-> Last");
