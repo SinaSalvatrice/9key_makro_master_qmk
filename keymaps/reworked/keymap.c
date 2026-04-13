@@ -328,10 +328,6 @@ static text_mode_t current_text_preview_mode(void) {
     return TEXT_MODE_WIN;
 }
 
-static window_mode_t current_window_preview_mode(void) {
-    return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_WIN;
-}
-
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "ACT";
@@ -368,50 +364,6 @@ static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
         }
     }
     return "Unknown";
-}
-
-static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
-    if (index == 0) return "SEL";
-    if (index == 1) return "BRO";
-    if (index == 2) return "AUX";
-    if (index >= 3 && index < 9) {
-        uint8_t slot = index - 3;
-        if (mode == WINDOW_MODE_BROWSER) {
-            return window_browser_labels[slot];
-        }
-        return window_win_labels[slot];
-    }
-    return "----";
-}
-
-static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
-    if (index == 0) return "Select layer";
-    if (index == 1) return "Hold browser controls";
-    if (index == 2) return "Reserved for later";
-    if (index >= 3 && index < 9) {
-        uint8_t slot = index - 3;
-        if (mode == WINDOW_MODE_BROWSER) {
-            return window_browser_functions[slot];
-        }
-        return window_win_functions[slot];
-    }
-    return "Unknown";
-}
-
-static const char *text_label_for(uint8_t index) {
-    return text_label_for_mode(current_text_preview_mode(), index);
-}
-
-static const char *text_function_for(uint8_t index) {
-    return text_function_for_mode(current_text_preview_mode(), index);
-}
-
-static const char *window_label_for(uint8_t index) {
-    return window_label_for_mode(current_window_preview_mode(), index);
-}
-
-static const char *window_function_for(uint8_t index) {
-    return window_function_for_mode(current_window_preview_mode(), index);
 }
 
 static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
