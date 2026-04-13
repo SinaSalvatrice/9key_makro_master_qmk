@@ -366,6 +366,14 @@ static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
     return "Unknown";
 }
 
+static const char *text_label_for(uint8_t index) {
+    return text_label_for_mode(current_text_preview_mode(), index);
+}
+
+static const char *text_function_for(uint8_t index) {
+    return text_function_for_mode(current_text_preview_mode(), index);
+}
+
 static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "BAR";
