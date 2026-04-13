@@ -998,6 +998,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     if (keycode == KC_SEL_HOLD) {
+        // Only honour the selector from its designated matrix position
+        if (record->event.key.row != SELECTOR_MATRIX_ROW ||
+            record->event.key.col != SELECTOR_MATRIX_COL) {
+            return false;
+        }
         if (record->event.pressed) {
             matrix_select_held = true;
             selector_nav_activity = false;
@@ -1224,9 +1229,15 @@ void matrix_scan_user(void) {
 
     if (!gp12_pressed && gp12_was_pressed) {
         if (timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
-            oled_view = (oled_view == OLED_VIEW_LEGEND)
-                      ? OLED_VIEW_LAST_KEY
-                      : OLED_VIEW_LEGEND;
+            if (matrix_select_held) {
+                // Selector held + button press → clear EEPROM and reboot
+                eeconfig_init();
+                soft_reset_keyboard();
+            } else {
+                oled_view = (oled_view == OLED_VIEW_LEGEND)
+                          ? OLED_VIEW_LAST_KEY
+                          : OLED_VIEW_LEGEND;
+            }
             gp12_last_action = timer_read32();
         }
     }
