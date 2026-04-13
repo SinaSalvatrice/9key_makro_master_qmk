@@ -470,6 +470,9 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer == _TEXT) {
         return text_label_for(index);
     }
+    if (layer == _WINDOW) {
+        return window_label_for(index);
+    }
     if (layer == _VSC) {
         return vsc_label_for(current_vsc_preview_mode(), index);
     }
@@ -483,6 +486,9 @@ static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     }
     if (layer == _TEXT) {
         return text_function_for(index);
+    }
+    if (layer == _WINDOW) {
+        return window_function_for(index);
     }
     if (layer == _VSC) {
         return vsc_function_for(current_vsc_preview_mode(), index);
@@ -499,6 +505,9 @@ static const char *last_key_label_for(void) {
     if (last_key_layer == _TEXT) {
         return text_label_for_mode(last_key_text_mode, index);
     }
+    if (last_key_layer == _WINDOW) {
+        return window_label_for_mode(last_key_window_mode, index);
+    }
     if (last_key_layer == _VSC) {
         return vsc_label_for(last_key_vsc_mode, index);
     }
@@ -513,6 +522,9 @@ static const char *last_key_function_for(void) {
 
     if (last_key_layer == _TEXT) {
         return text_function_for_mode(last_key_text_mode, index);
+    }
+    if (last_key_layer == _WINDOW) {
+        return window_function_for_mode(last_key_window_mode, index);
     }
     if (last_key_layer == _VSC) {
         return vsc_function_for(last_key_vsc_mode, index);
