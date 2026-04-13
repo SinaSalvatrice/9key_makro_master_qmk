@@ -43,14 +43,6 @@ enum custom_keycodes {
     SEL_RGB,
     SEL_DEV,
     SEL_VSC,
-    WIN_BRO,
-    WIN_AUX,
-    WIN_1,
-    WIN_2,
-    WIN_3,
-    WIN_4,
-    WIN_5,
-    WIN_6,
     TXT_ACT,
     TXT_EDT,
     TXT_1,
@@ -96,11 +88,6 @@ typedef enum {
     TEXT_MODE_EDIT,
 } text_mode_t;
 
-typedef enum {
-    WINDOW_MODE_WIN,
-    WINDOW_MODE_BROWSER,
-} window_mode_t;
-
 // ── OLED / state tracking ───────────────────────────────────
 static uint16_t last_keycode         = KC_NO;
 static uint8_t  last_key_layer       = _BASE;
@@ -119,9 +106,7 @@ static bool fx_toggle_armed          = false;
 static bool encoder_btn_pressed      = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
-static bool window_browser_held      = false;
 static text_mode_t last_key_text_mode    = TEXT_MODE_WIN;
-static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
 
 // ── Key -> LED mapping ──────────────────────────────────────
@@ -218,22 +203,6 @@ static const char *const text_edit_functions[6] = {
     "Enter", "Backspace", "Space", "Tab", "One-shot Shift", "Mouse button 1"
 };
 
-static const char *const window_win_labels[6] = {
-    "DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"
-};
-
-static const char *const window_browser_labels[6] = {
-    "BACK", "REFR", "FWD", "TAB<", "NEW", "TAB>"
-};
-
-static const char *const window_win_functions[6] = {
-    "Previous desktop", "Task view", "Next desktop", "Previous window", "Show desktop", "Next window"
-};
-
-static const char *const window_browser_functions[6] = {
-    "Browser back", "Refresh page", "Browser forward", "Previous tab", "New tab", "Next tab"
-};
-
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE] = {
         "SEL",  "UP",   "BSPC",
@@ -241,7 +210,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "UNDO", "DOWN", "REDO",
     },
     [_WINDOW] = {
-        "SEL",   "BRO",   "AUX",
+        "SEL",   "----",  "----",
         "DESK<", "TASK",  "DESK>",
         "WIN<",  "SHOW",  "WIN>",
     },
@@ -284,7 +253,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "Undo",           "Arrow down",     "Redo",
     },
     [_WINDOW] = {
-        "Select layer",   "Browser combo",  "Reserved",
+        "Select layer",   "VIA key",        "VIA key",
         "Prev desktop",   "Task view",      "Next desktop",
         "Prev window",    "Show desktop",   "Next window",
     },
