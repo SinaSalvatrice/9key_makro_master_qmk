@@ -3,10 +3,6 @@
 #define ENCODER_BTN_PIN GP8
 #define SELECTOR_BTN_PIN GP12
 
-// Selector is the first matrix key (top-left / row 0, col 0), not a dedicated GPIO pin.
-#define SELECTOR_MATRIX_ROW 0
-#define SELECTOR_MATRIX_COL 0
-
 // Milliseconds of inactivity before sending system sleep (5 minutes)
 #define IDLE_SLEEP_TIMEOUT_MS 300000
 
