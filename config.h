@@ -1,7 +1,7 @@
 #pragma once
 
 #define ENCODER_BTN_PIN GP8
-#define SELECTOR_BTN_PIN GP11
+#define SELECTOR_BTN_PIN GP12
 
 // Selector is the first matrix key (top-left / row 0, col 0), not a dedicated GPIO pin.
 #define SELECTOR_MATRIX_ROW 0
