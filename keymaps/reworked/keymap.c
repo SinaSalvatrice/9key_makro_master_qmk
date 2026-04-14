@@ -1051,9 +1051,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case RGB_PROFILE:
+            // Always allow toggling FX profile when SELECT is held, regardless of navigation
             if (record->event.pressed) {
-                fx_toggle_armed = matrix_select_held && !selector_nav_activity;
-            } else if (fx_toggle_armed && !selector_nav_activity) {
+                fx_toggle_armed = matrix_select_held;
+            } else if (fx_toggle_armed) {
                 rgb_minimal_mode = !rgb_minimal_mode;
                 fx_toggle_armed = false;
             } else {
