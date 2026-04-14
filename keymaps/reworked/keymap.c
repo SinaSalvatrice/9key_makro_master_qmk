@@ -1,3 +1,6 @@
+
+// ...existing includes and code...
+
 // --- Restored helper functions for OLED/key legend rendering ---
 static const char *text_label_for(uint8_t index) {
     return text_label_for_mode(current_text_preview_mode(), index);
