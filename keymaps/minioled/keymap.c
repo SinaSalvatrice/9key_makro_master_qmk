@@ -2,6 +2,8 @@
 #include "gpio.h"
 #include <stdio.h>
 
+// minioled: separate variant based on `reworked`, tuned for 128x32 OLEDs.
+
 // ============================================================
 // RGB / OLED selector build
 //
@@ -1231,109 +1233,6 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
 
-#ifdef OLED_DISPLAY_128X32
-static void write_line(uint8_t row, const char *str) {
-    char buf[22];
-    snprintf(buf, sizeof(buf), "%-21.21s", str);
-    oled_set_cursor(0, row);
-    oled_write(buf, false);
-}
-
-static void render_boot(void) {
-    if (boot_start == 0) {
-        boot_start = timer_read32() | 1;
-    }
-
-    uint32_t t = timer_elapsed32(boot_start);
-
-    write_line(0, "");
-    write_line(1, t >= 700 ? "       I AM" : "");
-    write_line(2, t >= 1200 ? "      ROOT" : "");
-    write_line(3, "");
-}
-
-static void render_header(uint8_t layer) {
-    char line[22];
-
-    if (layer == _SELECT) {
-        snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s",
-                 layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
-    } else if (layer == _TEXT) {
-        const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDT" : "WIN");
-        snprintf(line, sizeof(line), "TXT %-3s FX:%s",
-                 mode, rgb_minimal_mode ? "Q" : "W");
-    } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "VSC %-4s FX:%s",
-                 (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
-                 rgb_minimal_mode ? "Q" : "W");
-    } else {
-        snprintf(line, sizeof(line), "%-6s FX:%s",
-                 layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
-    }
-
-    write_line(0, line);
-}
-
-static void render_legend_view(uint8_t layer) {
-    char line[22];
-
-    render_header(layer);
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 0, 0),
-             legend_label_for(layer, 0, 1),
-             legend_label_for(layer, 0, 2));
-    write_line(1, line);
-
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 1, 0),
-             legend_label_for(layer, 1, 1),
-             legend_label_for(layer, 1, 2));
-    write_line(2, line);
-
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 2, 0),
-             legend_label_for(layer, 2, 1),
-             legend_label_for(layer, 2, 2));
-    write_line(3, line);
-}
-
-static void render_last_key_view(void) {
-    char buf[22];
-    const char *label = last_key_label_for();
-    const char *func  = last_key_function_for();
-
-    snprintf(buf, sizeof(buf), "LAST %-6.6s", layer_name_short(last_key_layer));
-    write_line(0, buf);
-
-    snprintf(buf, sizeof(buf), "K:%-7.7s %04X", label, last_keycode);
-    write_line(1, buf);
-
-    snprintf(buf, sizeof(buf), "F:%.18s", func);
-    write_line(2, buf);
-
-    snprintf(buf, sizeof(buf), "P:%u (%u,%u)",
-             (last_row * 3) + last_col + 1, last_row, last_col);
-    write_line(3, buf);
-}
-
-bool oled_task_user(void) {
-    if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
-        render_boot();
-        return false;
-    }
-
-    if (active_layer_raw() == _SELECT) {
-        render_legend_view(_SELECT);
-    } else if (oled_view == OLED_VIEW_LAST_KEY) {
-        render_last_key_view();
-    } else {
-        render_legend_view(active_layer_raw());
-    }
-
-    return false;
-}
-
-#else
 static void write_line(uint8_t row, const char *str) {
     char buf[22];
     snprintf(buf, sizeof(buf), "%-21.21s", str);
@@ -1381,18 +1280,14 @@ static void render_boot(void) {
     uint32_t t = timer_elapsed32(boot_start);
 
     write_line(0, "");
-    write_line(1, "");
-    write_line(2, t >=  800 ? "          I AM" : "             I");
-    write_line(3, t >= 1200 ? "          ROOT" : "");
-    write_line(4, "");
-    write_line(5, "");
-    write_line(6, "");
-    write_line(7, "");
+    write_line(1, t >= 800 ? "      I AM ROOT" : "        I AM");
+    write_line(2, t >= 1200 ? "        READY" : "");
+    write_line(3, "");
 }
 
 static void render_header(uint8_t layer) {
     char line[22];
-    snprintf(line, sizeof(line), "%-6s FX:%s",
+    snprintf(line, sizeof(line), "%-4s FX:%s",
              layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     write_line(0, line);
 }
@@ -1400,35 +1295,13 @@ static void render_header(uint8_t layer) {
 static void render_legend_view(uint8_t layer) {
     char line[22];
 
-    render_header(layer);
-    write_line(1, "1      2      3");
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 0, 0),
-             legend_label_for(layer, 0, 1),
-             legend_label_for(layer, 0, 2));
-    write_line(2, line);
-
-    write_line(3, "4      5      6");
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 1, 0),
-             legend_label_for(layer, 1, 1),
-             legend_label_for(layer, 1, 2));
-    write_line(4, line);
-
-    write_line(5, "7      8      9");
-    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
-             legend_label_for(layer, 2, 0),
-             legend_label_for(layer, 2, 1),
-             legend_label_for(layer, 2, 2));
-    write_line(6, line);
-
     if (layer == _SELECT) {
-        snprintf(line, sizeof(line), "Cur%u Tgt->%.10s",
+        snprintf(line, sizeof(line), "SEL %u->%.12s",
                  select_cursor + 1, layer_name_long(selector_target));
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "%s mode%s",
+        snprintf(line, sizeof(line), "VSC %s FX:%s",
                  (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
-                 (vsc_mode != VSC_MODE_NONE) ? " [HELD]" : "");
+                 rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT) {
         const char *mode = "NAV";
         if (text_action_held) {
@@ -1436,21 +1309,35 @@ static void render_legend_view(uint8_t layer) {
         } else if (text_edit_held) {
             mode = "EDT";
         }
-        snprintf(line, sizeof(line), "TXT %s%s",
-                 mode,
-                 (text_action_held || text_edit_held) ? " [HELD]" : "");
+        snprintf(line, sizeof(line), "TXT %s FX:%s",
+                 mode, rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW) {
-        snprintf(line, sizeof(line), "WIN %s%s",
+        snprintf(line, sizeof(line), "WIN %s FX:%s",
                  window_browser_held ? "BRO" : "NAV",
-                 window_browser_held ? " [HELD]" : "");
+                 rgb_minimal_mode ? "Q" : "W");
     } else {
-#ifdef SELECTOR_BTN_PIN
-        snprintf(line, sizeof(line), "GP12: Lay <-> Last");
-#else
-        snprintf(line, sizeof(line), "Hold SEL for grid");
-#endif
+        snprintf(line, sizeof(line), "%-4s FX:%s",
+                 layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     }
-    write_line(7, line);
+    write_line(0, line);
+
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 0, 0),
+             legend_label_for(layer, 0, 1),
+             legend_label_for(layer, 0, 2));
+    write_line(1, line);
+
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 1, 0),
+             legend_label_for(layer, 1, 1),
+             legend_label_for(layer, 1, 2));
+    write_line(2, line);
+
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 2, 0),
+             legend_label_for(layer, 2, 1),
+             legend_label_for(layer, 2, 2));
+    write_line(3, line);
 }
 
 static void render_last_key_view(void) {
@@ -1458,30 +1345,18 @@ static void render_last_key_view(void) {
     const char *label = last_key_label_for();
     const char *func  = last_key_function_for();
 
-    render_header(last_key_layer);
-    write_line(1, "LAST KEY");
+    snprintf(buf, sizeof(buf), "LAST %s", layer_name_short(last_key_layer));
+    write_line(0, buf);
 
-    snprintf(buf, sizeof(buf), "Layer: %s", layer_name_long(last_key_layer));
+    snprintf(buf, sizeof(buf), "Key %.8s 0x%04X", label, last_keycode);
+    write_line(1, buf);
+
+    snprintf(buf, sizeof(buf), "Fn  %.17s", func);
     write_line(2, buf);
 
-    snprintf(buf, sizeof(buf), "Key:   %.14s", label);
-    write_line(3, buf);
-
-    snprintf(buf, sizeof(buf), "Code:  0x%04X", last_keycode);
-    write_line(4, buf);
-
-    snprintf(buf, sizeof(buf), "Func:  %.14s", func);
-    write_line(5, buf);
-
-    snprintf(buf, sizeof(buf), "Pos:   %u (%u,%u)",
+    snprintf(buf, sizeof(buf), "Pos %u (%u,%u)",
              (last_row * 3) + last_col + 1, last_row, last_col);
-    write_line(6, buf);
-
-#ifdef SELECTOR_BTN_PIN
-    write_line(7, "GP12: back to Lay");
-#else
-    write_line(7, "Last-key details");
-#endif
+    write_line(3, buf);
 }
 
 bool oled_task_user(void) {

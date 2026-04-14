@@ -4,7 +4,7 @@
 
 enum layers {
     _BASE,
-    _WIN,
+    _NAV,
     _EDIT,
     _MEDIA,
     _FN,
@@ -13,7 +13,6 @@ enum layers {
 };
 
 static bool     selector_active    = false;
-static uint8_t  selector_target    = _BASE;
 static uint32_t last_activity_time = 0;
 static bool     sleep_sent         = false;
 static uint16_t last_keycode       = KC_NO;
@@ -31,7 +30,7 @@ static uint8_t visual_layer(void) {
 static const char *layer_name(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "BASE";
-        case _WIN:    return "WIN";
+        case _NAV:    return "NAV";
         case _EDIT:   return "EDIT";
         case _MEDIA:  return "MEDIA";
         case _FN:     return "FN";
@@ -50,7 +49,7 @@ static void apply_layer_rgb(uint8_t layer) {
             rgblight_mode_noeeprom(RGBLIGHT_MODE_RAINBOW_MOOD);
             rgblight_set_speed_noeeprom(128);
             break;
-        case _WIN:
+        case _NAV:
             rgblight_mode_noeeprom(RGBLIGHT_MODE_BREATHING + 3);
             rgblight_set_speed_noeeprom(128);
             rgblight_sethsv_noeeprom(158, 220, 100);
@@ -91,51 +90,10 @@ static void refresh_feedback(void) {
     apply_layer_rgb(selector_active ? selector_target : visual_layer());
 }
 
-static bool selector_keycode_to_layer(uint16_t keycode, uint8_t *layer) {
-    switch (keycode) {
-        case TO(_BASE):
-            *layer = _BASE;
-            return true;
-        case TO(_WIN):
-            *layer = _WIN;
-            return true;
-        case TO(_EDIT):
-            *layer = _EDIT;
-            return true;
-        case TO(_MEDIA):
-            *layer = _MEDIA;
-            return true;
-        case TO(_FN):
-            *layer = _FN;
-            return true;
-        case TO(_RGB):
-            *layer = _RGB;
-            return true;
-        default:
-            return false;
-    }
-}
-
-static void rotate_selector(bool clockwise) {
-    if (clockwise) {
-        selector_target = (selector_target + 1) % _SELECT;
-    } else {
-        selector_target = (selector_target == _BASE) ? (_SELECT - 1) : (selector_target - 1);
-    }
-
-    refresh_feedback();
-}
-
 static void begin_selector(void) {
     if (selector_active) {
         return;
     }
-
-    selector_target = active_layer();
-    if (selector_target >= _SELECT) {
-        selector_target = _BASE;
-    }
-
     selector_active = true;
     layer_on(_SELECT);
     refresh_feedback();
@@ -145,10 +103,8 @@ static void finish_selector(void) {
     if (!selector_active) {
         return;
     }
-
     selector_active = false;
     layer_off(_SELECT);
-    layer_move(selector_target);
     refresh_feedback();
 }
 
@@ -196,20 +152,12 @@ void matrix_scan_user(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    uint8_t selected_layer = _BASE;
-
     if (record->event.pressed) {
         last_activity_time = timer_read32();
         sleep_sent         = false;
         last_keycode       = keycode;
         last_row           = record->event.key.row;
         last_col           = record->event.key.col;
-
-        if (selector_active && selector_keycode_to_layer(keycode, &selected_layer)) {
-            selector_target = selected_layer;
-            refresh_feedback();
-            return false;
-        }
     }
 
     return true;
@@ -222,7 +170,6 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
     sleep_sent         = false;
 
     if (selector_active) {
-        rotate_selector(clockwise);
         return false;
     }
 
@@ -230,7 +177,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         case _BASE:
             clockwise ? tap_code(MS_WHLU) : tap_code(MS_WHLD);
             break;
-        case _WIN:
+        case _NAV:
             clockwise ? tap_code16(LGUI(KC_TAB)) : tap_code16(LALT(KC_TAB));
             break;
         case _EDIT:
@@ -260,10 +207,9 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 static void render_selector(void) {
-    oled_write_ln_P(PSTR("BAS WIN EDT"), false);
+    oled_write_ln_P(PSTR("BAS NAV EDT"), false);
     oled_write_ln_P(PSTR("MED FN  RGB"), false);
-    oled_write_P(PSTR("SEL -> "), false);
-    oled_write_ln(layer_name(selector_target), false);
+    oled_write_ln_P(PSTR("pick a key "), false);
     oled_write_P(PSTR("POS "), false);
     oled_write(get_u8_str(last_row, ' '), false);
     oled_write_P(PSTR(","), false);
@@ -301,7 +247,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LEFT,      KC_ENT,          KC_RGHT,
         LCTL(KC_Z),   KC_DOWN,         LCTL(KC_R)
     ),
-    [_WIN] = LAYOUT(
+    [_NAV] = LAYOUT(
         LGUI(KC_TAB), KC_UP,           LALT(KC_TAB),
         KC_LEFT,      KC_ENT,          KC_RGHT,
         LCTL(KC_Z),   KC_DOWN,         LCTL(KC_R)
@@ -327,7 +273,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         UG_SATU, UG_SATD, UG_VALD
     ),
     [_SELECT] = LAYOUT(
-        TO(_WIN),  TO(_EDIT), TO(_MEDIA),
+        TO(_NAV),  TO(_EDIT), TO(_MEDIA),
         TO(_FN),   TO(_BASE), TO(_RGB),
         KC_NO,     KC_NO,     KC_NO
     ),
