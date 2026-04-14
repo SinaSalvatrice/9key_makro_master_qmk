@@ -4,7 +4,7 @@
 
 enum layers {
     _BASE,
-    _NAV,
+    _WIN,
     _EDIT,
     _MEDIA,
     _FN,
@@ -30,7 +30,7 @@ static uint8_t visual_layer(void) {
 static const char *layer_name(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "BASE";
-        case _NAV:    return "NAV";
+        case _WIN:    return "WIN";
         case _EDIT:   return "EDIT";
         case _MEDIA:  return "MEDIA";
         case _FN:     return "FN";
@@ -50,7 +50,7 @@ static void apply_layer_rgb(uint8_t layer) {
             rgblight_set_speed_noeeprom(128);
             rgblight_sethsv_noeeprom(170, 255, 100);
             break;
-        case _NAV:
+        case _WIN:
             rgblight_set_speed_noeeprom(128);
             rgblight_sethsv_noeeprom(145, 220, 100);
             break;
@@ -107,7 +107,7 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 static void render_selector(void) {
-    oled_write_ln_P(PSTR("BAS NAV EDT"), false);
+    oled_write_ln_P(PSTR("BAS WIN EDT"), false);
     oled_write_ln_P(PSTR("MED FN  RGB"), false);
     oled_write_P(PSTR("SEL -> "), false);
     oled_write_ln(layer_name(selector_target), false);
@@ -215,7 +215,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         case _BASE:
             clockwise ? tap_code(MS_WHLU) : tap_code(MS_WHLD);
             break;
-        case _NAV:
+        case _WIN:
             clockwise ? tap_code16(LGUI(KC_TAB)) : tap_code16(LALT(KC_TAB));
             break;
         case _EDIT:
@@ -246,7 +246,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_7,         KC_8,        KC_9
     ),
 
-    [_NAV] = LAYOUT(
+    [_WIN] = LAYOUT(
         KC_LEFT, KC_UP,   KC_RGHT,
         KC_HOME, KC_ENT,  KC_END,
         KC_PGDN, KC_DOWN, KC_PGUP
@@ -277,7 +277,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_SELECT] = LAYOUT(
-        TO(_NAV),  TO(_EDIT), TO(_MEDIA),
+        TO(_WIN),  TO(_EDIT), TO(_MEDIA),
         TO(_FN),   KC_TRNS,   TO(_RGB),
         KC_NO,     KC_NO,     KC_NO
     )

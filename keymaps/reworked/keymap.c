@@ -90,13 +90,13 @@ typedef enum {
 } oled_view_t;
 
 typedef enum {
-    TEXT_MODE_NAV,
+    TEXT_MODE_WIN,
     TEXT_MODE_ACTIONS,
     TEXT_MODE_EDIT,
 } text_mode_t;
 
 typedef enum {
-    WINDOW_MODE_NAV,
+    WINDOW_MODE_WIN,
     WINDOW_MODE_BROWSER,
 } window_mode_t;
 
@@ -117,8 +117,8 @@ static bool encoder_btn_pressed      = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
 static bool window_browser_held      = false;
-static text_mode_t last_key_text_mode    = TEXT_MODE_NAV;
-static window_mode_t last_key_window_mode = WINDOW_MODE_NAV;
+static text_mode_t last_key_text_mode    = TEXT_MODE_WIN;
+static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
 
 // ── Key -> LED mapping ──────────────────────────────────────
@@ -191,7 +191,7 @@ static const char *const vsc_chat_macros[6] = {
     "Write a concise commit message and short body for the current staged changes.",
 };
 
-static const char *const text_nav_labels[6] = {
+static const char *const text_win_labels[6] = {
     "HOME", "UP", "END", "LEFT", "DOWN", "RGHT"
 };
 
@@ -203,7 +203,7 @@ static const char *const text_edit_labels[6] = {
     "ENT", "BSPC", "SPC", "TAB", "SHIFT", "BTN1"
 };
 
-static const char *const text_nav_functions[6] = {
+static const char *const text_win_functions[6] = {
     "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"
 };
 
@@ -215,7 +215,7 @@ static const char *const text_edit_functions[6] = {
     "Enter", "Backspace", "Space", "Tab", "One-shot Shift", "Mouse button 1"
 };
 
-static const char *const window_nav_labels[6] = {
+static const char *const window_win_labels[6] = {
     "DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"
 };
 
@@ -223,7 +223,7 @@ static const char *const window_browser_labels[6] = {
     "BACK", "REFR", "FWD", "TAB<", "NEW", "TAB>"
 };
 
-static const char *const window_nav_functions[6] = {
+static const char *const window_win_functions[6] = {
     "Previous desktop", "Task view", "Next desktop", "Previous window", "Show desktop", "Next window"
 };
 
@@ -258,9 +258,9 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "SAT+", "SAT-", "VAL-",
     },
     [_DEV] = {
-        "SEL",  "CTRL", "SHIFT",
-        "ALT",  "GUI",  "BTN1",
-        "M<-",  "M^",   "M->",
+        "SEL",  "M^",   "SHIFT",
+        "M<-",  "BTN1", "M->",
+        "ALT",  "Mv",   "BTN2",
     },
     [_VSC] = {
         "SEL",  "BAR",  "CHAT",
@@ -301,9 +301,9 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "Saturation up",  "Saturation down", "Brightness down",
     },
     [_DEV] = {
-        "Select layer",   "Hold Ctrl",      "Hold Shift",
-        "Hold Alt",       "Hold GUI",       "Mouse button 1",
-        "Mouse left",     "Mouse up",       "Mouse right",
+        "Select layer",   "Mouse up",       "Hold Shift",
+        "Mouse left",     "Mouse button 1", "Mouse right",
+        "Hold Alt",       "Mouse down",     "Mouse button 2",
     },
     [_VSC] = {
         "Select layer",   "BAR mode",       "CHAT mode",
@@ -353,11 +353,11 @@ static vsc_mode_t current_vsc_preview_mode(void) {
 static text_mode_t current_text_preview_mode(void) {
     if (text_action_held) return TEXT_MODE_ACTIONS;
     if (text_edit_held) return TEXT_MODE_EDIT;
-    return TEXT_MODE_NAV;
+    return TEXT_MODE_WIN;
 }
 
 static window_mode_t current_window_preview_mode(void) {
-    return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_NAV;
+    return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_WIN;
 }
 
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
@@ -371,9 +371,9 @@ static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
                 return text_action_labels[slot];
             case TEXT_MODE_EDIT:
                 return text_edit_labels[slot];
-            case TEXT_MODE_NAV:
+            case TEXT_MODE_WIN:
             default:
-                return text_nav_labels[slot];
+                return text_win_labels[slot];
         }
     }
     return "----";
@@ -390,9 +390,9 @@ static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
                 return text_action_functions[slot];
             case TEXT_MODE_EDIT:
                 return text_edit_functions[slot];
-            case TEXT_MODE_NAV:
+            case TEXT_MODE_WIN:
             default:
-                return text_nav_functions[slot];
+                return text_win_functions[slot];
         }
     }
     return "Unknown";
@@ -407,7 +407,7 @@ static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
         if (mode == WINDOW_MODE_BROWSER) {
             return window_browser_labels[slot];
         }
-        return window_nav_labels[slot];
+        return window_win_labels[slot];
     }
     return "----";
 }
@@ -421,7 +421,7 @@ static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
         if (mode == WINDOW_MODE_BROWSER) {
             return window_browser_functions[slot];
         }
-        return window_nav_functions[slot];
+        return window_win_functions[slot];
     }
     return "Unknown";
 }
@@ -589,17 +589,19 @@ static void send_vsc_command(const char *command) {
 }
 
 static void trigger_vsc_target(uint8_t slot) {
+    vsc_mode_t mode = current_vsc_preview_mode();
+
     if (slot >= 6) {
         return;
     }
 
-    if (vsc_mode == VSC_MODE_NONE) {
+    if (mode == VSC_MODE_NONE) {
         return;
     }
 
-    if (vsc_mode == VSC_MODE_BAR) {
+    if (mode == VSC_MODE_BAR) {
         send_vsc_command(vsc_bar_commands[slot]);
-    } else if (vsc_mode == VSC_MODE_CHAT) {
+    } else if (mode == VSC_MODE_CHAT) {
         send_string(vsc_chat_macros[slot]);
     }
 }
@@ -632,7 +634,7 @@ static void tap_text_target(uint8_t slot) {
             }
             break;
 
-        case TEXT_MODE_NAV:
+        case TEXT_MODE_WIN:
         default:
             switch (slot) {
                 case 0: tap_code(KC_HOME); break;
@@ -961,7 +963,11 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 static void select_target_layer(uint8_t layer) {
     selector_target = layer;
     select_cursor   = slot_for_layer(selector_target);
-    layer_move(selector_target);
+
+    // Keep SELECT active while the selector key is held; commit the target on release.
+    if (!matrix_select_held) {
+        layer_move(selector_target);
+    }
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -1231,6 +1237,112 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
 
+#ifdef OLED_DISPLAY_128X32
+static void write_line(uint8_t row, const char *str) {
+    char buf[22];
+    snprintf(buf, sizeof(buf), "%-21.21s", str);
+    oled_set_cursor(0, row);
+    oled_write(buf, false);
+}
+
+static void render_boot(void) {
+    if (boot_start == 0) {
+        boot_start = timer_read32() | 1;
+    }
+
+    uint32_t t = timer_elapsed32(boot_start);
+
+    write_line(0, "");
+    write_line(1, t >= 700 ? "       I AM" : "");
+    write_line(2, t >= 1200 ? "      ROOT" : "");
+    write_line(3, "");
+}
+
+static void render_header(uint8_t layer) {
+    char line[22];
+
+    if (layer == _SELECT) {
+        snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s",
+                 layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
+    } else if (layer == _WINDOW) {
+        snprintf(line, sizeof(line), "WIN %-3s FX:%s",
+                 window_browser_held ? "BRO" : "WIN", rgb_minimal_mode ? "Q" : "W");
+    } else if (layer == _TEXT) {
+        const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDT" : "WIN");
+        snprintf(line, sizeof(line), "TXT %-3s FX:%s",
+                 mode, rgb_minimal_mode ? "Q" : "W");
+    } else if (layer == _VSC) {
+        snprintf(line, sizeof(line), "VSC %-4s FX:%s",
+                 (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
+                 rgb_minimal_mode ? "Q" : "W");
+    } else {
+        snprintf(line, sizeof(line), "%-6s FX:%s",
+                 layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
+    }
+
+    write_line(0, line);
+}
+
+static void render_legend_view(uint8_t layer) {
+    char line[22];
+
+    render_header(layer);
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 0, 0),
+             legend_label_for(layer, 0, 1),
+             legend_label_for(layer, 0, 2));
+    write_line(1, line);
+
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 1, 0),
+             legend_label_for(layer, 1, 1),
+             legend_label_for(layer, 1, 2));
+    write_line(2, line);
+
+    snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s",
+             legend_label_for(layer, 2, 0),
+             legend_label_for(layer, 2, 1),
+             legend_label_for(layer, 2, 2));
+    write_line(3, line);
+}
+
+static void render_last_key_view(void) {
+    char buf[22];
+    const char *label = last_key_label_for();
+    const char *func  = last_key_function_for();
+
+    snprintf(buf, sizeof(buf), "LAST %-6.6s", layer_name_short(last_key_layer));
+    write_line(0, buf);
+
+    snprintf(buf, sizeof(buf), "K:%-7.7s %04X", label, last_keycode);
+    write_line(1, buf);
+
+    snprintf(buf, sizeof(buf), "F:%.18s", func);
+    write_line(2, buf);
+
+    snprintf(buf, sizeof(buf), "P:%u (%u,%u)",
+             (last_row * 3) + last_col + 1, last_row, last_col);
+    write_line(3, buf);
+}
+
+bool oled_task_user(void) {
+    if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
+        render_boot();
+        return false;
+    }
+
+    if (active_layer_raw() == _SELECT) {
+        render_legend_view(_SELECT);
+    } else if (oled_view == OLED_VIEW_LAST_KEY) {
+        render_last_key_view();
+    } else {
+        render_legend_view(active_layer_raw());
+    }
+
+    return false;
+}
+
+#else
 static void write_line(uint8_t row, const char *str) {
     char buf[22];
     snprintf(buf, sizeof(buf), "%-21.21s", str);
@@ -1327,7 +1439,7 @@ static void render_legend_view(uint8_t layer) {
                  (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
                  (vsc_mode != VSC_MODE_NONE) ? " [HELD]" : "");
     } else if (layer == _TEXT) {
-        const char *mode = "NAV";
+        const char *mode = "WIN";
         if (text_action_held) {
             mode = "ACT";
         } else if (text_edit_held) {
@@ -1338,7 +1450,7 @@ static void render_legend_view(uint8_t layer) {
                  (text_action_held || text_edit_held) ? " [HELD]" : "");
     } else if (layer == _WINDOW) {
         snprintf(line, sizeof(line), "WIN %s%s",
-                 window_browser_held ? "BRO" : "NAV",
+                 window_browser_held ? "BRO" : "WIN",
                  window_browser_held ? " [HELD]" : "");
     } else {
 #ifdef SELECTOR_BTN_PIN
@@ -1399,4 +1511,5 @@ bool oled_task_user(void) {
 
     return false;
 }
+#endif
 #endif
