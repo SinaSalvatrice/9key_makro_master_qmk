@@ -1,4 +1,4 @@
-name: Build 9key_makro_master
+name: Build 9key_makro_master keymaps
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        keymap: [bringup, rework]
+        keymap: [bringup, reworked, minioled]
 
     env:
       KEYBOARD: 9key_makro_master
