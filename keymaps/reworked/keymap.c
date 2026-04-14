@@ -1169,8 +1169,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _SELECT:
-            select_cursor = next_select_slot(select_cursor, clockwise);
-            sync_selector_target_from_cursor();
+            if (encoder_btn_pressed) {
+                select_cursor = next_select_slot(select_cursor, clockwise);
+                sync_selector_target_from_cursor();
+            }
             break;
 
         default:
