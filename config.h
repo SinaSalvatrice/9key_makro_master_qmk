@@ -3,6 +3,10 @@
 #define ENCODER_BTN_PIN GP8
 #define SELECTOR_BTN_PIN GP12
 
+// Selector is the first matrix key (top-left / row 0, col 0), not a dedicated GPIO pin.
+#define SELECTOR_MATRIX_ROW 0
+#define SELECTOR_MATRIX_COL 0
+
 // Milliseconds of inactivity before sending system sleep (5 minutes)
 #define IDLE_SLEEP_TIMEOUT_MS 300000
 
@@ -17,7 +21,7 @@
 #define I2C1_SDA_PIN GP0
 #define I2C1_SCL_PIN GP1
 #define I2C1_CLOCK_SPEED 400000
-#define OLED_DISPLAY_128X64
+#define OLED_DISPLAY_128X32
 #define OLED_IC OLED_IC_SSD1306
 #define OLED_DISPLAY_ADDRESS 0x3C
 #define OLED_TIMEOUT 0

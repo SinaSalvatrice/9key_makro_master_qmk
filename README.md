@@ -18,7 +18,7 @@ mapping
         KC_LEFT,       KC_ENT,   KC_RGHT,
         LCTL(KC_Z),    KC_DOWN,  LCTL(KC_R)
     ),
-    [_NAV] = LAYOUT(
+    [_WIN] = LAYOUT(
         LGUI(KC_TAB),  KC_UP,    LALT(KC_TAB),
         KC_LEFT,       KC_ENT,   KC_RGHT,
         LCTL(KC_Z),    KC_DOWN,  LCTL(KC_R)
@@ -65,7 +65,7 @@ when Encoder is turned while MO layerselector is active, layer goes to next or p
 EDIT :  wandering green/yellow breathing
 enc a+b = select next sign/select prevoius sign
 
-NAV : wandering blue/turqoise breathing
+WIN : wandering blue/turqoise breathing
 enc a+b = next Window (Windows)
 
 MEDIA :  wandering pink/yellow breathing

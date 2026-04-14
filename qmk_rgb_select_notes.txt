@@ -33,8 +33,8 @@ What changed
   only the currently selected layer key breathes
 
 - While SELECT is active:
-  preview cursor advances every 500 ms
-  encoder steps preview manually
+  cursor starts on slot 1 (BASE)
+  move the cursor manually with the encoder
   OLED shows key number + layer name for the highlighted slot
 
 Important

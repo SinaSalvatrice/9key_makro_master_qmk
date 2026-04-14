@@ -4,7 +4,7 @@
 
 enum layers {
     _BASE,
-    _NAV,
+    _WIN,
     _EDIT,
     _MEDIA,
     _FN,
@@ -30,7 +30,7 @@ static uint8_t visual_layer(void) {
 static const char *layer_name(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "BASE";
-        case _NAV:    return "NAV";
+        case _WIN:    return "WIN";
         case _EDIT:   return "EDIT";
         case _MEDIA:  return "MEDIA";
         case _FN:     return "FN";
@@ -49,7 +49,7 @@ static void apply_layer_rgb(uint8_t layer) {
             rgblight_mode_noeeprom(RGBLIGHT_MODE_RAINBOW_MOOD);
             rgblight_set_speed_noeeprom(128);
             break;
-        case _NAV:
+        case _WIN:
             rgblight_mode_noeeprom(RGBLIGHT_MODE_BREATHING + 3);
             rgblight_set_speed_noeeprom(128);
             rgblight_sethsv_noeeprom(158, 220, 100);
@@ -87,7 +87,7 @@ static void apply_layer_rgb(uint8_t layer) {
 }
 
 static void refresh_feedback(void) {
-    apply_layer_rgb(selector_active ? selector_target : visual_layer());
+    apply_layer_rgb(visual_layer());
 }
 
 static void begin_selector(void) {
@@ -177,7 +177,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         case _BASE:
             clockwise ? tap_code(MS_WHLU) : tap_code(MS_WHLD);
             break;
-        case _NAV:
+        case _WIN:
             clockwise ? tap_code16(LGUI(KC_TAB)) : tap_code16(LALT(KC_TAB));
             break;
         case _EDIT:
@@ -207,7 +207,7 @@ oled_rotation_t oled_init_user(oled_rotation_t rotation) {
 }
 
 static void render_selector(void) {
-    oled_write_ln_P(PSTR("BAS NAV EDT"), false);
+    oled_write_ln_P(PSTR("BAS WIN EDT"), false);
     oled_write_ln_P(PSTR("MED FN  RGB"), false);
     oled_write_ln_P(PSTR("pick a key "), false);
     oled_write_P(PSTR("POS "), false);
@@ -247,7 +247,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LEFT,      KC_ENT,          KC_RGHT,
         LCTL(KC_Z),   KC_DOWN,         LCTL(KC_R)
     ),
-    [_NAV] = LAYOUT(
+    [_WIN] = LAYOUT(
         LGUI(KC_TAB), KC_UP,           LALT(KC_TAB),
         KC_LEFT,      KC_ENT,          KC_RGHT,
         LCTL(KC_Z),   KC_DOWN,         LCTL(KC_R)
@@ -273,7 +273,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         UG_SATU, UG_SATD, UG_VALD
     ),
     [_SELECT] = LAYOUT(
-        TO(_NAV),  TO(_EDIT), TO(_MEDIA),
+        TO(_WIN),  TO(_EDIT), TO(_MEDIA),
         TO(_FN),   TO(_BASE), TO(_RGB),
         KC_NO,     KC_NO,     KC_NO
     ),
