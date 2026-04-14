@@ -1,7 +1,8 @@
-name: Build 9key_makro_master keymaps
+name: Build 9key_makro_master minioled
 
 on:
   workflow_dispatch:
+  repository_dispatch:
   push:
     branches: [ oledworking ]
     paths:
@@ -22,13 +23,9 @@ jobs:
     permissions:
       contents: read
 
-    strategy:
-      fail-fast: false
-      matrix:
-        keymap: [bringup, reworked, minioled]
-
     env:
       KEYBOARD: 9key_makro_master
+      KEYMAP: minioled
       QMK_HOME: /tmp/qmk_firmware
 
     steps:
@@ -50,46 +47,23 @@ jobs:
           cp -R "$GITHUB_WORKSPACE/." "$QMK_HOME/keyboards/$KEYBOARD/"
           rm -rf "$QMK_HOME/keyboards/$KEYBOARD/.git" "$QMK_HOME/keyboards/$KEYBOARD/.github"
 
-      - name: Debug keymaps
-        run: |
-          echo "=== Keymaps ==="
-          find "$QMK_HOME/keyboards/$KEYBOARD/keymaps" -maxdepth 2 -type f | sort || true
-
       - name: Build firmware
-        id: build
-        continue-on-error: true
         run: |
           git config --global --add safe.directory "$QMK_HOME"
           cd "$QMK_HOME"
-          qmk compile -kb "$KEYBOARD" -km "${{ matrix.keymap }}" 2>&1 | tee "$GITHUB_WORKSPACE/build_${{ matrix.keymap }}.log"
-          exit ${PIPESTATUS[0]}
+          qmk compile -kb "$KEYBOARD" -km "$KEYMAP"
 
-      - name: Stage uf2 if present
-        if: always()
+      - name: Stage artifact
         run: |
           mkdir -p "$GITHUB_WORKSPACE/artifacts"
-          find "$QMK_HOME" -type f -name "${KEYBOARD}_${{ matrix.keymap }}.uf2" -exec cp {} "$GITHUB_WORKSPACE/artifacts/" \; || true
-          ls -la "$GITHUB_WORKSPACE/artifacts" || true
+          find "$QMK_HOME" -type f -name "${KEYBOARD}_${KEYMAP}.uf2" -exec cp {} "$GITHUB_WORKSPACE/artifacts/" \;
+          test -f "$GITHUB_WORKSPACE/artifacts/${KEYBOARD}_${KEYMAP}.uf2"
 
-      - name: Upload uf2
-        if: always() && hashFiles(format('artifacts/{0}_{1}.uf2', env.KEYBOARD, matrix.keymap)) != ''
+      - name: Upload firmware minioled
         uses: actions/upload-artifact@v4
         with:
-          name: 9key_makro_master_${{ matrix.keymap }}_uf2
-          path: artifacts/9key_makro_master_${{ matrix.keymap }}.uf2
+          name: 9key_makro_master_minioled_uf2
+          path: artifacts/9key_makro_master_minioled.uf2
           if-no-files-found: error
           compression-level: 6
-          overwrite: true
-
-      - name: Upload build log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: 9key_makro_master_${{ matrix.keymap }}_log
-          path: build_${{ matrix.keymap }}.log
-          if-no-files-found: error
-          overwrite: true
-
-      - name: Fail job if build failed
-        if: steps.build.outcome != 'success'
-        run: exit 1
+          overwrite: false
