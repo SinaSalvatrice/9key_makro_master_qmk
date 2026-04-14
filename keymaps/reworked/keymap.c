@@ -1,3 +1,43 @@
+// --- Restored helper functions for OLED/key legend rendering ---
+static const char *text_label_for(uint8_t index) {
+    return text_label_for_mode(current_text_preview_mode(), index);
+}
+
+static const char *window_label_for(uint8_t index) {
+    if (index == 0) return "SEL";
+    if (index == 1) return "BRO";
+    if (index == 2) return "AUX";
+    if (index >= 3 && index < 9) {
+        static const char *window_labels[6] = {"DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"};
+        return window_labels[index - 3];
+    }
+    return "----";
+}
+
+static const char *text_function_for(uint8_t index) {
+    return text_function_for_mode(current_text_preview_mode(), index);
+}
+
+static const char *window_function_for(uint8_t index) {
+    if (index == 0) return "Select layer";
+    if (index == 1) return "Browser combo";
+    if (index == 2) return "Reserved";
+    if (index >= 3 && index < 9) {
+        static const char *window_functions[6] = {"Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"};
+        return window_functions[index - 3];
+    }
+    return "Unknown";
+}
+
+static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
+    // Only one mode implemented in this keymap, so just use window_label_for
+    return window_label_for(index);
+}
+
+static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
+    // Only one mode implemented in this keymap, so just use window_function_for
+    return window_function_for(index);
+}
 #include QMK_KEYBOARD_H
 #include "gpio.h"
 #include <stdio.h>
