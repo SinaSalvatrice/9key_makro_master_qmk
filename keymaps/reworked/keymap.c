@@ -1289,12 +1289,24 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s",
                  layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW) {
-        snprintf(line, sizeof(line), "WIN %-3s FX:%s",
-                 window_browser_held ? "BRO" : "WIN", rgb_minimal_mode ? "Q" : "W");
+        if (window_browser_held) {
+            snprintf(line, sizeof(line), "WIN BRO FX:%s",
+                     rgb_minimal_mode ? "Q" : "W");
+        } else {
+            snprintf(line, sizeof(line), "WIN FX:%s",
+                     rgb_minimal_mode ? "Q" : "W");
+        }
     } else if (layer == _TEXT) {
-        const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDT" : "WIN");
-        snprintf(line, sizeof(line), "TXT %-3s FX:%s",
-                 mode, rgb_minimal_mode ? "Q" : "W");
+        if (text_action_held) {
+            snprintf(line, sizeof(line), "TXT ACT FX:%s",
+                     rgb_minimal_mode ? "Q" : "W");
+        } else if (text_edit_held) {
+            snprintf(line, sizeof(line), "TXT EDT FX:%s",
+                     rgb_minimal_mode ? "Q" : "W");
+        } else {
+            snprintf(line, sizeof(line), "TXT FX:%s",
+                     rgb_minimal_mode ? "Q" : "W");
+        }
     } else if (layer == _VSC) {
         snprintf(line, sizeof(line), "VSC %-4s FX:%s",
                  (current_vsc_preview_mode() == VSC_MODE_CHAT) ? "CHAT" : "BAR",
