@@ -114,6 +114,9 @@ static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
+static bool encoder_btn_was_pressed  = false;
+static bool encoder_btn_rotated      = false;
+static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
 static bool window_browser_held      = false;
@@ -1146,8 +1149,11 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 
         case _TEXT:
             if (encoder_btn_pressed) {
+                encoder_btn_rotated = true;
+                text_selection_pending_copy = true;
                 tap_code16(clockwise ? S(KC_RGHT) : S(KC_LEFT));
             } else {
+                text_selection_pending_copy = false;
                 tap_code(clockwise ? KC_RGHT : KC_LEFT);
             }
             break;
@@ -1186,6 +1192,18 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 void matrix_scan_user(void) {
 #ifdef ENCODER_BTN_PIN
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
+
+    if (encoder_btn_pressed && !encoder_btn_was_pressed) {
+        encoder_btn_rotated = false;
+    } else if (!encoder_btn_pressed && encoder_btn_was_pressed) {
+        if (active_layer_raw() == _TEXT && text_selection_pending_copy && !encoder_btn_rotated) {
+            tap_code16(C(KC_C));
+            text_selection_pending_copy = false;
+        }
+        encoder_btn_rotated = false;
+    }
+
+    encoder_btn_was_pressed = encoder_btn_pressed;
 #endif
 
 #ifdef SELECTOR_BTN_PIN
