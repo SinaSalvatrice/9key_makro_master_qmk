@@ -1221,6 +1221,10 @@ void keyboard_post_init_user(void) {
     rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
 #endif
 
+#ifdef ENCODER_BTN_PIN
+    gpio_set_pin_input_high(ENCODER_BTN_PIN);
+#endif
+
     gpio_set_pin_output(GP25);
     gpio_write_pin_high(GP25);
 
