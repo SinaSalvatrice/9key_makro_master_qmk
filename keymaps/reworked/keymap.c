@@ -1290,21 +1290,26 @@ static void render_header(uint8_t layer) {
                  layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW) {
         if (window_browser_held) {
-            snprintf(line, sizeof(line), "WIN BRO FX:%s",
+            snprintf(line, sizeof(line), "%-7s FX:%s",
+                     "WIN BRO",
                      rgb_minimal_mode ? "Q" : "W");
         } else {
-            snprintf(line, sizeof(line), "WIN FX:%s",
+            snprintf(line, sizeof(line), "%-6s FX:%s",
+                     "WIN",
                      rgb_minimal_mode ? "Q" : "W");
         }
     } else if (layer == _TEXT) {
         if (text_action_held) {
-            snprintf(line, sizeof(line), "TXT ACT FX:%s",
+            snprintf(line, sizeof(line), "%-7s FX:%s",
+                     "TXT ACT",
                      rgb_minimal_mode ? "Q" : "W");
         } else if (text_edit_held) {
-            snprintf(line, sizeof(line), "TXT EDT FX:%s",
+            snprintf(line, sizeof(line), "%-7s FX:%s",
+                     "TXT EDT",
                      rgb_minimal_mode ? "Q" : "W");
         } else {
-            snprintf(line, sizeof(line), "TXT FX:%s",
+            snprintf(line, sizeof(line), "%-6s FX:%s",
+                     "TXT",
                      rgb_minimal_mode ? "Q" : "W");
         }
     } else if (layer == _VSC) {
