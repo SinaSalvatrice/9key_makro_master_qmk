@@ -621,8 +621,8 @@ static void tap_text_target(uint8_t slot) {
                 case 1: tap_code16(C(KC_C)); break;
                 case 2: tap_code16(C(KC_V)); break;
                 case 3: tap_code16(C(KC_X)); break;
-                case 4: tap_code16(C(KC_Z)); break;
-                case 5: tap_code16(C(KC_Y)); break;
+                case 4: tap_code16(C(KC_Y)); break;
+                case 5: tap_code16(C(KC_Z)); break;
             }
             break;
 
