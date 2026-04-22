@@ -23,6 +23,7 @@
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
+#define CLEAR_EEPROM_HOLD_MS 800
 #define VIA_LAYER_SLOT_COUNT 7
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -122,6 +123,7 @@ static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
 static bool encoder_btn_rotated      = false;
 static bool button_clear_armed       = false;
+static uint32_t button_clear_timer   = 0;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
@@ -543,6 +545,10 @@ static void clear_eeprom_and_reset(void) {
     eeconfig_disable();
     soft_reset_keyboard();
 #endif
+}
+
+static uint16_t clear_eeprom_progress_ms(void) {
+    return button_clear_armed ? (uint16_t)timer_elapsed32(button_clear_timer) : 0;
 }
 
 static uint8_t slot_for_layer(uint8_t layer) {
@@ -1467,7 +1473,9 @@ void matrix_scan_user(void) {
     bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
     if (clear_buttons_pressed && !button_clear_armed) {
         button_clear_armed = true;
+        button_clear_timer = timer_read32();
         gp12_combo_used    = true;
+    } else if (clear_buttons_pressed && timer_elapsed32(button_clear_timer) >= CLEAR_EEPROM_HOLD_MS) {
         clear_eeprom_and_reset();
     } else if (!clear_buttons_pressed) {
         button_clear_armed = false;
