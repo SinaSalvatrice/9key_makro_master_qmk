@@ -23,6 +23,7 @@
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
+#define CLEAR_EEPROM_HOLD_MS 1000
 #define VIA_LAYER_SLOT_COUNT 7
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -122,6 +123,7 @@ static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
 static bool encoder_btn_rotated      = false;
 static bool button_clear_armed       = false;
+static uint32_t button_clear_started = 0;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
@@ -1443,12 +1445,18 @@ void matrix_scan_user(void) {
 
 #    ifdef ENCODER_BTN_PIN
     bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
-    if (clear_buttons_pressed && !button_clear_armed) {
-        button_clear_armed = true;
-        gp12_combo_used    = true;
-        eeconfig_disable();
-        soft_reset_keyboard();
-    } else if (!clear_buttons_pressed) {
+    if (clear_buttons_pressed) {
+        gp12_combo_used = true;
+
+        if (button_clear_started == 0) {
+            button_clear_started = timer_read32() | 1;
+        } else if (!button_clear_armed && timer_elapsed32(button_clear_started) >= CLEAR_EEPROM_HOLD_MS) {
+            button_clear_armed = true;
+            eeconfig_disable();
+            soft_reset_keyboard();
+        }
+    } else {
+        button_clear_started = 0;
         button_clear_armed = false;
     }
 #    endif
