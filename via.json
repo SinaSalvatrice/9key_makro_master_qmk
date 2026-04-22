@@ -35,7 +35,7 @@
     {"name": "VSC_4", "title": "VSC target 4", "shortName": "V4"},
     {"name": "VSC_5", "title": "VSC target 5", "shortName": "V5"},
     {"name": "VSC_6", "title": "VSC target 6", "shortName": "V6"},
-    {"name": "RGB_PROFILE", "title": "Toggle RGB profile", "shortName": "RGBP"}
+    {"name": "RGB_PROFILE", "title": "Toggle FX mode", "shortName": "FX"}
   ],
   "matrix": {
     "rows": 3,

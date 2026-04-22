@@ -158,7 +158,7 @@ static const select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _DEV,     18, 255, 130, "DEV",    true  },  // key 6
     { _VSC,    200, 255, 130, "VSC",    true  },  // key 7
     { _RGB,    215, 240, 130, "RGB",    true  },  // key 8
-    { _SELECT,   0,   0,  24, "FREE",   false },  // key 9
+    { _SELECT,   0,   0,  24, "RESET",  false },  // key 9
 };
 
 static const char *const vsc_bar_labels[6] = {
@@ -274,7 +274,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_SELECT] = {
         "BASE", "WIN",  "TXT",
         "MED",  "FX",   "DEV",
-        "VSC",  "RGB",  "FREE",
+        "VSC",  "RGB",  "RESET",
     },
 };
 
@@ -317,7 +317,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_SELECT] = {
         "Go to base",     "Go to window",   "Go to text",
         "Go to media",    "Toggle FX mode", "Go to DEV",
-        "Go to VSC",      "Go to RGB",      "Unused",
+        "Go to VSC",      "Go to RGB",      "Clear VIA EEPROM",
     },
 };
 
@@ -936,7 +936,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_SELECT] = LAYOUT(
         SEL_BASE,            SEL_WINDOW,         SEL_TEXT,
         SEL_MEDIA,           RGB_PROFILE,        SEL_DEV,
-        SEL_VSC,             SEL_RGB,            KC_NO
+        SEL_VSC,             SEL_RGB,            EE_CLR
     ),
 };
 
