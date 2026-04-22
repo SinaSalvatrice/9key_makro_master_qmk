@@ -112,6 +112,7 @@ static uint32_t boot_start           = 0;
 static oled_view_t oled_view         = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
+static text_mode_t text_mode         = TEXT_MODE_WIN;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
@@ -356,7 +357,7 @@ static vsc_mode_t current_vsc_preview_mode(void) {
 static text_mode_t current_text_preview_mode(void) {
     if (text_action_held) return TEXT_MODE_ACTIONS;
     if (text_edit_held) return TEXT_MODE_EDIT;
-    return TEXT_MODE_WIN;
+    return text_mode;
 }
 
 static window_mode_t current_window_preview_mode(void) {
@@ -384,8 +385,8 @@ static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
 
 static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Hold text actions";
-    if (index == 2) return "Hold text edit tools";
+    if (index == 1) return "Toggle text actions";
+    if (index == 2) return "Toggle text edit tools";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         switch (mode) {
@@ -1071,11 +1072,19 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case TXT_ACT:
-            text_action_held = record->event.pressed;
+            if (record->event.pressed) {
+                text_action_held = false;
+                text_edit_held = false;
+                text_mode = (text_mode == TEXT_MODE_ACTIONS) ? TEXT_MODE_WIN : TEXT_MODE_ACTIONS;
+            }
             return false;
 
         case TXT_EDT:
-            text_edit_held = record->event.pressed;
+            if (record->event.pressed) {
+                text_action_held = false;
+                text_edit_held = false;
+                text_mode = (text_mode == TEXT_MODE_EDIT) ? TEXT_MODE_WIN : TEXT_MODE_EDIT;
+            }
             return false;
 
         case TXT_1:
