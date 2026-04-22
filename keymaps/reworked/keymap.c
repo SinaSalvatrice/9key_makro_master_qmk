@@ -25,6 +25,10 @@
 #define BUTTON_DEBOUNCE_MS   150
 #define VIA_LAYER_SLOT_COUNT 7
 
+enum tap_dance_codes {
+    TD_SELECT_BASE,
+};
+
 // ── Layer enum ──────────────────────────────────────────────
 enum layers {
     _BASE,
@@ -121,6 +125,7 @@ static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
 static bool encoder_btn_rotated      = false;
+static bool td_select_hold_active    = false;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
@@ -528,6 +533,17 @@ static void update_select_layer_state(void) {
     }
 }
 
+static void begin_select_hold(void) {
+    matrix_select_held = true;
+    update_select_layer_state();
+}
+
+static void end_select_hold(void) {
+    matrix_select_held = false;
+    update_select_layer_state();
+    layer_move(selector_target);
+}
+
 static uint8_t slot_for_layer(uint8_t layer) {
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         if (select_slots[i].selectable && select_slots[i].layer == layer) {
@@ -540,6 +556,36 @@ static uint8_t slot_for_layer(uint8_t layer) {
 static uint8_t palette_floor(uint8_t value, uint8_t minimum) {
     return value < minimum ? minimum : value;
 }
+
+static void td_select_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+
+    if (state->count >= 2) {
+        selector_target = _BASE;
+        select_cursor   = slot_for_layer(selector_target);
+        layer_move(_BASE);
+        return;
+    }
+
+    if (state->count == 1 && state->pressed) {
+        td_select_hold_active = true;
+        begin_select_hold();
+    }
+}
+
+static void td_select_reset(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+
+    if (td_select_hold_active) {
+        td_select_hold_active = false;
+        end_select_hold();
+    }
+}
+
+qk_tap_dance_action_t tap_dance_actions[] = {
+    [TD_SELECT_BASE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_finished, td_select_reset),
+};
 
 static uint8_t via_palette_index_for_slot(uint8_t slot) {
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
@@ -1113,43 +1159,43 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT),         KC_UP,              KC_BSPC,
+        TD(TD_SELECT_BASE),  KC_UP,              KC_BSPC,
         KC_LEFT,             KC_ENT,             KC_RGHT,
         LCTL(KC_Y),          KC_DOWN,            LCTL(KC_Z)
     ),
 
     [_WINDOW] = LAYOUT(
-        MO(_SELECT),         WIN_BRO,            WIN_AUX,
+        TD(TD_SELECT_BASE),  WIN_BRO,            WIN_AUX,
         WIN_1,               WIN_2,              WIN_3,
         WIN_4,               WIN_5,              WIN_6
     ),
 
     [_TEXT] = LAYOUT(
-        MO(_SELECT),         TXT_ACT,            TXT_EDT,
+        TD(TD_SELECT_BASE),  TXT_ACT,            TXT_EDT,
         TXT_1,               TXT_2,              TXT_3,
         TXT_4,               TXT_5,              TXT_6
     ),
 
     [_MEDIA] = LAYOUT(
-        MO(_SELECT),         KC_MPRV,            KC_MNXT,
+        TD(TD_SELECT_BASE),  KC_MPRV,            KC_MNXT,
         KC_MRWD,             KC_MPLY,            KC_MFFD,
         KC_VOLD,             KC_MUTE,            KC_VOLU
     ),
 
     [_RGB] = LAYOUT(
-        MO(_SELECT),         UG_SPDD,            UG_TOGG,
+        TD(TD_SELECT_BASE),  UG_SPDD,            UG_TOGG,
         UG_HUEU,             UG_HUED,            UG_VALU,
         UG_SATU,             UG_SATD,            UG_VALD
     ),
 
     [_DEV] = LAYOUT(
-        MO(_SELECT),         MS_UP,              KC_LSFT,
+        TD(TD_SELECT_BASE),  MS_UP,              KC_LSFT,
         MS_LEFT,             MS_BTN1,            MS_RGHT,
         KC_LALT,             MS_DOWN,            MS_BTN2
     ),
 
     [_VSC] = LAYOUT(
-        MO(_SELECT),         VSC_BAR,            VSC_CHAT,
+        TD(TD_SELECT_BASE),  VSC_BAR,            VSC_CHAT,
         VSC_1,               VSC_2,              VSC_3,
         VSC_4,               VSC_5,              VSC_6
     ),
@@ -1207,18 +1253,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             layer_move(_BASE);
             return false;
         }
-    }
-
-    if (keycode == MO(_SELECT)) {
-        if (record->event.pressed) {
-            matrix_select_held = true;
-            update_select_layer_state();
-        } else {
-            matrix_select_held = false;
-            update_select_layer_state();
-            layer_move(selector_target);
-        }
-        return false;
     }
 
     if (record->event.pressed) {
