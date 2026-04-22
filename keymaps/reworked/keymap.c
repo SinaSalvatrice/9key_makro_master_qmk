@@ -121,6 +121,7 @@ static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
 static bool encoder_btn_rotated      = false;
+static bool button_clear_armed       = false;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
@@ -526,6 +527,22 @@ static void update_select_layer_state(void) {
     } else {
         layer_off(_SELECT);
     }
+}
+
+static void clear_eeprom_and_reset(void) {
+#ifdef NO_RESET
+    eeconfig_init();
+#    ifdef VIA_ENABLE
+    load_via_config();
+#    endif
+    layer_move(_BASE);
+    selector_target = _BASE;
+    select_cursor   = slot_for_layer(selector_target);
+    rgb_frame_timer = timer_read32();
+#else
+    eeconfig_disable();
+    soft_reset_keyboard();
+#endif
 }
 
 static uint8_t slot_for_layer(uint8_t layer) {
@@ -1420,6 +1437,13 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 }
 
 void matrix_scan_user(void) {
+    bool gp12_pressed = false;
+#ifdef SELECTOR_BTN_PIN
+    static bool gp12_was_pressed = false;
+    static bool gp12_combo_used = false;
+    static uint32_t gp12_last_action = 0;
+#endif
+
 #ifdef ENCODER_BTN_PIN
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
 
@@ -1437,18 +1461,28 @@ void matrix_scan_user(void) {
 #endif
 
 #ifdef SELECTOR_BTN_PIN
-    static bool gp12_was_pressed = false;
-    static uint32_t gp12_last_action = 0;
+    gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
 
-    bool gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
+#    ifdef ENCODER_BTN_PIN
+    bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
+    if (clear_buttons_pressed && !button_clear_armed) {
+        button_clear_armed = true;
+        gp12_combo_used    = true;
+        clear_eeprom_and_reset();
+    } else if (!clear_buttons_pressed) {
+        button_clear_armed = false;
+    }
+#    endif
 
     if (!gp12_pressed && gp12_was_pressed) {
-        if (timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
+        if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND)
                       ? OLED_VIEW_LAST_KEY
                       : OLED_VIEW_LEGEND;
             gp12_last_action = timer_read32();
         }
+
+        gp12_combo_used = false;
     }
 
     gp12_was_pressed = gp12_pressed;
