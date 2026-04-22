@@ -116,7 +116,7 @@ static uint32_t boot_start           = 0;
 static oled_view_t oled_view         = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
-static text_mode_t text_mode         = TEXT_MODE_ACTIONS;
+static text_mode_t text_mode         = TEXT_MODE_WIN;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
@@ -124,7 +124,7 @@ static bool encoder_btn_rotated      = false;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
-static text_mode_t last_key_text_mode    = TEXT_MODE_ACTIONS;
+static text_mode_t last_key_text_mode    = TEXT_MODE_WIN;
 static bool window_browser_held      = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
@@ -190,15 +190,15 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 5, 6, 7
+    0, 1, 2, 5, 3, 6, 7
 };
 
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {160, 220, 120},
     {176, 240, 120},
     { 96, 220, 110},
-    { 18, 255, 130},
     { 32, 255, 130},
+    { 18, 255, 130},
     {200, 255, 130},
     {215, 240, 130},
 };
@@ -332,7 +332,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "Prev window",    "Show desktop",   "Next window",
     },
     [_TEXT] = {
-        "Select layer",   "Hold edit tools", "Enter",
+        "Select layer",   "Hold text actions", "Enter",
         "Line start",     "Cursor up",      "Line end",
         "Cursor left",    "Cursor down",    "Cursor right",
     },
@@ -408,7 +408,7 @@ static window_mode_t current_window_preview_mode(void) {
 
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
-    if (index == 1) return "EDT";
+    if (index == 1) return "ACT";
     if (index == 2) return "ENT";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
@@ -427,7 +427,7 @@ static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
 
 static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Hold text edit tools";
+    if (index == 1) return "Hold text actions";
     if (index == 2) return "Enter";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
@@ -1125,7 +1125,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_TEXT] = LAYOUT(
-        MO(_SELECT),         TXT_EDT,            KC_ENT,
+        MO(_SELECT),         TXT_ACT,            KC_ENT,
         TXT_1,               TXT_2,              TXT_3,
         TXT_4,               TXT_5,              TXT_6
     ),
@@ -1293,11 +1293,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case TXT_ACT:
-            if (record->event.pressed) {
-                text_action_held = false;
-                text_edit_held = false;
-                text_mode = TEXT_MODE_ACTIONS;
-            }
+            text_edit_held   = false;
+            text_action_held = record->event.pressed;
             return false;
 
         case TXT_EDT:
