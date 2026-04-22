@@ -112,7 +112,7 @@ static uint32_t boot_start           = 0;
 static oled_view_t oled_view         = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
-static text_mode_t text_mode         = TEXT_MODE_WIN;
+static text_mode_t text_mode         = TEXT_MODE_ACTIONS;
 static window_mode_t window_mode     = WINDOW_MODE_WIN;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
@@ -121,7 +121,7 @@ static bool encoder_btn_rotated      = false;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
-static text_mode_t last_key_text_mode    = TEXT_MODE_WIN;
+static text_mode_t last_key_text_mode    = TEXT_MODE_ACTIONS;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
 
@@ -1080,7 +1080,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 text_action_held = false;
                 text_edit_held = false;
-                text_mode = (text_mode == TEXT_MODE_ACTIONS) ? TEXT_MODE_WIN : TEXT_MODE_ACTIONS;
+                text_mode = TEXT_MODE_ACTIONS;
             }
             return false;
 
@@ -1088,7 +1088,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 text_action_held = false;
                 text_edit_held = false;
-                text_mode = (text_mode == TEXT_MODE_EDIT) ? TEXT_MODE_WIN : TEXT_MODE_EDIT;
+                text_mode = (text_mode == TEXT_MODE_EDIT) ? TEXT_MODE_ACTIONS : TEXT_MODE_EDIT;
             }
             return false;
 
