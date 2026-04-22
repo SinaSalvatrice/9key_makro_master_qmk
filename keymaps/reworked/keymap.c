@@ -289,7 +289,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "WIN<",  "SHOW",  "WIN>",
     },
     [_TEXT] = {
-        "SEL",  "EDT",  "ENT",
+        "SEL",  "ACT",  "ENT",
         "HOME", "UP",   "END",
         "LEFT", "DOWN", "RGHT",
     },
