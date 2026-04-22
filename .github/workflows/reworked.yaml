@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   repository_dispatch:
   push:
-    branches: [ oledworking ]
+    branches: [ main, oledworking ]
     paths:
       - "config.h"
       - "keyboard.json"

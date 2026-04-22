@@ -3,7 +3,7 @@ name: Build 9key_makro_master via
 on:
   workflow_dispatch:
   push:
-    branches: [ oledworking ]
+    branches: [ main, oledworking ]
     paths:
       - "config.h"
       - "keyboard.json"
@@ -12,7 +12,7 @@ on:
       - "9key_makro_master.h"
       - "rules.mk"
       - "keymaps/**"
-      - ".github/workflows/build.yaml"
+      - ".github/workflows/buildvia.yaml"
   pull_request:
 
 jobs:
