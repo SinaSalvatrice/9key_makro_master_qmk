@@ -116,6 +116,7 @@ static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
+static bool button_clear_armed       = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
 static bool window_browser_held      = false;
@@ -151,9 +152,9 @@ static const select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   160, 220, 120, "BASE",   true  },  // key 1
     { _WINDOW, 176, 240, 120, "WINDOW", true  },  // key 2
     { _TEXT,    96, 220, 110, "TXT",    true  },  // key 3
-    { _MEDIA,   32, 255, 130, "MEDIA",  true  },  // key 4
+    { _MEDIA,   18, 255, 130, "MEDIA",  true  },  // key 4
     { _SELECT,   0,   0, 120, "SELECT", false },  // key 5 / style toggle
-    { _DEV,     18, 255, 130, "DEV",    true  },  // key 6
+    { _DEV,     32, 255, 130, "DEV",    true  },  // key 6
     { _VSC,    200, 255, 130, "VSC",    true  },  // key 7
     { _RGB,    215, 240, 130, "RGB",    true  },  // key 8
     { _SELECT,   0,   0,  24, "FREE",   false },  // key 9
@@ -1188,6 +1189,22 @@ void matrix_scan_user(void) {
 
     bool gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
 
+#    ifdef ENCODER_BTN_PIN
+    bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
+    if (clear_buttons_pressed && !button_clear_armed) {
+        button_clear_armed = true;
+        eeconfig_disable();
+        soft_reset_keyboard();
+    } else if (!clear_buttons_pressed) {
+        button_clear_armed = false;
+    }
+
+    if (clear_buttons_pressed) {
+        gp12_was_pressed = gp12_pressed;
+        return;
+    }
+#    endif
+
     if (!gp12_pressed && gp12_was_pressed) {
         if (timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND)
@@ -1213,6 +1230,10 @@ void keyboard_post_init_user(void) {
 #ifdef RGBLIGHT_ENABLE
     rgblight_enable_noeeprom();
     rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
+#endif
+
+#ifdef ENCODER_BTN_PIN
+    gpio_set_pin_input_high(ENCODER_BTN_PIN);
 #endif
 
     gpio_set_pin_output(GP25);
