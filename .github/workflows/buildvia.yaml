@@ -1,4 +1,4 @@
-name: Build 9key_makro_master reworked
+name: Build 9key_makro_master via
 
 on:
   workflow_dispatch:
@@ -24,7 +24,7 @@ jobs:
 
     env:
       KEYBOARD: 9key_makro_master_qmk
-      KEYMAP: reworked
+      KEYMAP: via
       QMK_HOME: /tmp/qmk_firmware
 
     steps:
@@ -58,11 +58,11 @@ jobs:
           find "$QMK_HOME" -type f -name "${KEYBOARD}_${KEYMAP}.uf2" -exec cp {} "$GITHUB_WORKSPACE/artifacts/" \;
           test -f "$GITHUB_WORKSPACE/artifacts/${KEYBOARD}_${KEYMAP}.uf2"
 
-      - name: Upload firmware reworked
+      - name: Upload firmware via
         uses: actions/upload-artifact@v4
         with:
-          name: 9key_makro_master_qmk_reworked_uf2
-          path: artifacts/9key_makro_master_qmk_reworked.uf2
+          name: 9key_makro_master_qmk_via_uf2
+          path: artifacts/9key_makro_master_qmk_via.uf2
           if-no-files-found: error
           compression-level: 6
           overwrite: false
