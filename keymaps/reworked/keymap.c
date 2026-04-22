@@ -1094,6 +1094,15 @@ static void render_select_wild(void) {
 }
 
 static void render_rgb_layer_visuals(void) {
+    if (button_clear_armed) {
+        uint8_t pulse = pulse_val(timer_read32(), 420, 0, 40, 180);
+        clear_all_keys();
+        for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+            set_key_hsv(i, 0, 255, pulse);
+        }
+        return;
+    }
+
     uint8_t layer = active_layer_raw();
 
     if (rgb_minimal_mode) {
@@ -1810,9 +1819,32 @@ static void render_last_key_view(void) {
 #endif
 }
 
+static void render_clear_eeprom_view(void) {
+    char buf[22];
+    uint16_t elapsed = clear_eeprom_progress_ms();
+    uint16_t remaining = (elapsed >= CLEAR_EEPROM_HOLD_MS) ? 0 : (CLEAR_EEPROM_HOLD_MS - elapsed);
+
+    write_line(0, "EEPROM CLEAR");
+    write_line(1, "Hold ENC + GP12");
+    write_line(2, "Keep holding...");
+
+    snprintf(buf, sizeof(buf), "Reset in %4ums", remaining);
+    write_line(3, buf);
+
+    write_line(4, "Release to abort");
+    write_line(5, "VIA/keymap/macros");
+    write_line(6, "will be reset");
+    write_line(7, "LEDs red = armed");
+}
+
 bool oled_task_user(void) {
     if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
         render_boot();
+        return false;
+    }
+
+    if (button_clear_armed) {
+        render_clear_eeprom_view();
         return false;
     }
 
