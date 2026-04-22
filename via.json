@@ -2,7 +2,123 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "menus": ["qmk_rgblight"],
+  "firmwareVersion": 1,
+  "menus": [
+    "qmk_rgblight",
+    {
+      "label": "Display",
+      "content": [
+        {
+          "label": "OLED",
+          "content": [
+            {
+              "label": "Default View",
+              "type": "dropdown",
+              "options": [["Legend", 0], ["Last Key", 1]],
+              "content": ["id_via_oled_view", 0, 1]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Palette",
+      "content": [
+        {
+          "label": "FX",
+          "content": [
+            {
+              "label": "Minimal Mode",
+              "type": "toggle",
+              "content": ["id_via_fx_mode", 0, 2]
+            }
+          ]
+        },
+        {
+          "label": "Layers",
+          "content": [
+            {
+              "label": "BASE Color",
+              "type": "color",
+              "content": ["id_via_layer_color[0]", 0, 3, 0]
+            },
+            {
+              "label": "BASE Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[0]", 0, 4, 0]
+            },
+            {
+              "label": "WINDOW Color",
+              "type": "color",
+              "content": ["id_via_layer_color[1]", 0, 3, 1]
+            },
+            {
+              "label": "WINDOW Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[1]", 0, 4, 1]
+            },
+            {
+              "label": "TXT Color",
+              "type": "color",
+              "content": ["id_via_layer_color[2]", 0, 3, 2]
+            },
+            {
+              "label": "TXT Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[2]", 0, 4, 2]
+            },
+            {
+              "label": "MEDIA Color",
+              "type": "color",
+              "content": ["id_via_layer_color[3]", 0, 3, 3]
+            },
+            {
+              "label": "MEDIA Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[3]", 0, 4, 3]
+            },
+            {
+              "label": "DEV Color",
+              "type": "color",
+              "content": ["id_via_layer_color[4]", 0, 3, 4]
+            },
+            {
+              "label": "DEV Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[4]", 0, 4, 4]
+            },
+            {
+              "label": "VSC Color",
+              "type": "color",
+              "content": ["id_via_layer_color[5]", 0, 3, 5]
+            },
+            {
+              "label": "VSC Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[5]", 0, 4, 5]
+            },
+            {
+              "label": "RGB Color",
+              "type": "color",
+              "content": ["id_via_layer_color[6]", 0, 3, 6]
+            },
+            {
+              "label": "RGB Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[6]", 0, 4, 6]
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "customKeycodes": [
     {"name": "SEL_BASE", "title": "Go to BASE layer", "shortName": "BASE"},
     {"name": "SEL_WINDOW", "title": "Go to WINDOW layer", "shortName": "WIN"},

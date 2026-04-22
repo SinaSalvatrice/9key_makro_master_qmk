@@ -1,5 +1,8 @@
 #include QMK_KEYBOARD_H
 #include "gpio.h"
+#ifdef VIA_ENABLE
+#    include "via.h"
+#endif
 #include <stdio.h>
 
 // ============================================================
@@ -20,6 +23,7 @@
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
+#define VIA_LAYER_SLOT_COUNT 7
 
 // ── Layer enum ──────────────────────────────────────────────
 enum layers {
@@ -148,8 +152,32 @@ typedef struct {
     bool selectable;
 } select_slot_t;
 
+typedef struct {
+    uint8_t hue;
+    uint8_t sat;
+    uint8_t val;
+} hsv_config_t;
+
+#ifdef VIA_ENABLE
+enum via_custom_value {
+    id_via_oled_view        = 1,
+    id_via_fx_mode          = 2,
+    id_via_layer_color      = 3,
+    id_via_layer_brightness = 4,
+};
+
+typedef struct {
+    uint8_t      signature;
+    uint8_t      oled_view;
+    uint8_t      fx_mode;
+    hsv_config_t layer_palette[VIA_LAYER_SLOT_COUNT];
+} via_user_config_t;
+
+static via_user_config_t via_user_config;
+#endif
+
 // 9 physical keys, future-proofed for a 3x3 layer selector.
-static const select_slot_t select_slots[PAD_KEY_COUNT] = {
+static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   160, 220, 120, "BASE",   true  },  // key 1
     { _WINDOW, 176, 240, 120, "WINDOW", true  },  // key 2
     { _TEXT,    96, 220, 110, "TXT",    true  },  // key 3
@@ -159,6 +187,20 @@ static const select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _VSC,    200, 255, 130, "VSC",    true  },  // key 7
     { _RGB,    215, 240, 130, "RGB",    true  },  // key 8
     { _SELECT,   0,   0,  24, "RESET",  false },  // key 9
+};
+
+static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
+    0, 1, 2, 3, 5, 6, 7
+};
+
+static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
+    {160, 220, 120},
+    {176, 240, 120},
+    { 96, 220, 110},
+    { 32, 255, 130},
+    { 18, 255, 130},
+    {200, 255, 130},
+    {215, 240, 130},
 };
 
 static const char *const vsc_bar_labels[6] = {
@@ -495,6 +537,180 @@ static uint8_t slot_for_layer(uint8_t layer) {
     return 0;
 }
 
+static uint8_t palette_floor(uint8_t value, uint8_t minimum) {
+    return value < minimum ? minimum : value;
+}
+
+static uint8_t via_palette_index_for_slot(uint8_t slot) {
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        if (via_layer_slots[i] == slot) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+static uint8_t via_palette_index_for_layer(uint8_t layer) {
+    return via_palette_index_for_slot(slot_for_layer(layer));
+}
+
+static hsv_config_t palette_for_layer(uint8_t layer) {
+    return select_slots[slot_for_layer(layer)].selectable
+        ? (hsv_config_t){
+            select_slots[slot_for_layer(layer)].hue,
+            select_slots[slot_for_layer(layer)].sat,
+            select_slots[slot_for_layer(layer)].val,
+        }
+        : via_default_palette[0];
+}
+
+static void apply_palette_entry(uint8_t index) {
+    if (index >= VIA_LAYER_SLOT_COUNT) {
+        return;
+    }
+
+    uint8_t slot = via_layer_slots[index];
+    select_slots[slot].hue = via_user_config.layer_palette[index].hue;
+    select_slots[slot].sat = via_user_config.layer_palette[index].sat;
+    select_slots[slot].val = via_user_config.layer_palette[index].val;
+}
+
+static void apply_via_runtime_config(void) {
+#ifdef VIA_ENABLE
+    oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY
+              ? OLED_VIEW_LAST_KEY
+              : OLED_VIEW_LEGEND;
+    rgb_minimal_mode = via_user_config.fx_mode != 0;
+
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        apply_palette_entry(i);
+    }
+#endif
+}
+
+#ifdef VIA_ENABLE
+static void set_via_config_defaults(void) {
+    via_user_config.signature = 0x91;
+    via_user_config.oled_view = OLED_VIEW_LEGEND;
+    via_user_config.fx_mode   = 0;
+
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        via_user_config.layer_palette[i] = via_default_palette[i];
+    }
+
+    apply_via_runtime_config();
+}
+
+static void save_via_config(void) {
+    via_update_custom_config(&via_user_config, 0, sizeof(via_user_config));
+}
+
+static void load_via_config(void) {
+    via_read_custom_config(&via_user_config, 0, sizeof(via_user_config));
+    if (via_user_config.signature != 0x91) {
+        set_via_config_defaults();
+        save_via_config();
+        return;
+    }
+
+    apply_via_runtime_config();
+}
+
+static void via_config_set_value(uint8_t *data) {
+    uint8_t *value_id   = &data[0];
+    uint8_t *value_data = &data[1];
+
+    switch (*value_id) {
+        case id_via_oled_view:
+            via_user_config.oled_view = value_data[0] == OLED_VIEW_LAST_KEY
+                                      ? OLED_VIEW_LAST_KEY
+                                      : OLED_VIEW_LEGEND;
+            oled_view = via_user_config.oled_view;
+            break;
+
+        case id_via_fx_mode:
+            via_user_config.fx_mode = value_data[0] ? 1 : 0;
+            rgb_minimal_mode = via_user_config.fx_mode != 0;
+            break;
+
+        case id_via_layer_color:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.layer_palette[value_data[0]].hue = value_data[1];
+                via_user_config.layer_palette[value_data[0]].sat = value_data[2];
+                apply_palette_entry(value_data[0]);
+            }
+            break;
+
+        case id_via_layer_brightness:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.layer_palette[value_data[0]].val = value_data[1];
+                apply_palette_entry(value_data[0]);
+            }
+            break;
+    }
+}
+
+static void via_config_get_value(uint8_t *data) {
+    uint8_t *value_id   = &data[0];
+    uint8_t *value_data = &data[1];
+
+    switch (*value_id) {
+        case id_via_oled_view:
+            value_data[0] = via_user_config.oled_view;
+            break;
+
+        case id_via_fx_mode:
+            value_data[0] = via_user_config.fx_mode;
+            break;
+
+        case id_via_layer_color:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                uint8_t index = value_data[0];
+                value_data[1] = via_user_config.layer_palette[index].hue;
+                value_data[2] = via_user_config.layer_palette[index].sat;
+            }
+            break;
+
+        case id_via_layer_brightness:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                value_data[1] = via_user_config.layer_palette[value_data[0]].val;
+            }
+            break;
+    }
+}
+
+void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
+    (void)length;
+
+    uint8_t *command_id        = &data[0];
+    uint8_t *channel_id        = &data[1];
+    uint8_t *value_id_and_data = &data[2];
+
+    if (*channel_id == 0) {
+        switch (*command_id) {
+            case id_custom_set_value:
+                via_config_set_value(value_id_and_data);
+                break;
+
+            case id_custom_get_value:
+                via_config_get_value(value_id_and_data);
+                break;
+
+            case id_custom_save:
+                save_via_config();
+                break;
+
+            default:
+                *command_id = id_unhandled;
+                break;
+        }
+        return;
+    }
+
+    *command_id = id_unhandled;
+}
+#endif
+
 static void sync_selector_target_from_cursor(void) {
     if (select_cursor < PAD_KEY_COUNT && select_slots[select_cursor].selectable) {
         selector_target = select_slots[select_cursor].layer;
@@ -730,32 +946,32 @@ static void render_minimal_profile(uint8_t layer) {
 
 static void render_base_wild(void) {
     uint32_t now = timer_read32();
+    hsv_config_t base = palette_for_layer(_BASE);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t mix = triwave8_period(now, 5200, i * 17);
-        uint8_t hue = lerp8(150, 205, mix);  // cyan -> violet
-        uint8_t val = pulse_val(now, 2600, i * 11, 18, 88);
-        set_key_hsv(i, hue, 220, val);
+        uint8_t hue = base.hue + (mix / 5);
+        uint8_t val = pulse_val(now, 2600, i * 11, palette_floor(base.val / 4, 18), base.val);
+        set_key_hsv(i, hue, base.sat, val);
     }
 }
 
 static void render_window_wild(void) {
     uint32_t now   = timer_read32();
     uint8_t  spike = (now / 110) % PAD_KEY_COUNT;
+    hsv_config_t window = palette_for_layer(_WINDOW);
 
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t dist = (i > spike) ? (i - spike) : (spike - i);
-        uint8_t hue  = 176;
-        uint8_t sat  = 245;
-        uint8_t val  = pulse_val(now, 1800, i * 19, 10, 40);
+        uint8_t hue  = window.hue;
+        uint8_t sat  = window.sat;
+        uint8_t val  = pulse_val(now, 1800, i * 19, palette_floor(window.val / 5, 10), palette_floor(window.val / 2, 40));
 
         if (dist == 0) {
-            hue = 168;
-            sat = 245;
-            val = 160;
+            hue = window.hue - 8;
+            val = palette_floor(window.val + 30, window.val);
         } else if (dist == 1) {
-            hue = 176;
-            sat = 240;
-            val = 90;
+            hue = window.hue + 6;
+            val = palette_floor(window.val - 20, palette_floor(window.val / 2, 40));
         }
 
         set_key_hsv(i, hue, sat, val);
@@ -764,53 +980,58 @@ static void render_window_wild(void) {
 
 static void render_text_wild(void) {
     uint32_t now = timer_read32();
+    hsv_config_t text = palette_for_layer(_TEXT);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t drift = triwave8_period(now, 7600, i * 13);
-        uint8_t hue   = lerp8(88, 112, drift);
-        uint8_t val   = pulse_val(now, 3600, i * 9, 10, 58);
-        set_key_hsv(i, hue, 210, val);
+        uint8_t hue   = text.hue + (drift / 12);
+        uint8_t val   = pulse_val(now, 3600, i * 9, palette_floor(text.val / 5, 10), text.val);
+        set_key_hsv(i, hue, text.sat, val);
     }
 }
 
 static void render_media_wild(void) {
     uint32_t now = timer_read32();
+    hsv_config_t media = palette_for_layer(_MEDIA);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 3000, i * 18);
-        uint8_t hue   = lerp8(24, 42, swing);
-        uint8_t val   = pulse_val(now, 2000, i * 14, 14, 100);
-        set_key_hsv(i, hue, 255, val);
+        uint8_t hue   = media.hue + (swing / 14);
+        uint8_t val   = pulse_val(now, 2000, i * 14, palette_floor(media.val / 5, 14), media.val);
+        set_key_hsv(i, hue, media.sat, val);
     }
 }
 
 static void render_rgb_wild(void) {
     uint32_t now       = timer_read32();
     bool     beatflash = ((now % 1100) < 120);
+    hsv_config_t rgb = palette_for_layer(_RGB);
 
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
-        uint8_t hue = (uint8_t)((now / 18) + i * 28);
-        uint8_t val = pulse_val(now, 1400, i * 15, 34, beatflash ? 180 : 120);
-        set_key_hsv(i, hue, 255, val);
+        uint8_t hue = (uint8_t)(rgb.hue + (now / 18) + i * 28);
+        uint8_t val = pulse_val(now, 1400, i * 15, palette_floor(rgb.val / 4, 34), beatflash ? palette_floor(rgb.val + 40, rgb.val) : rgb.val);
+        set_key_hsv(i, hue, rgb.sat, val);
     }
 }
 
 static void render_dev_wild(void) {
     uint32_t now = timer_read32();
+    hsv_config_t dev = palette_for_layer(_DEV);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 2200, i * 23);
-        uint8_t hue   = lerp8(10, 40, swing);
-        uint8_t sat   = (i >= 6) ? 255 : 220;
-        uint8_t val   = pulse_val(now, 900 + (i * 40), i * 17, 18, 150);
+        uint8_t hue   = dev.hue + (swing / 9);
+        uint8_t sat   = dev.sat;
+        uint8_t val   = pulse_val(now, 900 + (i * 40), i * 17, palette_floor(dev.val / 5, 18), palette_floor(dev.val + 20, dev.val));
         set_key_hsv(i, hue, sat, val);
     }
 }
 
 static void render_vsc_wild(void) {
     uint32_t now = timer_read32();
+    hsv_config_t vsc = palette_for_layer(_VSC);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 1800, i * 21);
-        uint8_t hue   = lerp8(160, 215, swing);
-        uint8_t sat   = (i >= 3) ? 255 : 210;
-        uint8_t val   = pulse_val(now, 1100 + (i * 30), i * 13, 18, 145);
+        uint8_t hue   = vsc.hue + (swing / 6);
+        uint8_t sat   = vsc.sat;
+        uint8_t val   = pulse_val(now, 1100 + (i * 30), i * 13, palette_floor(vsc.val / 5, 18), palette_floor(vsc.val + 15, vsc.val));
         set_key_hsv(i, hue, sat, val);
     }
 }
@@ -1257,6 +1478,10 @@ void keyboard_post_init_user(void) {
 
 #ifdef SELECTOR_BTN_PIN
     gpio_set_pin_input_high(SELECTOR_BTN_PIN);
+#endif
+
+#ifdef VIA_ENABLE
+    load_via_config();
 #endif
 
     boot_start      = timer_read32() | 1;
