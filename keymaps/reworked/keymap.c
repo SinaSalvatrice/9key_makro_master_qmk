@@ -36,7 +36,7 @@ enum layers {
 
 // ── Custom keycodes for SELECT mode ─────────────────────────
 enum custom_keycodes {
-    SEL_BASE = SAFE_RANGE,
+    SEL_BASE = QK_KB_0,
     SEL_WINDOW,
     SEL_TEXT,
     SEL_MEDIA,
@@ -68,7 +68,7 @@ enum custom_keycodes {
     VSC_5,
     VSC_6,
     RGB_PROFILE,
-    LAYER_LEGEND,
+    LAYER_LEGEND = SAFE_RANGE,
     KEY_FUNCTION_LEGEND,
     LAST_KEY_LEGEND
 };
