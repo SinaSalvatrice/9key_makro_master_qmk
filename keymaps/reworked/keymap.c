@@ -113,7 +113,6 @@ static oled_view_t oled_view         = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
 static text_mode_t text_mode         = TEXT_MODE_ACTIONS;
-static window_mode_t window_mode     = WINDOW_MODE_WIN;
 static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
@@ -122,6 +121,7 @@ static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
 static text_mode_t last_key_text_mode    = TEXT_MODE_ACTIONS;
+static bool window_browser_held      = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
 
@@ -242,7 +242,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "UNDO", "DOWN", "REDO",
     },
     [_WINDOW] = {
-        "SEL",   "BRO",   "WIN",
+        "SEL",   "BRO",   "AUX",
         "DESK<", "TASK",  "DESK>",
         "WIN<",  "SHOW",  "WIN>",
     },
@@ -285,7 +285,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "Undo",           "Arrow down",     "Redo",
     },
     [_WINDOW] = {
-        "Select layer",   "Browser combo",  "Window combo",
+        "Select layer",   "Browser combo",  "Reserved",
         "Prev desktop",   "Task view",      "Next desktop",
         "Prev window",    "Show desktop",   "Next window",
     },
@@ -361,7 +361,7 @@ static text_mode_t current_text_preview_mode(void) {
 }
 
 static window_mode_t current_window_preview_mode(void) {
-    return window_mode;
+    return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_WIN;
 }
 
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
@@ -405,7 +405,7 @@ static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
 static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "BRO";
-    if (index == 2) return "WIN";
+    if (index == 2) return "AUX";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         if (mode == WINDOW_MODE_BROWSER) {
@@ -418,8 +418,8 @@ static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
 
 static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Toggle browser controls";
-    if (index == 2) return "Toggle window controls";
+    if (index == 1) return "Hold browser controls";
+    if (index == 2) return "Reserved for later";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         if (mode == WINDOW_MODE_BROWSER) {
@@ -1054,15 +1054,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case WIN_BRO:
-            if (record->event.pressed) {
-                window_mode = (window_mode == WINDOW_MODE_BROWSER) ? WINDOW_MODE_WIN : WINDOW_MODE_BROWSER;
-            }
+            window_browser_held = record->event.pressed;
             return false;
 
         case WIN_AUX:
-            if (record->event.pressed) {
-                window_mode = WINDOW_MODE_WIN;
-            }
             return false;
 
         case WIN_1:
