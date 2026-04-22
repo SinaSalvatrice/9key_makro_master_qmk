@@ -289,7 +289,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "WIN<",  "SHOW",  "WIN>",
     },
     [_TEXT] = {
-        "SEL",  "ACT",  "EDT",
+        "SEL",  "EDT",  "ENT",
         "HOME", "UP",   "END",
         "LEFT", "DOWN", "RGHT",
     },
@@ -332,7 +332,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
         "Prev window",    "Show desktop",   "Next window",
     },
     [_TEXT] = {
-        "Select layer",   "Action combo",   "Edit combo",
+        "Select layer",   "Hold edit tools", "Enter",
         "Line start",     "Cursor up",      "Line end",
         "Cursor left",    "Cursor down",    "Cursor right",
     },
@@ -408,8 +408,8 @@ static window_mode_t current_window_preview_mode(void) {
 
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
-    if (index == 1) return "ACT";
-    if (index == 2) return "EDT";
+    if (index == 1) return "EDT";
+    if (index == 2) return "ENT";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         switch (mode) {
@@ -427,8 +427,8 @@ static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
 
 static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Toggle text actions";
-    if (index == 2) return "Toggle text edit tools";
+    if (index == 1) return "Hold text edit tools";
+    if (index == 2) return "Enter";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         switch (mode) {
@@ -1125,7 +1125,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_TEXT] = LAYOUT(
-        MO(_SELECT),         TXT_ACT,            TXT_EDT,
+        MO(_SELECT),         TXT_EDT,            KC_ENT,
         TXT_1,               TXT_2,              TXT_3,
         TXT_4,               TXT_5,              TXT_6
     ),
@@ -1301,11 +1301,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case TXT_EDT:
-            if (record->event.pressed) {
-                text_action_held = false;
-                text_edit_held = false;
-                text_mode = (text_mode == TEXT_MODE_EDIT) ? TEXT_MODE_ACTIONS : TEXT_MODE_EDIT;
-            }
+            text_action_held = false;
+            text_edit_held   = record->event.pressed;
             return false;
 
         case TXT_1:
