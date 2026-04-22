@@ -112,6 +112,9 @@ void keyboard_post_init_user(void) {
     gpio_set_pin_input_high(ENCODER_BTN_PIN);
     gpio_set_pin_input_high(SELECTOR_BTN_PIN);
 
+    gpio_set_pin_output(GP25);
+    gpio_write_pin_high(GP25);
+
     last_activity_time = timer_read32();
     refresh_feedback();
 }
