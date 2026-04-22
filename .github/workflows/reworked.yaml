@@ -1,4 +1,4 @@
-name: Build 9key_makro_master reworked
+name: Build 9key_makro_master_qmk reworked
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ on:
       - "9key_makro_master.h"
       - "rules.mk"
       - "keymaps/**"
-      - ".github/workflows/build.yaml"
+      - ".github/workflows/reworked.yaml"
   pull_request:
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
       contents: read
 
     env:
-      KEYBOARD: 9key_makro_master
+      KEYBOARD: 9key_makro_master_qmk
       KEYMAP: reworked
       QMK_HOME: /tmp/qmk_firmware
 
@@ -62,8 +62,8 @@ jobs:
       - name: Upload firmware reworked
         uses: actions/upload-artifact@v4
         with:
-          name: 9key_makro_master_reworked_uf2
-          path: artifacts/9key_makro_master_reworked.uf2
+          name: 9key_makro_master_qmk_reworked_uf2
+          path: artifacts/9key_makro_master_qmk_reworked.uf2
           if-no-files-found: error
           compression-level: 6
           overwrite: false
