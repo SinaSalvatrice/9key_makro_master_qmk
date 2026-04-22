@@ -23,7 +23,6 @@
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
-#define CLEAR_EEPROM_HOLD_MS 800
 #define VIA_LAYER_SLOT_COUNT 7
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -122,8 +121,6 @@ static bool matrix_select_held       = false;
 static bool encoder_btn_pressed      = false;
 static bool encoder_btn_was_pressed  = false;
 static bool encoder_btn_rotated      = false;
-static bool button_clear_armed       = false;
-static uint32_t button_clear_timer   = 0;
 static bool text_selection_pending_copy = false;
 static bool text_action_held         = false;
 static bool text_edit_held           = false;
@@ -529,26 +526,6 @@ static void update_select_layer_state(void) {
     } else {
         layer_off(_SELECT);
     }
-}
-
-static void clear_eeprom_and_reset(void) {
-#ifdef NO_RESET
-    eeconfig_init();
-#    ifdef VIA_ENABLE
-    load_via_config();
-#    endif
-    layer_move(_BASE);
-    selector_target = _BASE;
-    select_cursor   = slot_for_layer(selector_target);
-    rgb_frame_timer = timer_read32();
-#else
-    eeconfig_disable();
-    soft_reset_keyboard();
-#endif
-}
-
-static uint16_t clear_eeprom_progress_ms(void) {
-    return button_clear_armed ? (uint16_t)timer_elapsed32(button_clear_timer) : 0;
 }
 
 static uint8_t slot_for_layer(uint8_t layer) {
@@ -1094,15 +1071,6 @@ static void render_select_wild(void) {
 }
 
 static void render_rgb_layer_visuals(void) {
-    if (button_clear_armed) {
-        uint8_t pulse = pulse_val(timer_read32(), 420, 0, 40, 180);
-        clear_all_keys();
-        for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
-            set_key_hsv(i, 0, 255, pulse);
-        }
-        return;
-    }
-
     uint8_t layer = active_layer_raw();
 
     if (rgb_minimal_mode) {
@@ -1455,7 +1423,6 @@ void matrix_scan_user(void) {
     bool gp12_pressed = false;
 #ifdef SELECTOR_BTN_PIN
     static bool gp12_was_pressed = false;
-    static bool gp12_combo_used = false;
     static uint32_t gp12_last_action = 0;
 #endif
 
@@ -1478,28 +1445,13 @@ void matrix_scan_user(void) {
 #ifdef SELECTOR_BTN_PIN
     gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
 
-#    ifdef ENCODER_BTN_PIN
-    bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
-    if (clear_buttons_pressed && !button_clear_armed) {
-        button_clear_armed = true;
-        button_clear_timer = timer_read32();
-        gp12_combo_used    = true;
-    } else if (clear_buttons_pressed && timer_elapsed32(button_clear_timer) >= CLEAR_EEPROM_HOLD_MS) {
-        clear_eeprom_and_reset();
-    } else if (!clear_buttons_pressed) {
-        button_clear_armed = false;
-    }
-#    endif
-
     if (!gp12_pressed && gp12_was_pressed) {
-        if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
+        if (timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND)
                       ? OLED_VIEW_LAST_KEY
                       : OLED_VIEW_LEGEND;
             gp12_last_action = timer_read32();
         }
-
-        gp12_combo_used = false;
     }
 
     gp12_was_pressed = gp12_pressed;
@@ -1819,32 +1771,9 @@ static void render_last_key_view(void) {
 #endif
 }
 
-static void render_clear_eeprom_view(void) {
-    char buf[22];
-    uint16_t elapsed = clear_eeprom_progress_ms();
-    uint16_t remaining = (elapsed >= CLEAR_EEPROM_HOLD_MS) ? 0 : (CLEAR_EEPROM_HOLD_MS - elapsed);
-
-    write_line(0, "EEPROM CLEAR");
-    write_line(1, "Hold ENC + GP12");
-    write_line(2, "Keep holding...");
-
-    snprintf(buf, sizeof(buf), "Reset in %4ums", remaining);
-    write_line(3, buf);
-
-    write_line(4, "Release to abort");
-    write_line(5, "VIA/keymap/macros");
-    write_line(6, "will be reset");
-    write_line(7, "LEDs red = armed");
-}
-
 bool oled_task_user(void) {
     if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
         render_boot();
-        return false;
-    }
-
-    if (button_clear_armed) {
-        render_clear_eeprom_view();
         return false;
     }
 
