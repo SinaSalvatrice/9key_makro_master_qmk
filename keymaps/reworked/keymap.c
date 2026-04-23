@@ -422,12 +422,6 @@ static uint8_t palette_floor(uint8_t value, uint8_t minimum) {
     return value < minimum ? minimum : value;
 }
 
-static uint8_t via_palette_index_for_slot(uint8_t slot) {
-    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
-        if (via_layer_slots[i] == slot) return i;
-    }
-    return 0;
-}
 
 static hsv_config_t palette_for_layer(uint8_t layer) {
     uint8_t slot = slot_for_layer(layer);
