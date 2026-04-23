@@ -25,7 +25,8 @@
 #define BUTTON_DEBOUNCE_MS   150
 #define CLEAR_EEPROM_HOLD_MS 1000
 #define VIA_LAYER_SLOT_COUNT 7
-
+#define ENCODER_HELP_HOLD_MS 700
+#define ENCODER_HELP_SHOW_MS 2500
 // ── Layer enum ──────────────────────────────────────────────
 enum layers {
     _BASE,
@@ -92,6 +93,7 @@ typedef enum {
 typedef enum {
     OLED_VIEW_LEGEND,
     OLED_VIEW_LAST_KEY,
+    OLED_VIEW_ENCODER,
 } oled_view_t;
 
 typedef enum {
@@ -131,6 +133,9 @@ static text_mode_t last_key_text_mode    = TEXT_MODE_WIN;
 static bool window_browser_held      = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode      = VSC_MODE_BAR;
+static uint32_t encoder_help_started = 0;
+static uint32_t encoder_help_until   = 0;
+static bool encoder_help_fired       = false;
 
 // ── Key -> LED mapping ──────────────────────────────────────
 // Physical key numbering for OLED is row-major / left-to-right:
@@ -205,6 +210,44 @@ static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {200, 255, 130},
     {215, 240, 130},
 };
+
+static const char *encoder_function_for_layer(uint8_t layer) {
+    switch (layer) {
+        case _BASE:
+            return "Wheel scroll up/down";
+
+        case _WINDOW:
+            return window_browser_held
+                ? "Browser page prev/next"
+                : "Alt-Tab window switch";
+
+        case _TEXT:
+            return encoder_btn_pressed
+                ? "Select text left/right"
+                : "Move cursor left/right";
+
+        case _MEDIA:
+            return "Volume up/down";
+
+        case _RGB:
+            return "RGB brightness +/-";
+
+        case _DEV:
+            return "Mouse wheel up/down";
+
+        case _VSC:
+            return "VSCode page prev/next";
+
+        case _SELECT:
+            return encoder_btn_pressed
+                ? "Choose target layer"
+                : "Hold encoder btn first";
+
+        default:
+            return "Encoder fallback volume";
+    }
+}
+
 
 static const char *const vsc_bar_labels[6] = {
     "EXPL", "SRC", "GH-A", "GHUB", "GPT", "FREE"
@@ -1429,11 +1472,30 @@ void matrix_scan_user(void) {
 
     if (encoder_btn_pressed && !encoder_btn_was_pressed) {
         encoder_btn_rotated = false;
-    } else if (!encoder_btn_pressed && encoder_btn_was_pressed) {
-        if (active_layer_raw() == _TEXT && text_selection_pending_copy && !encoder_btn_rotated) {
+        encoder_help_started = timer_read32() | 1;
+        encoder_help_fired = false;
+    }
+
+    if (encoder_btn_pressed && encoder_help_started != 0 && !encoder_help_fired) {
+        if (timer_elapsed32(encoder_help_started) >= ENCODER_HELP_HOLD_MS) {
+            encoder_help_fired = true;
+            encoder_help_until = timer_read32() + ENCODER_HELP_SHOW_MS;
+            oled_view = OLED_VIEW_ENCODER;
+        }
+    }
+
+    if (!encoder_btn_pressed && encoder_btn_was_pressed) {
+        if (
+            active_layer_raw() == _TEXT &&
+            text_selection_pending_copy &&
+            !encoder_btn_rotated &&
+            !encoder_help_fired
+        ) {
             tap_code16(C(KC_C));
             text_selection_pending_copy = false;
         }
+
+        encoder_help_started = 0;
         encoder_btn_rotated = false;
     }
 
@@ -1602,6 +1664,21 @@ static void render_legend_view(uint8_t layer) {
     write_line(3, line);
 }
 
+static void render_last_key_view
+static void render_encoder_view(void) {
+    char buf[22];
+    uint8_t layer = active_layer_raw();
+
+    render_header(layer);
+
+    write_line(1, "ENCODER MODE");
+
+    snprintf(buf, sizeof(buf), "L:%-6.6s", layer_name_short(layer));
+    write_line(2, buf);
+
+    snprintf(buf, sizeof(buf), "%.21s", encoder_function_for_layer(layer));
+    write_line(3, buf);
+}
 static void render_last_key_view(void) {
     char buf[22];
     const char *label = last_key_label_for();
@@ -1627,12 +1704,23 @@ bool oled_task_user(void) {
         return false;
     }
 
-    if (active_layer_raw() == _SELECT) {
+    if (oled_view == OLED_VIEW_ENCODER) {
+        if (timer_read32() < encoder_help_until) {
+            render_encoder_view();
+            return false;
+        } else {
+            oled_view = OLED_VIEW_LEGEND;
+        }
+    }
+
+    uint8_t layer = active_layer_raw();
+
+    if (layer == _SELECT) {
         render_legend_view(_SELECT);
     } else if (oled_view == OLED_VIEW_LAST_KEY) {
         render_last_key_view();
     } else {
-        render_legend_view(active_layer_raw());
+        render_legend_view(layer);
     }
 
     return false;
