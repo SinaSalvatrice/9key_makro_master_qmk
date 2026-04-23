@@ -71,10 +71,7 @@ enum custom_keycodes {
     VSC_4,
     VSC_5,
     VSC_6,
-    RGB_PROFILE,
-    LAYER_LEGEND = SAFE_RANGE,
-    KEY_FUNCTION_LEGEND,
-    LAST_KEY_LEGEND
+    RGB_PROFILE
 };
 
 static bool rgb_minimal_mode = false;
@@ -443,10 +440,6 @@ static uint8_t via_palette_index_for_slot(uint8_t slot) {
         if (via_layer_slots[i] == slot) return i;
     }
     return 0;
-}
-
-static uint8_t via_palette_index_for_layer(uint8_t layer) {
-    return via_palette_index_for_slot(slot_for_layer(layer));
 }
 
 static hsv_config_t palette_for_layer(uint8_t layer) {
