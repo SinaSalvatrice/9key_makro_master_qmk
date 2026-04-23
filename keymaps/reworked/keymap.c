@@ -992,14 +992,14 @@ static void render_text_wild(void) {
     }
 }
 
-static void render_media_wild(void) {
+static void render_dev_wild(void) {
     uint32_t now = timer_read32();
-    hsv_config_t media = palette_for_layer(_MEDIA);
+    hsv_config_t dev = palette_for_layer(_DEV);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 3000, i * 18);
-        uint8_t hue   = media.hue + (swing / 14);
-        uint8_t val   = pulse_val(now, 2000, i * 14, palette_floor(media.val / 5, 14), media.val);
-        set_key_hsv(i, hue, media.sat, val);
+        uint8_t hue   = dev.hue + (swing / 14);
+        uint8_t val   = pulse_val(now, 2000, i * 14, palette_floor(dev.val / 5, 14), dev.val);
+        set_key_hsv(i, hue, dev.sat, val);
     }
 }
 
@@ -1015,14 +1015,14 @@ static void render_rgb_wild(void) {
     }
 }
 
-static void render_dev_wild(void) {
+static void render_med_wild(void) {
     uint32_t now = timer_read32();
-    hsv_config_t dev = palette_for_layer(_DEV);
+    hsv_config_t med = palette_for_layer(_MED);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 2200, i * 23);
-        uint8_t hue   = dev.hue + (swing / 9);
-        uint8_t sat   = dev.sat;
-        uint8_t val   = pulse_val(now, 900 + (i * 40), i * 17, palette_floor(dev.val / 5, 18), palette_floor(dev.val + 20, dev.val));
+        uint8_t hue   = med.hue + (swing / 9);
+        uint8_t sat   = med.sat;
+        uint8_t val   = pulse_val(now, 900 + (i * 40), i * 17, palette_floor(med.val / 5, 18), palette_floor(med.val + 20, med.val));
         set_key_hsv(i, hue, sat, val);
     }
 }
