@@ -20,7 +20,7 @@
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
-#define CLEAR_EEPROM_HOLD_MS 1000
+#define CLEAR_EEPROM_HOLD_MS 3000
 #define VIA_LAYER_SLOT_COUNT 7
 #define ENCODER_HELP_HOLD_MS 700
 #define ENCODER_HELP_SHOW_MS 2500
@@ -489,11 +489,31 @@ static void save_via_config(void) {
 
 static void load_via_config(void) {
     via_read_custom_config(&via_user_config, 0, sizeof(via_user_config));
+
+    bool invalid_config = false;
+
     if (via_user_config.signature != 0x92) {
+        invalid_config = true;
+    }
+
+    if (via_user_config.oled_view > OLED_VIEW_LAST_KEY) {
+        invalid_config = true;
+    }
+
+    if (via_user_config.fx_mode > 1) {
+        invalid_config = true;
+    }
+
+    if (via_user_config.rgb_effect >= RGB_EFFECT_COUNT) {
+        invalid_config = true;
+    }
+
+    if (invalid_config) {
         set_via_config_defaults();
         save_via_config();
         return;
     }
+
     apply_via_runtime_config();
 }
 
@@ -1174,7 +1194,16 @@ void matrix_scan_user(void) {
             button_clear_started = timer_read32() | 1;
         } else if (!button_clear_armed && timer_elapsed32(button_clear_started) >= CLEAR_EEPROM_HOLD_MS) {
             button_clear_armed = true;
-            eeconfig_disable();
+
+            // Safe reset: initialize EEPROM to sane QMK defaults instead of disabling it.
+            // This avoids RP2040/VIA custom-config dead-states after struct changes.
+            eeconfig_init();
+
+#ifdef VIA_ENABLE
+            set_via_config_defaults();
+            save_via_config();
+#endif
+
             soft_reset_keyboard();
         }
     } else {
@@ -1214,6 +1243,12 @@ void keyboard_post_init_user(void) {
 #ifdef SELECTOR_BTN_PIN
     gpio_set_pin_input_high(SELECTOR_BTN_PIN);
 #endif
+#ifdef FORCE_EEPROM_RESET_ON_BOOT
+    // Emergency recovery switch: define FORCE_EEPROM_RESET_ON_BOOT in config.h,
+    // flash once, let the board boot, then remove the define and flash again.
+    eeconfig_init();
+#endif
+
 #ifdef VIA_ENABLE
     load_via_config();
 #endif

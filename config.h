@@ -16,7 +16,7 @@
 #define RGBLIGHT_DEFAULT_VAL 96
 #define RGBLIGHT_DEFAULT_SPD 128
 #define VIA_EEPROM_CUSTOM_CONFIG_SIZE 32
-#define VIA_FIRMWARE_VERSION 0x00000004
+#define VIA_FIRMWARE_VERSION 0x00000005
 #define ONBOARD_LED_PIN GP13
 #define DYNAMIC_KEYMAP_LAYER_COUNT 8
 #define I2C_DRIVER I2CD0
@@ -27,3 +27,6 @@
 #define OLED_IC OLED_IC_SSD1306
 #define OLED_DISPLAY_ADDRESS 0x3C
 #define OLED_TIMEOUT 0
+
+// Emergency only: uncomment, flash once, boot once, comment again, flash again.
+// #define FORCE_EEPROM_RESET_ON_BOOT
