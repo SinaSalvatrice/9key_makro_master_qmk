@@ -2,7 +2,7 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "firmwareVersion": 3,
+  "firmwareVersion": 4,
   "menus": [
     "qmk_rgblight",
     {
@@ -14,8 +14,21 @@
             {
               "label": "Default View",
               "type": "dropdown",
-              "options": [["Legend", 0], ["Last Key", 1]],
-              "content": ["id_via_oled_view", 0, 1]
+              "options": [
+                [
+                  "Legend",
+                  0
+                ],
+                [
+                  "Last Key",
+                  1
+                ]
+              ],
+              "content": [
+                "id_via_oled_view",
+                0,
+                1
+              ]
             }
           ]
         }
@@ -30,7 +43,50 @@
             {
               "label": "Minimal Mode",
               "type": "toggle",
-              "content": ["id_via_fx_mode", 0, 2]
+              "content": [
+                "id_via_fx_mode",
+                0,
+                2
+              ]
+            },
+            {
+              "label": "RGB Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Off",
+                  6
+                ]
+              ],
+              "content": [
+                "id_via_rgb_effect",
+                0,
+                5
+              ]
             }
           ]
         },
@@ -40,79 +96,170 @@
             {
               "label": "BASE Color",
               "type": "color",
-              "content": ["id_via_layer_color[0]", 0, 3, 0]
+              "content": [
+                "id_via_layer_color[0]",
+                0,
+                3,
+                0
+              ]
             },
             {
               "label": "BASE Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[0]", 0, 4, 0]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[0]",
+                0,
+                4,
+                0
+              ]
             },
             {
               "label": "WINDOW Color",
               "type": "color",
-              "content": ["id_via_layer_color[1]", 0, 3, 1]
+              "content": [
+                "id_via_layer_color[1]",
+                0,
+                3,
+                1
+              ]
             },
             {
               "label": "WINDOW Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[1]", 0, 4, 1]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[1]",
+                0,
+                4,
+                1
+              ]
             },
             {
               "label": "TXT Color",
               "type": "color",
-              "content": ["id_via_layer_color[2]", 0, 3, 2]
+              "content": [
+                "id_via_layer_color[2]",
+                0,
+                3,
+                2
+              ]
             },
             {
               "label": "TXT Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[2]", 0, 4, 2]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[2]",
+                0,
+                4,
+                2
+              ]
             },
             {
               "label": "MEDIA Color",
               "type": "color",
-              "content": ["id_via_layer_color[3]", 0, 3, 3]
+              "content": [
+                "id_via_layer_color[3]",
+                0,
+                3,
+                3
+              ]
             },
             {
               "label": "MEDIA Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[3]", 0, 4, 3]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[3]",
+                0,
+                4,
+                3
+              ]
             },
             {
               "label": "DEV Color",
               "type": "color",
-              "content": ["id_via_layer_color[4]", 0, 3, 4]
+              "content": [
+                "id_via_layer_color[4]",
+                0,
+                3,
+                4
+              ]
             },
             {
               "label": "DEV Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[4]", 0, 4, 4]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[4]",
+                0,
+                4,
+                4
+              ]
             },
             {
               "label": "VSC Color",
               "type": "color",
-              "content": ["id_via_layer_color[5]", 0, 3, 5]
+              "content": [
+                "id_via_layer_color[5]",
+                0,
+                3,
+                5
+              ]
             },
             {
               "label": "VSC Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[5]", 0, 4, 5]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[5]",
+                0,
+                4,
+                5
+              ]
             },
             {
               "label": "RGB Color",
               "type": "color",
-              "content": ["id_via_layer_color[6]", 0, 3, 6]
+              "content": [
+                "id_via_layer_color[6]",
+                0,
+                3,
+                6
+              ]
             },
             {
               "label": "RGB Brightness",
               "type": "range",
-              "options": [0, 255],
-              "content": ["id_via_layer_brightness[6]", 0, 4, 6]
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[6]",
+                0,
+                4,
+                6
+              ]
             }
           ]
         }
@@ -120,38 +267,166 @@
     }
   ],
   "customKeycodes": [
-    {"name": "SEL_BASE", "title": "Go to BASE layer", "shortName": "BASE"},
-    {"name": "SEL_WINDOW", "title": "Go to WINDOW layer", "shortName": "WIN"},
-    {"name": "SEL_TEXT", "title": "Go to TXT layer", "shortName": "TXT"},
-    {"name": "SEL_MEDIA", "title": "Go to MEDIA layer", "shortName": "MED"},
-    {"name": "SEL_RGB", "title": "Go to RGB layer", "shortName": "RGB"},
-    {"name": "SEL_DEV", "title": "Go to DEV layer", "shortName": "DEV"},
-    {"name": "SEL_VSC", "title": "Go to VSC layer", "shortName": "VSC"},
-    {"name": "WIN_BRO", "title": "Window browser mode", "shortName": "BRO"},
-    {"name": "WIN_AUX", "title": "Window aux key", "shortName": "AUX"},
-    {"name": "WIN_1", "title": "Window target 1", "shortName": "W1"},
-    {"name": "WIN_2", "title": "Window target 2", "shortName": "W2"},
-    {"name": "WIN_3", "title": "Window target 3", "shortName": "W3"},
-    {"name": "WIN_4", "title": "Window target 4", "shortName": "W4"},
-    {"name": "WIN_5", "title": "Window target 5", "shortName": "W5"},
-    {"name": "WIN_6", "title": "Window target 6", "shortName": "W6"},
-    {"name": "TXT_ACT", "title": "Toggle TXT actions", "shortName": "ACT"},
-    {"name": "TXT_EDT", "title": "Toggle TXT edit tools", "shortName": "EDT"},
-    {"name": "TXT_1", "title": "TXT target 1", "shortName": "T1"},
-    {"name": "TXT_2", "title": "TXT target 2", "shortName": "T2"},
-    {"name": "TXT_3", "title": "TXT target 3", "shortName": "T3"},
-    {"name": "TXT_4", "title": "TXT target 4", "shortName": "T4"},
-    {"name": "TXT_5", "title": "TXT target 5", "shortName": "T5"},
-    {"name": "TXT_6", "title": "TXT target 6", "shortName": "T6"},
-    {"name": "VSC_BAR", "title": "Toggle VSC bar mode", "shortName": "BAR"},
-    {"name": "VSC_CHAT", "title": "Toggle VSC chat mode", "shortName": "CHAT"},
-    {"name": "VSC_1", "title": "VSC target 1", "shortName": "V1"},
-    {"name": "VSC_2", "title": "VSC target 2", "shortName": "V2"},
-    {"name": "VSC_3", "title": "VSC target 3", "shortName": "V3"},
-    {"name": "VSC_4", "title": "VSC target 4", "shortName": "V4"},
-    {"name": "VSC_5", "title": "VSC target 5", "shortName": "V5"},
-    {"name": "VSC_6", "title": "VSC target 6", "shortName": "V6"},
-    {"name": "RGB_PROFILE", "title": "Toggle FX mode", "shortName": "FX"}
+    {
+      "name": "SEL_BASE",
+      "title": "Go to BASE layer",
+      "shortName": "BASE"
+    },
+    {
+      "name": "SEL_WINDOW",
+      "title": "Go to WINDOW layer",
+      "shortName": "WIN"
+    },
+    {
+      "name": "SEL_TEXT",
+      "title": "Go to TXT layer",
+      "shortName": "TXT"
+    },
+    {
+      "name": "SEL_MEDIA",
+      "title": "Go to MEDIA layer",
+      "shortName": "MED"
+    },
+    {
+      "name": "SEL_RGB",
+      "title": "Go to RGB layer",
+      "shortName": "RGB"
+    },
+    {
+      "name": "SEL_DEV",
+      "title": "Go to DEV layer",
+      "shortName": "DEV"
+    },
+    {
+      "name": "SEL_VSC",
+      "title": "Go to VSC layer",
+      "shortName": "VSC"
+    },
+    {
+      "name": "WIN_BRO",
+      "title": "Window browser mode",
+      "shortName": "BRO"
+    },
+    {
+      "name": "WIN_AUX",
+      "title": "Window aux key",
+      "shortName": "AUX"
+    },
+    {
+      "name": "WIN_1",
+      "title": "Window target 1",
+      "shortName": "W1"
+    },
+    {
+      "name": "WIN_2",
+      "title": "Window target 2",
+      "shortName": "W2"
+    },
+    {
+      "name": "WIN_3",
+      "title": "Window target 3",
+      "shortName": "W3"
+    },
+    {
+      "name": "WIN_4",
+      "title": "Window target 4",
+      "shortName": "W4"
+    },
+    {
+      "name": "WIN_5",
+      "title": "Window target 5",
+      "shortName": "W5"
+    },
+    {
+      "name": "WIN_6",
+      "title": "Window target 6",
+      "shortName": "W6"
+    },
+    {
+      "name": "TXT_ACT",
+      "title": "Toggle TXT actions",
+      "shortName": "ACT"
+    },
+    {
+      "name": "TXT_EDT",
+      "title": "Toggle TXT edit tools",
+      "shortName": "EDT"
+    },
+    {
+      "name": "TXT_1",
+      "title": "TXT target 1",
+      "shortName": "T1"
+    },
+    {
+      "name": "TXT_2",
+      "title": "TXT target 2",
+      "shortName": "T2"
+    },
+    {
+      "name": "TXT_3",
+      "title": "TXT target 3",
+      "shortName": "T3"
+    },
+    {
+      "name": "TXT_4",
+      "title": "TXT target 4",
+      "shortName": "T4"
+    },
+    {
+      "name": "TXT_5",
+      "title": "TXT target 5",
+      "shortName": "T5"
+    },
+    {
+      "name": "TXT_6",
+      "title": "TXT target 6",
+      "shortName": "T6"
+    },
+    {
+      "name": "VSC_BAR",
+      "title": "Toggle VSC bar mode",
+      "shortName": "BAR"
+    },
+    {
+      "name": "VSC_CHAT",
+      "title": "Toggle VSC chat mode",
+      "shortName": "CHAT"
+    },
+    {
+      "name": "VSC_1",
+      "title": "VSC target 1",
+      "shortName": "V1"
+    },
+    {
+      "name": "VSC_2",
+      "title": "VSC target 2",
+      "shortName": "V2"
+    },
+    {
+      "name": "VSC_3",
+      "title": "VSC target 3",
+      "shortName": "V3"
+    },
+    {
+      "name": "VSC_4",
+      "title": "VSC target 4",
+      "shortName": "V4"
+    },
+    {
+      "name": "VSC_5",
+      "title": "VSC target 5",
+      "shortName": "V5"
+    },
+    {
+      "name": "VSC_6",
+      "title": "VSC target 6",
+      "shortName": "V6"
+    },
+    {
+      "name": "RGB_PROFILE",
+      "title": "Toggle FX mode",
+      "shortName": "FX"
+    }
   ],
   "matrix": {
     "rows": 3,
@@ -159,9 +434,21 @@
   },
   "layouts": {
     "keymap": [
-      ["0,0", "0,1", "0,2"],
-      ["1,0", "1,1", "1,2"],
-      ["2,0", "2,1", "2,2"]
+      [
+        "0,0",
+        "0,1",
+        "0,2"
+      ],
+      [
+        "1,0",
+        "1,1",
+        "1,2"
+      ],
+      [
+        "2,0",
+        "2,1",
+        "2,2"
+      ]
     ]
   }
 }

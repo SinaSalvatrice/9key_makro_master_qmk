@@ -92,6 +92,17 @@ typedef enum {
 } oled_view_t;
 
 typedef enum {
+    RGB_EFFECT_WILD = 0,
+    RGB_EFFECT_BREATHING,
+    RGB_EFFECT_RUNNING,
+    RGB_EFFECT_TWINKLE,
+    RGB_EFFECT_PULSE,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_OFF,
+    RGB_EFFECT_COUNT
+} rgb_effect_mode_t;
+
+typedef enum {
     TEXT_MODE_WIN,
     TEXT_MODE_ACTIONS,
     TEXT_MODE_EDIT,
@@ -131,6 +142,7 @@ static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
 static uint32_t encoder_help_started = 0;
 static uint32_t encoder_help_until   = 0;
 static bool encoder_help_fired       = false;
+static rgb_effect_mode_t rgb_effect_mode = RGB_EFFECT_WILD;
 
 // Physical key numbering:
 //  1 2 3
@@ -163,12 +175,14 @@ enum via_custom_value {
     id_via_fx_mode          = 2,
     id_via_layer_color      = 3,
     id_via_layer_brightness = 4,
+    id_via_rgb_effect       = 5,
 };
 
 typedef struct {
     uint8_t      signature;
     uint8_t      oled_view;
     uint8_t      fx_mode;
+    uint8_t      rgb_effect;
     hsv_config_t layer_palette[VIA_LAYER_SLOT_COUNT];
 } via_user_config_t;
 
@@ -275,7 +289,7 @@ static const char *layer_name_short(uint8_t l) {
     }
 }
 
-static const char *__attribute__((unused)) layer_name_long(uint8_t l) {
+static const char *layer_name_long(uint8_t l) {
     switch (l) {
         case _BASE:   return "BASE";
         case _WINDOW: return "WINDOW";
@@ -424,14 +438,14 @@ static uint8_t palette_floor(uint8_t value, uint8_t minimum) {
     return value < minimum ? minimum : value;
 }
 
-static uint8_t __attribute__((unused)) via_palette_index_for_slot(uint8_t slot) {
+static uint8_t via_palette_index_for_slot(uint8_t slot) {
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
         if (via_layer_slots[i] == slot) return i;
     }
     return 0;
 }
 
-static uint8_t __attribute__((unused)) via_palette_index_for_layer(uint8_t layer) {
+static uint8_t via_palette_index_for_layer(uint8_t layer) {
     return via_palette_index_for_slot(slot_for_layer(layer));
 }
 
@@ -454,13 +468,17 @@ static void apply_palette_entry(uint8_t index) {
 static void apply_via_runtime_config(void) {
     oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
     rgb_minimal_mode = via_user_config.fx_mode != 0;
+    rgb_effect_mode = via_user_config.rgb_effect < RGB_EFFECT_COUNT
+                    ? (rgb_effect_mode_t)via_user_config.rgb_effect
+                    : RGB_EFFECT_WILD;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) apply_palette_entry(i);
 }
 
 static void set_via_config_defaults(void) {
-    via_user_config.signature = 0x91;
-    via_user_config.oled_view = OLED_VIEW_LEGEND;
-    via_user_config.fx_mode   = 0;
+    via_user_config.signature  = 0x92;
+    via_user_config.oled_view  = OLED_VIEW_LEGEND;
+    via_user_config.fx_mode    = 0;
+    via_user_config.rgb_effect = RGB_EFFECT_WILD;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) via_user_config.layer_palette[i] = via_default_palette[i];
     apply_via_runtime_config();
 }
@@ -471,7 +489,7 @@ static void save_via_config(void) {
 
 static void load_via_config(void) {
     via_read_custom_config(&via_user_config, 0, sizeof(via_user_config));
-    if (via_user_config.signature != 0x91) {
+    if (via_user_config.signature != 0x92) {
         set_via_config_defaults();
         save_via_config();
         return;
@@ -491,6 +509,10 @@ static void via_config_set_value(uint8_t *data) {
         case id_via_fx_mode:
             via_user_config.fx_mode = value_data[0] ? 1 : 0;
             rgb_minimal_mode = via_user_config.fx_mode != 0;
+            break;
+        case id_via_rgb_effect:
+            via_user_config.rgb_effect = value_data[0] < RGB_EFFECT_COUNT ? value_data[0] : RGB_EFFECT_WILD;
+            rgb_effect_mode = (rgb_effect_mode_t)via_user_config.rgb_effect;
             break;
         case id_via_layer_color:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -518,6 +540,9 @@ static void via_config_get_value(uint8_t *data) {
             break;
         case id_via_fx_mode:
             value_data[0] = via_user_config.fx_mode;
+            break;
+        case id_via_rgb_effect:
+            value_data[0] = via_user_config.rgb_effect;
             break;
         case id_via_layer_color:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -576,7 +601,7 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     return layer_legend[layer][index];
 }
 
-static const char *__attribute__((unused)) function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
+static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     uint8_t index = (row * MATRIX_COLS) + col;
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (layer == _TEXT) return text_function_for(index);
@@ -825,12 +850,72 @@ static void render_select_wild(void) {
     }
 }
 
+static void render_effect_solid(uint8_t layer) {
+    hsv_config_t p = palette_for_layer(layer);
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, p.val); }
+}
+
+static void render_effect_breathing(uint8_t layer) {
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t val = pulse_val(timer_read32(), 2200, 0, palette_floor(p.val / 8, 8), p.val);
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, val); }
+}
+
+static void render_effect_running(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t head = (now / 110) % PAD_KEY_COUNT;
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+        uint8_t dist = (i + PAD_KEY_COUNT - head) % PAD_KEY_COUNT;
+        uint8_t val = palette_floor(p.val / 8, 8);
+        if (dist == 0) val = p.val;
+        else if (dist == 1 || dist == 8) val = palette_floor(p.val / 2, 30);
+        else if (dist == 2 || dist == 7) val = palette_floor(p.val / 4, 16);
+        set_key_hsv(i, p.hue, p.sat, val);
+    }
+}
+
+static void render_effect_twinkle(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t sparkle = ((now / 137) * 5 + 1) % PAD_KEY_COUNT;
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+        uint8_t base = palette_floor(p.val / 10, 6);
+        uint8_t shimmer = triwave8_period(now, 900 + i * 73, i * 29) / 8;
+        uint8_t val = palette_floor(base + shimmer, base);
+        if (i == sparkle) val = p.val;
+        set_key_hsv(i, p.hue + i * 2, p.sat, val);
+    }
+}
+
+static void render_effect_pulse(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    bool flash = (now % 1400) < 140;
+    uint8_t val = flash ? p.val : palette_floor(p.val / 5, 12);
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, val); }
+}
+
 static void render_rgb_layer_visuals(void) {
     uint8_t layer = active_layer_raw();
+
+    if (rgb_effect_mode == RGB_EFFECT_OFF) { clear_all_keys(); return; }
+
     if (rgb_minimal_mode) {
         render_minimal_profile(layer);
         return;
     }
+
+    switch (rgb_effect_mode) {
+        case RGB_EFFECT_BREATHING: render_effect_breathing(layer); return;
+        case RGB_EFFECT_RUNNING:   render_effect_running(layer);   return;
+        case RGB_EFFECT_TWINKLE:   render_effect_twinkle(layer);   return;
+        case RGB_EFFECT_PULSE:     render_effect_pulse(layer);     return;
+        case RGB_EFFECT_SOLID:     render_effect_solid(layer);     return;
+        case RGB_EFFECT_WILD:
+        default: break;
+    }
+
     switch (layer) {
         case _BASE:   render_base_wild(); break;
         case _WINDOW: render_window_wild(); break;
