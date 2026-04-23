@@ -286,19 +286,6 @@ static const char *layer_name_short(uint8_t l) {
     }
 }
 
-static const char *layer_name_long(uint8_t l) {
-    switch (l) {
-        case _BASE:   return "BASE";
-        case _WINDOW: return "WINDOW";
-        case _TEXT:   return "TXT";
-        case _MEDIA:  return "MEDIA";
-        case _RGB:    return "RGB";
-        case _DEV:    return "DEV";
-        case _VSC:    return "VSC";
-        case _SELECT: return "SELECT";
-        default:      return "BASE";
-    }
-}
 
 static uint8_t active_layer_raw(void) {
     return get_highest_layer(layer_state | default_layer_state);
