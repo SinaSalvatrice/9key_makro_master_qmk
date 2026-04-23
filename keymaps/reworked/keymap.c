@@ -184,9 +184,9 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   160, 220, 120, "BASE",   true  },  // key 1
     { _WINDOW, 176, 240, 120, "WINDOW", true  },  // key 2
     { _TEXT,    96, 220, 110, "TXT",    true  },  // key 3
-    { _MEDIA,   18, 255, 130, "MEDIA",  true  },  // key 4
+    { _DEV,   18, 255, 130, "DEV",  true  },  // key 4
     { _SELECT,   0,   0, 120, "SELECT", false },  // key 5 / style toggle
-    { _DEV,     32, 255, 130, "DEV",    true  },  // key 6
+    { _MEDIA,     32, 255, 130, "MEDIA",    true  },  // key 6
     { _VSC,    200, 255, 130, "VSC",    true  },  // key 7
     { _RGB,    215, 240, 130, "RGB",    true  },  // key 8
     { _SELECT,   0,   0,  24, "RESET",  false },  // key 9
