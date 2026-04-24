@@ -2,7 +2,7 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "firmwareVersion": 6,
+  "firmwareVersion": 7,
   "menus": [
     "qmk_rgblight",
     {
@@ -107,14 +107,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[0]",
                 0,
                 5,
+                0
+              ]
+            },
+            {
+              "label": "BASE Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[0]",
+                0,
+                6,
                 0
               ]
             },
@@ -171,14 +201,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[1]",
                 0,
                 5,
+                1
+              ]
+            },
+            {
+              "label": "WINDOW Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[1]",
+                0,
+                6,
                 1
               ]
             },
@@ -235,14 +295,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[2]",
                 0,
                 5,
+                2
+              ]
+            },
+            {
+              "label": "TXT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[2]",
+                0,
+                6,
                 2
               ]
             },
@@ -299,14 +389,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[3]",
                 0,
                 5,
+                3
+              ]
+            },
+            {
+              "label": "MEDIA Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[3]",
+                0,
+                6,
                 3
               ]
             },
@@ -363,14 +483,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[4]",
                 0,
                 5,
+                4
+              ]
+            },
+            {
+              "label": "DEV Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[4]",
+                0,
+                6,
                 4
               ]
             },
@@ -427,14 +577,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[5]",
                 0,
                 5,
+                5
+              ]
+            },
+            {
+              "label": "VSC Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[5]",
+                0,
+                6,
                 5
               ]
             },
@@ -491,14 +671,44 @@
                   5
                 ],
                 [
-                  "Off",
+                  "Comet",
                   6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
                 ]
               ],
               "content": [
                 "id_via_rgb_effect[6]",
                 0,
                 5,
+                6
+              ]
+            },
+            {
+              "label": "RGB Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[6]",
+                0,
+                6,
                 6
               ]
             }
