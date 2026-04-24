@@ -139,7 +139,6 @@ static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
 static uint32_t encoder_help_started = 0;
 static uint32_t encoder_help_until   = 0;
 static bool encoder_help_fired       = false;
-static rgb_effect_mode_t rgb_effect_mode = RGB_EFFECT_WILD;
 
 // Physical key numbering:
 //  1 2 3
@@ -179,7 +178,7 @@ typedef struct {
     uint8_t      signature;
     uint8_t      oled_view;
     uint8_t      fx_mode;
-    uint8_t      rgb_effect;
+    uint8_t      layer_effect[VIA_LAYER_SLOT_COUNT];
     hsv_config_t layer_palette[VIA_LAYER_SLOT_COUNT];
 } via_user_config_t;
 
@@ -191,9 +190,9 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   160, 220, 120, "BASE",   true  },
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
-    { _DEV,   32, 255, 130, "DEV",  true  },
+    { _MEDIA,   32, 255, 130, "MEDIA",  true  },
     { _SELECT,   0,   0, 120, "SELECT", false },
-    { _MEDIA,     18, 255, 130, "MEDIA",    true  },
+    { _DEV,     18, 255, 130, "DEV",    true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
     { _SELECT,   0,   0,  24, "RESET",  false },
@@ -286,6 +285,19 @@ static const char *layer_name_short(uint8_t l) {
     }
 }
 
+static const char *layer_name_long(uint8_t l) {
+    switch (l) {
+        case _BASE:   return "BASE";
+        case _WINDOW: return "WINDOW";
+        case _TEXT:   return "TXT";
+        case _MEDIA:  return "MEDIA";
+        case _RGB:    return "RGB";
+        case _DEV:    return "DEV";
+        case _VSC:    return "VSC";
+        case _SELECT: return "SELECT";
+        default:      return "BASE";
+    }
+}
 
 static uint8_t active_layer_raw(void) {
     return get_highest_layer(layer_state | default_layer_state);
@@ -422,12 +434,28 @@ static uint8_t palette_floor(uint8_t value, uint8_t minimum) {
     return value < minimum ? minimum : value;
 }
 
+static uint8_t via_palette_index_for_slot(uint8_t slot) {
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        if (via_layer_slots[i] == slot) return i;
+    }
+    return 0;
+}
 
 static hsv_config_t palette_for_layer(uint8_t layer) {
     uint8_t slot = slot_for_layer(layer);
     return select_slots[slot].selectable
         ? (hsv_config_t){select_slots[slot].hue, select_slots[slot].sat, select_slots[slot].val}
         : via_default_palette[0];
+}
+
+static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.layer_effect[index] < RGB_EFFECT_COUNT) {
+        return (rgb_effect_mode_t)via_user_config.layer_effect[index];
+    }
+#endif
+    return RGB_EFFECT_WILD;
 }
 
 #ifdef VIA_ENABLE
@@ -442,18 +470,17 @@ static void apply_palette_entry(uint8_t index) {
 static void apply_via_runtime_config(void) {
     oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
     rgb_minimal_mode = via_user_config.fx_mode != 0;
-    rgb_effect_mode = via_user_config.rgb_effect < RGB_EFFECT_COUNT
-                    ? (rgb_effect_mode_t)via_user_config.rgb_effect
-                    : RGB_EFFECT_WILD;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) apply_palette_entry(i);
 }
 
 static void set_via_config_defaults(void) {
-    via_user_config.signature  = 0x92;
+    via_user_config.signature  = 0x93;
     via_user_config.oled_view  = OLED_VIEW_LEGEND;
     via_user_config.fx_mode    = 0;
-    via_user_config.rgb_effect = RGB_EFFECT_WILD;
-    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) via_user_config.layer_palette[i] = via_default_palette[i];
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        via_user_config.layer_effect[i] = RGB_EFFECT_WILD;
+        via_user_config.layer_palette[i] = via_default_palette[i];
+    }
     apply_via_runtime_config();
 }
 
@@ -466,7 +493,7 @@ static void load_via_config(void) {
 
     bool invalid_config = false;
 
-    if (via_user_config.signature != 0x92) {
+    if (via_user_config.signature != 0x93) {
         invalid_config = true;
     }
 
@@ -478,8 +505,10 @@ static void load_via_config(void) {
         invalid_config = true;
     }
 
-    if (via_user_config.rgb_effect >= RGB_EFFECT_COUNT) {
-        invalid_config = true;
+    for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
+        if (via_user_config.layer_effect[i] >= RGB_EFFECT_COUNT) {
+            invalid_config = true;
+        }
     }
 
     if (invalid_config) {
@@ -505,8 +534,9 @@ static void via_config_set_value(uint8_t *data) {
             rgb_minimal_mode = via_user_config.fx_mode != 0;
             break;
         case id_via_rgb_effect:
-            via_user_config.rgb_effect = value_data[0] < RGB_EFFECT_COUNT ? value_data[0] : RGB_EFFECT_WILD;
-            rgb_effect_mode = (rgb_effect_mode_t)via_user_config.rgb_effect;
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.layer_effect[value_data[0]] = value_data[1] < RGB_EFFECT_COUNT ? value_data[1] : RGB_EFFECT_WILD;
+            }
             break;
         case id_via_layer_color:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -536,7 +566,9 @@ static void via_config_get_value(uint8_t *data) {
             value_data[0] = via_user_config.fx_mode;
             break;
         case id_via_rgb_effect:
-            value_data[0] = via_user_config.rgb_effect;
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                value_data[1] = via_user_config.layer_effect[value_data[0]];
+            }
             break;
         case id_via_layer_color:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -892,15 +924,16 @@ static void render_effect_pulse(uint8_t layer) {
 
 static void render_rgb_layer_visuals(void) {
     uint8_t layer = active_layer_raw();
+    rgb_effect_mode_t effect = effect_for_layer(layer);
 
-    if (rgb_effect_mode == RGB_EFFECT_OFF) { clear_all_keys(); return; }
+    if (effect == RGB_EFFECT_OFF) { clear_all_keys(); return; }
 
     if (rgb_minimal_mode) {
         render_minimal_profile(layer);
         return;
     }
 
-    switch (rgb_effect_mode) {
+    switch (effect) {
         case RGB_EFFECT_BREATHING: render_effect_breathing(layer); return;
         case RGB_EFFECT_RUNNING:   render_effect_running(layer);   return;
         case RGB_EFFECT_TWINKLE:   render_effect_twinkle(layer);   return;
@@ -1236,7 +1269,6 @@ void keyboard_post_init_user(void) {
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
-#endif
 
 #ifdef OLED_DISPLAY_128X32
 static void write_line(uint8_t row, const char *str) {
