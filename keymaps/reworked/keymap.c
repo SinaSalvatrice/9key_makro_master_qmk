@@ -1236,6 +1236,7 @@ void keyboard_post_init_user(void) {
 oled_rotation_t oled_init_user(oled_rotation_t rotation) {
     return rotation;
 }
+#endif
 
 #ifdef OLED_DISPLAY_128X32
 static void write_line(uint8_t row, const char *str) {
