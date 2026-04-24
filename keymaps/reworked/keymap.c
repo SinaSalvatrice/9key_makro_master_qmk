@@ -450,7 +450,7 @@ static hsv_config_t palette_for_layer(uint8_t layer) {
 
 static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
 #ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
+    uint8_t index = via_palette_index_for_slot(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.layer_effect[index] < RGB_EFFECT_COUNT) {
         return (rgb_effect_mode_t)via_user_config.layer_effect[index];
     }
@@ -1277,6 +1277,7 @@ static void write_line(uint8_t row, const char *str) {
     oled_set_cursor(0, row);
     oled_write(buf, false);
 }
+#endif
 
 static void render_boot(void) {
     if (boot_start == 0) boot_start = timer_read32() | 1;
