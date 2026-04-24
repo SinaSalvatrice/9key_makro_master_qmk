@@ -193,7 +193,7 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _TEXT,    96, 220, 110, "TXT",    true  },
     { _DEV,   32, 255, 130, "DEV",  true  },
     { _SELECT,   0,   0, 120, "SELECT", false },
-    { _DEV,     18, 255, 130, "MEDIA",    true  },
+    { _MEDIA,     18, 255, 130, "MEDIA",    true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
     { _SELECT,   0,   0,  24, "RESET",  false },
