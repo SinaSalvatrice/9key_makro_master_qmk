@@ -230,15 +230,24 @@ static const char *const vsc_bar_commands[6] = {
     ""
 };
 
-static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
-static const char *const vsc_chat_functions[6] = {"Summarize", "Review", "Suggest fix", "Write tests", "Explain code", "Commit message"};
+static const char *const vsc_chat_labels[6] = {"EXPL", "REVW", "IMPRV", "INO", "ENV", "MD"};
+static const char *const vsc_chat_functions[6] = {"Summarize code", "Review", "Suggest fix", "", "Testing", "Test"};
 static const char *const vsc_chat_macros[6] = {
-    "Summarize the selected file and list the most important implementation details.",
-    "Review the selected repo for bugs, regressions, edge cases, and missing tests.",
-    "Suggest a minimal fix for the current problem and explain the root cause.",
-    "Write focused tests for the selected code path and cover the main edge cases.",
-    "Explain this code step by step, including the important state changes and control flow.",
-    "Write a concise commit message and short body for the current staged changes.",
+   
+ "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
+    
+"Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
+   
+ "Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
+   
+ "create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.", 
+   
+"Check my QMK environment in VS code, but don't change files. Execute diagnostic commands such as 'qmk doctor', 'qmk config', and userspace 'qmk userspace-doctor'. Analyze OS, shell, dependencies, compilers, paths, VS code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps.
+Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
+
+"Check notes.md and start working on it.",
+
+
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
