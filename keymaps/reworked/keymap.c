@@ -230,9 +230,10 @@ static const char *const vsc_bar_commands[6] = {
     ""
 };
 
-static const char *const vsc_chat_labels[6] = {"EXPL", "REVW", "IMPRV", "INO", "ENV", "MD"};
-static const char *const vsc_chat_functions[6] = {"Summarize code", "Review", "Suggest fix", "", "Testing", "Test"};
+static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
+static const char *const vsc_chat_functions[6] = {"Summarize", "Review", "Suggest fix", "Write tests", "Explain code", "Commit message"};
 static const char *const vsc_chat_macros[6] = {
+<<<<<<< HEAD
    
   "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
     
@@ -249,6 +250,14 @@ Repair my QMK development environment in VS code. Use the output of 'qmk doctor'
 
 
 
+=======
+    "Summarize the selected file and list the most important implementation details.",
+    "Review the selected repo for bugs, regressions, edge cases, and missing tests.",
+    "Suggest a minimal fix for the current problem and explain the root cause.",
+    "Write focused tests for the selected code path and cover the main edge cases.",
+    "Explain this code step by step, including the important state changes and control flow.",
+    "Write a concise commit message and short body for the current staged changes.",
+>>>>>>> parent of 5a3ede6 (Aktualisieren von keymap.c)
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
