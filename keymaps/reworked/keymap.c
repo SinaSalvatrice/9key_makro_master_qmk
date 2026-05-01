@@ -237,14 +237,10 @@ static const char *const vsc_chat_macros[6] = {
   "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
     
 "Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
-   
- "Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
-   
- "create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.", 
-   
-"Check my QMK environment in VS code, but don't change files. Execute diagnostic commands such as 'qmk doctor', 'qmk config', and userspace 'qmk userspace-doctor'. Analyze OS, shell, dependencies, compilers, paths, VS code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps.
-Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
-
+"Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
+"create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.", 
+"Check my QMK environment in VS code, but don't change files. Execute diagnostic commands such as 'qmk doctor', 'qmk config', and userspace 'qmk userspace-doctor'. Analyze OS, shell, dependencies, compilers, paths, VS code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps."
+"Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
 "Check notes.md and start working on it.",
 
 
