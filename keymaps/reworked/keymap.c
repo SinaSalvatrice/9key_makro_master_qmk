@@ -1333,11 +1333,14 @@ void matrix_scan_user(void) {
     }
 #    endif
 
-    if (!gp12_pressed && gp12_was_pressed) {
+    if (gp12_pressed && !gp12_was_pressed) {
         if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
             gp12_last_action = timer_read32();
         }
+    }
+
+    if (!gp12_pressed && gp12_was_pressed) {
         gp12_combo_used = false;
     }
     gp12_was_pressed = gp12_pressed;
