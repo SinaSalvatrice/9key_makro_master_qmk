@@ -1,7 +1,7 @@
 #include QMK_KEYBOARD_H
 #include "gpio.h"
 #ifdef VIA_ENABLE
-#    include "via.h"
+#include "via.h"
 #endif
 #include <stdio.h>
 
@@ -13,9 +13,11 @@
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
-#    define RGBLIGHT_LED_COUNT 9
+#define RGBLIGHT_LED_COUNT 9
 #endif
-
+#ifndef SELECTOR_BTN_PIN
+#    define SELECTOR_BTN_PIN GP12
+#endif
 #define PAD_KEY_COUNT        9
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
