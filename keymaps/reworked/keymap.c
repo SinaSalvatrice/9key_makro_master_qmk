@@ -1295,16 +1295,6 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
         }
     }
 
-    if (!encoder_btn_pressed && encoder_btn_was_pressed) {
-        if (active_layer_raw() == _TEXT && text_selection_pending_copy && !encoder_btn_rotated && !encoder_help_fired) {
-            tap_code16(C(KC_C));
-            text_selection_pending_copy = false;
-        }
-        encoder_help_started = 0;
-        encoder_btn_rotated = false;
-    }
-
-    encoder_btn_was_pressed = encoder_btn_pressed;
 #endif
 
 #ifdef SELECTOR_BTN_PIN
