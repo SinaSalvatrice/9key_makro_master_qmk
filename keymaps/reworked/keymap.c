@@ -243,8 +243,6 @@ static const char *const vsc_chat_macros[6] = {
 "Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
 "Check notes.md and start working on it.",
 
-
-
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
@@ -1274,12 +1272,21 @@ void matrix_scan_user(void) {
 #ifdef ENCODER_BTN_PIN
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
 
-    if (encoder_btn_pressed && !encoder_btn_was_pressed) {
-        encoder_btn_rotated = false;
+if (encoder_btn_pressed && !encoder_btn_was_pressed) {
+    encoder_btn_rotated = false;
+
+    if (active_layer_raw() == _TEXT && text_selection_pending_copy) {
+        tap_code16(C(KC_C));
+        text_selection_pending_copy = false;
+
+        // Verhindert, dass dieser Kopierdruck noch Encoder-Help auslöst
+        encoder_help_started = 0;
+        encoder_help_fired = true;
+    } else {
         encoder_help_started = timer_read32() | 1;
         encoder_help_fired = false;
     }
-
+}
     if (encoder_btn_pressed && encoder_help_started != 0 && !encoder_help_fired) {
         if (timer_elapsed32(encoder_help_started) >= ENCODER_HELP_HOLD_MS) {
             encoder_help_fired = true;
@@ -1330,7 +1337,7 @@ void matrix_scan_user(void) {
 #    endif
 
     if (gp12_pressed && !gp12_was_pressed) {
-        if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
+        if (!button_clear_armed && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
             gp12_last_action = timer_read32();
         }
