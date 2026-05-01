@@ -1302,21 +1302,22 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
 
 #    ifdef ENCODER_BTN_PIN
     bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
+
     if (clear_buttons_pressed) {
         gp12_combo_used = true;
+
         if (button_clear_started == 0) {
             button_clear_started = timer_read32() | 1;
         } else if (!button_clear_armed && timer_elapsed32(button_clear_started) >= CLEAR_EEPROM_HOLD_MS) {
             button_clear_armed = true;
 
             // Safe reset: initialize EEPROM to sane QMK defaults instead of disabling it.
-            // This avoids RP2040/VIA custom-config dead-states after struct changes.
             eeconfig_init();
 
-#ifdef VIA_ENABLE
+#        ifdef VIA_ENABLE
             set_via_config_defaults();
             save_via_config();
-#endif
+#        endif
 
             soft_reset_keyboard();
         }
@@ -1326,16 +1327,25 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
     }
 #    endif
 
-    if (gp12_pressed && !gp12_was_pressed) {
-        if (!button_clear_armed && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
+    // Toggle OLED only on RELEASE, not on press.
+    // This prevents accidental toggles during combo/clear actions.
+    if (!gp12_pressed && gp12_was_pressed) {
+        if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
+
+#    ifdef VIA_ENABLE
+            // Optional but recommended:
+            // keep VIA state in sync so it does not overwrite your runtime choice later.
+            via_user_config.oled_view = oled_view;
+            save_via_config();
+#    endif
+
             gp12_last_action = timer_read32();
         }
-    }
 
-    if (!gp12_pressed && gp12_was_pressed) {
         gp12_combo_used = false;
     }
+
     gp12_was_pressed = gp12_pressed;
 #endif
 
