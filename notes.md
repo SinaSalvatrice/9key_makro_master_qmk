@@ -14,7 +14,7 @@
 - SSD1306 OLED on I2C
 - Rotary encoder
 - Top-left key (`SEL`) is the practical main layer-selector entry
-- Dedicated OLED toggle path now uses `GP11`
+- Optional extra selector/OLED toggle path via `GP12` still exists in config and code
 
 ---
 
@@ -28,28 +28,7 @@
 - `DEV`
 - `VSC`
 - `RGB`
-- `PRMPT`
 - `SELECT`
-
-### Reworked keymap outline
-- File role: `keymaps/reworked/keymap.c` is the canonical firmware implementation and owns layers, OLED, RGB, selector flow, encoder behavior, and VIA custom config.
-- Top of file: compile-time constants, layer enum, custom keycodes, runtime state, selector slot metadata, and centralized labels/functions for OLED and host actions.
-- Middle of file: helper functions for layer naming, OLED text lookup, VIA config load/save, selector cursor syncing, RGB palette/effect rendering, and host-action dispatch.
-- Key behavior section: layer keymaps, selector target changes, prompt/VSC dispatch, per-layer encoder actions, and matrix scanning for GP11 OLED toggle plus encoder-button combos.
-- Display section: boot screen, legend view, last-key view, encoder-help view, and the final OLED task switch that chooses which screen to show.
-- Layer model:
-- `BASE` is the default navigation layer.
-- `WINDOW`, `TEXT`, `MEDIA`, `DEV`, `VSC`, and `RGB` are work layers with layer-specific encoder actions.
-- `PROMPT` is a dedicated prompt launcher layer that reuses the six Copilot chat prompt strings.
-- `SELECT` is the transient selector grid and FX toggle surface.
-- Selector model:
-- Hold `SEL` to open `SELECT`.
-- Release `SEL` to move to the current selector target.
-- Tap `SEL` twice without changing the selector target to jump back to `BASE`.
-- The last selector slot now opens `PROMPT` instead of clearing EEPROM.
-- Dedicated buttons:
-- `GP11` toggles OLED legend/last-key view on tap.
-- Encoder button + `GP11` held for the configured timeout clears EEPROM and resets the board.
 
 ### Selector flow
 - Key 1 on the main layers is `MO(_SELECT)` and acts as the main selector button.
@@ -57,7 +36,6 @@
 - Releasing `SEL` moves to the currently highlighted target layer.
 - Turning the encoder while in `SELECT` cycles through the available layer slots.
 - The selector correctly remembers the current layer when entering the grid instead of always snapping back to `BASE`.
-- Double-tapping `SEL` without changing target returns to `BASE`.
 
 ### Encoder behavior by layer
 - `BASE` → mouse wheel up/down
@@ -75,7 +53,6 @@
 - Last-key view shows layer, key label, keycode, function, and matrix position.
 - While `SELECT` is active, the OLED intentionally forces the selector legend/grid view.
 - On the `VSC` layer, the OLED preview changes depending on whether `BAR` or `CHAT` is the current held/last-used mode.
-- `GP11` toggles between the main legend view and the last-key view.
 
 ### RGB
 - RGB is handled explicitly per key rather than relying only on stock global effects.
@@ -88,11 +65,6 @@
 - Top row remains `SEL`, `BAR`, `CHAT`.
 - Lower six keys (`VSC_1` … `VSC_6`) trigger shared actions depending on the active `BAR` or `CHAT` mode.
 - `BAR` strings and `CHAT` texts are already centralized in one editable block in the keymap, which is good and should stay that way.
-
-### PROMPT layer
-- `PRMPT` is a direct launcher for the six Copilot chat prompts already stored in `vsc_chat_macros`.
-- Top row is `SEL`, `KC_NO`, `KC_NO`.
-- Lower six keys send summarize, review, suggest-fix, test, explain, and commit-message prompts after focusing the Copilot Chat view.
 
 ---
 
@@ -108,7 +80,7 @@
 1. Tune RGB colors / animation intensity only by feel, not because of any current problem.
 2. Personalize the default `CHAT` prompts if wanted.
 3. Adjust any `BAR` command names only if a specific host/extension setup needs it.
-4. Decide later whether `PROMPT` should keep reusing the current six chat prompts or split into its own prompt set.
+4. Decide later whether the optional `GP12` path should remain as an OLED-view toggle or eventually be retired.
 
 ---
 
