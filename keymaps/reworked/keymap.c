@@ -483,6 +483,15 @@ static const char *prompt_function_for_mode(prompt_mode_t mode, uint8_t index) {
 static const char *prompt_label_for(uint8_t index) { return prompt_label_for_mode(prompt_mode, index); }
 static const char *prompt_function_for(uint8_t index) { return prompt_function_for_mode(prompt_mode, index); }
 
+static const char *prompt_mode_name(prompt_mode_t mode) {
+    switch (mode) {
+        case PROMPT_MODE_PICS: return "PICS";
+        case PROMPT_MODE_ETSY: return "ETSY";
+        case PROMPT_MODE_BASE:
+        default:               return "BASE";
+    }
+}
+
 static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "BAR";
@@ -1275,9 +1284,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_RGB:    if (record->event.pressed) select_target_layer(_RGB); return false;
         case SEL_DEV:    if (record->event.pressed) select_target_layer(_DEV); return false;
         case SEL_VSC:    if (record->event.pressed) select_target_layer(_VSC); return false;
-        case SEL_PROMPT: if (record->event.pressed) select_target_layer(_PROMPT); return false;
-        case PRM_PICS:   if (record->event.pressed) prompt_mode = PROMPT_MODE_PICS; return false;
-        case PRM_ETSY:   if (record->event.pressed) prompt_mode = PROMPT_MODE_ETSY; return false;
+        case SEL_PROMPT:
+            if (record->event.pressed) {
+                prompt_mode = PROMPT_MODE_BASE;
+                select_target_layer(_PROMPT);
+            }
+            return false;
+        case PRM_PICS:
+            if (record->event.pressed) {
+                prompt_mode = PROMPT_MODE_PICS;
+                selector_target = _PROMPT;
+                select_cursor = slot_for_layer(selector_target);
+                layer_move(_PROMPT);
+            }
+            return false;
+        case PRM_ETSY:
+            if (record->event.pressed) {
+                prompt_mode = PROMPT_MODE_ETSY;
+                selector_target = _PROMPT;
+                select_cursor = slot_for_layer(selector_target);
+                layer_move(_PROMPT);
+            }
+            return false;
 
         case WIN_BRO: window_browser_held = record->event.pressed; return false;
         case WIN_AUX: return false;
@@ -1519,6 +1547,8 @@ static void render_header(uint8_t layer) {
     char line[22];
     if (layer == _SELECT) {
         snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s", layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
+    } else if (layer == _PROMPT) {
+        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-7s FX:%s", "WIN BRO", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT && text_action_held) {
@@ -1612,7 +1642,11 @@ static void render_boot(void) {
 
 static void render_header(uint8_t layer) {
     char line[22];
-    snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
+    if (layer == _PROMPT) {
+        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
+    } else {
+        snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
+    }
     write_line(0, line);
 }
 
