@@ -14,7 +14,8 @@
 - SSD1306 OLED on I2C
 - Rotary encoder
 - Top-left key (`SEL`) is the practical main layer-selector entry
-- Optional extra selector/OLED toggle path via `GP12` still exists in config and code
+- `GP11` toggles OLED legend / last-key view
+- Encoder button + `GP11` hold is the EEPROM-clear combo
 
 ---
 
@@ -28,6 +29,7 @@
 - `DEV`
 - `VSC`
 - `RGB`
+- `PROMPT` (`PRM`)
 - `SELECT`
 
 ### Selector flow
@@ -36,6 +38,8 @@
 - Releasing `SEL` moves to the currently highlighted target layer.
 - Turning the encoder while in `SELECT` cycles through the available layer slots.
 - The selector correctly remembers the current layer when entering the grid instead of always snapping back to `BASE`.
+- Double-tapping `SEL` without changing the target returns to `BASE`.
+- The last selector slot selects the `PROMPT` layer.
 
 ### Encoder behavior by layer
 - `BASE` → mouse wheel up/down
@@ -45,7 +49,7 @@
 - `RGB` → brightness down / up
 - `DEV` → mouse wheel up/down
 - `VSC` → `Ctrl+PgUp` / `Ctrl+PgDn`
-- `PRMPT` → `Ctrl+PgUp` / `Ctrl+PgDn`
+- `PROMPT` → `Ctrl+PgUp` / `Ctrl+PgDn`
 - `SELECT` → move through layer targets, but only while the encoder button is held
 
 ### OLED
@@ -53,6 +57,8 @@
 - Last-key view shows layer, key label, keycode, function, and matrix position.
 - While `SELECT` is active, the OLED intentionally forces the selector legend/grid view.
 - On the `VSC` layer, the OLED preview changes depending on whether `BAR` or `CHAT` is the current held/last-used mode.
+- On the `PROMPT` layer, the OLED header shows the active prompt mode: `BASE`, `PICS`, or `ETSY`.
+- `GP11` toggles between legend view and last-key view.
 
 ### RGB
 - RGB is handled explicitly per key rather than relying only on stock global effects.
@@ -65,6 +71,14 @@
 - Top row remains `SEL`, `BAR`, `CHAT`.
 - Lower six keys (`VSC_1` … `VSC_6`) trigger shared actions depending on the active `BAR` or `CHAT` mode.
 - `BAR` strings and `CHAT` texts are already centralized in one editable block in the keymap, which is good and should stay that way.
+
+### PROMPT layer
+- `PROMPT` is a dedicated prompt launcher layer.
+- Top row is `SEL`, `PICS`, `ETSY`.
+- `SEL_PROMPT` enters `PROMPT` in base prompt mode.
+- `PICS` switches the prompt set to picture-planning prompts.
+- `ETSY` switches the prompt set to Etsy-listing prompts.
+- The lower six keys reuse the six prompt trigger positions and send mode-specific prompt text after focusing the Copilot Chat view.
 
 ---
 
@@ -80,7 +94,7 @@
 1. Tune RGB colors / animation intensity only by feel, not because of any current problem.
 2. Personalize the default `CHAT` prompts if wanted.
 3. Adjust any `BAR` command names only if a specific host/extension setup needs it.
-4. Decide later whether the optional `GP12` path should remain as an OLED-view toggle or eventually be retired.
+4. Decide later whether `PROMPT` base mode should stay generic or be replaced by a more tailored listing-creation prompt set.
 
 ---
 
