@@ -18,7 +18,6 @@
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
 #endif
-    static bool gp12_combo_used = false;
 #define PAD_KEY_COUNT        9
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
