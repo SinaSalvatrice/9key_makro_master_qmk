@@ -1,7 +1,6 @@
 #pragma once
 
 #define ENCODER_BTN_PIN GP8
-#define SELECTOR_BTN_PIN GP12
 
 // Selector is the first matrix key (top-left / row 0, col 0), not a dedicated GPIO pin.
 #define SELECTOR_MATRIX_ROW 0
@@ -10,6 +9,7 @@
 // Milliseconds of inactivity before sending system sleep (5 minutes)
 #define IDLE_SLEEP_TIMEOUT_MS 300000
 
+#define RGBLIGHT_LED_COUNT 9
 #define RGBLIGHT_LIMIT_VAL 160
 #define RGBLIGHT_DEFAULT_HUE 128
 #define RGBLIGHT_DEFAULT_SAT 255
