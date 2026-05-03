@@ -1161,7 +1161,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             selector_origin_layer = active_layer_raw();
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
             matrix_select_held = true;
-            update_select_layer_state();
+  TO(       )update_select_layer_state();
         } else {
             matrix_select_held = false;
             update_select_layer_state();
@@ -1196,7 +1196,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_RGB:    if (record->event.pressed) select_target_layer(_RGB); return false;
         case SEL_DEV:    if (record->event.pressed) select_target_layer(_DEV); return false;
         case SEL_VSC:    if (record->event.pressed) select_target_layer(_VSC); return false;
-        case SEL_PROMPT: if (record->event.pressed) select_target_layer(_PROMPT); return false;
+        case SEL_PROMPT:
+            if (record->event.pressed) {
+                selector_target = _PROMPT;
+                select_cursor = slot_for_layer(selector_target);
+                layer_move(_PROMPT);
+            }
+            return false;
 
         case WIN_BRO: window_browser_held = record->event.pressed; return false;
         case WIN_AUX: return false;
