@@ -25,6 +25,7 @@
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS 3000
 #define VIA_LAYER_SLOT_COUNT 7
+#define REWORKED_LAYOUT_VERSION 2
 #define ENCODER_HELP_HOLD_MS 700
 #define ENCODER_HELP_SHOW_MS 2500
 
@@ -198,6 +199,7 @@ enum via_custom_value {
 
 typedef struct {
     uint8_t      signature;
+    uint8_t      layout_version;
     uint8_t      oled_view;
     uint8_t      fx_mode;
     uint8_t      layer_effect[VIA_LAYER_SLOT_COUNT];
@@ -599,6 +601,7 @@ static void apply_via_runtime_config(void) {
 
 static void set_via_config_defaults(void) {
     via_user_config.signature  = 0x94;
+    via_user_config.layout_version = REWORKED_LAYOUT_VERSION;
     via_user_config.oled_view  = OLED_VIEW_LEGEND;
     via_user_config.fx_mode    = 0;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
@@ -622,6 +625,10 @@ static void load_via_config(void) {
         invalid_config = true;
     }
 
+    if (via_user_config.layout_version != REWORKED_LAYOUT_VERSION) {
+        invalid_config = true;
+    }
+
     if (via_user_config.oled_view > OLED_VIEW_LAST_KEY) {
         invalid_config = true;
     }
@@ -640,6 +647,8 @@ static void load_via_config(void) {
     }
 
     if (invalid_config) {
+        // The layout changed; reset EEPROM-backed key assignments so new defaults apply.
+        eeconfig_init();
         set_via_config_defaults();
         save_via_config();
         return;
