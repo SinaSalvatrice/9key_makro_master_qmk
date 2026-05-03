@@ -21,12 +21,17 @@
 
 ## Current behavior
 
+### GAME layer
+- `GAME` is now a keyboard-style gaming layer, not a mouse/dev utilities layer.
+- Layout is `SEL / ESC / TAB`, `A / W / D`, `SHIFT / S / SPACE`.
+- The encoder stays on scroll so it can act like weapon or inventory cycling in games that support mouse-wheel switching.
+
 ### Layers in use
 - `BASE`
 - `WINDOW`
 - `TEXT` (`TXT`)
 - `MEDIA`
-- `DEV`
+- `GAME`
 - `VSC`
 - `RGB`
 - `PROMPT` (`PRM`)
@@ -47,7 +52,7 @@
 - `TXT` → cursor left / right by default; with encoder button held, select left / right, and a follow-up button tap copies the selection
 - `MEDIA` → volume down / up
 - `RGB` → brightness down / up
-- `DEV` → mouse wheel up/down
+- `GAME` → weapon or inventory scroll
 - `VSC` → `Ctrl+PgUp` / `Ctrl+PgDn`
 - `PROMPT` → `Ctrl+PgUp` / `Ctrl+PgDn`
 - `SELECT` → move through layer targets, but only while the encoder button is held
@@ -67,7 +72,7 @@
 - Overall feel is already strong; this is now mostly a polish/taste area.
 
 ### VSC layer
-- `VSC` is an extra working layer, not a replacement for `DEV`.
+- `VSC` is an extra working layer, not a replacement for `GAME`.
 - Top row remains `SEL`, `BAR`, `CHAT`.
 - Lower six keys (`VSC_1` … `VSC_6`) trigger shared actions depending on the active `BAR` or `CHAT` mode.
 - `BAR` strings and `CHAT` texts are already centralized in one editable block in the keymap, which is good and should stay that way.
@@ -111,27 +116,27 @@
 
 
 
-## to do 
+## to do
 - verify RGB pixel position under the keys in layer mod.
- 
-- base - 0/0 
-- win - 0/1 
+
+- base - 0/0
+- win - 0/1
 - txt - 0/2
 
 - med - 1/0
-- Fx - 1/1 no pixel because of switching this exactly behavior, good 👍 
-- dev - 1/2
+- Fx - 1/1 no pixel because of switching this exactly behavior, good 👍
+- game - 1/2
 - VSC - 2/0
-- RGB - 2/1 
+- RGB - 2/1
 
 - Extend TXT layer.
 - the first two availale keys are modifiers.
 - The rest on no kombo pressed are defined as followed: home, up, end, left, down, right
 - first (_ACT) toggles actions like select all, copy, paste, cut, undo, redo
 - second (_EDT) toggles textedit keys such as enter, backspace, space, tab, shift and mouse key 1.
-- IMPORTANT: enc A+B go through the text. the encoder btn should transform this movement into a selection of these characters. 
+- IMPORTANT: enc A+B go through the text. the encoder btn should transform this movement into a selection of these characters.
 
-- Extend Windows layer. 
+- Extend Windows layer.
 - the first two availale keys are modifiers
 - the first (BRO) activates browser control, whatever that may include, surprise me.
 - the second one comes later

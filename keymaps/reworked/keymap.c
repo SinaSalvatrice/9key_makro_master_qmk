@@ -9,7 +9,7 @@
 // RGB / OLED selector build
 // - GP11 toggles OLED Legend <-> Last Key view
 // - Long encoder-button hold shows temporary Encoder Help view
-// - DEV / MEDIA FX colors swapped
+// - GAME reuses the old DEV layer slot; MEDIA keeps its swapped palette slot
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
@@ -210,12 +210,12 @@ typedef struct {
 static via_user_config_t via_user_config;
 #endif
 
-// DEV / MEDIA swapped versus previous version.
+// GAME / MEDIA share the old DEV slot to keep VIA layer indexing stable.
 static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   160, 220, 120, "BASE",   true  },
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
-    { _DEV,   32, 255, 130, "DEV",  true  },
+    { _DEV,   32, 255, 130, "GAME", true  },
     { _SELECT,   0,   0, 120, "SELECT", false },
     { _MEDIA,     18, 255, 130, "MEDIA",    true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
@@ -227,12 +227,12 @@ static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
     0, 1, 2, 5, 3, 6, 7
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, DEV, MEDIA, VSC, RGB.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, GAME(old DEV slot), MEDIA, VSC, RGB.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {160, 220, 120},
     {176, 240, 120},
     { 96, 220, 110},
-    { 18, 255, 130}, // DEV
+    { 18, 255, 130}, // GAME
     { 32, 255, 130}, // MEDIA
     {200, 255, 130},
     {215, 240, 130},
@@ -309,10 +309,10 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
     [_RGB]    = {"SEL",  "SPD-", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-", "VAL-"},
-    [_DEV]    = {"SEL",  "M^",   "SHIFT","M<-",  "BTN1", "M->",  "ALT",  "Mv",   "BTN2"},
+    [_DEV]    = {"SEL",  "ESC",  "TAB",  "A",    "W",    "D",    "SHIFT","S",    "SPC"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "DEV",  "VSC",  "RGB",  "PROMT"},
+    [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "GAME", "VSC",  "RGB",  "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -321,10 +321,10 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
     [_RGB]    = {"Select layer", "Speed down", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
-    [_DEV]    = {"Select layer", "Mouse up", "Hold Shift", "Mouse left", "Mouse button 1", "Mouse right", "Hold Alt", "Mouse down", "Mouse button 2"},
+    [_DEV]    = {"Select layer", "Game escape", "Game tab", "Move left", "Move forward", "Move right", "Sprint or crouch modifier", "Move back", "Jump or confirm"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to DEV", "Go to VSC", "Go to RGB", "Go to prompt"},
+    [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -334,7 +334,7 @@ static const char *layer_name_short(uint8_t l) {
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MED";
         case _RGB:    return "RGB";
-        case _DEV:    return "DEV";
+        case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PRM";
         case _SELECT: return "SEL";
@@ -349,7 +349,7 @@ static const char *layer_name_long(uint8_t l) {
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MEDIA";
         case _RGB:    return "RGB";
-        case _DEV:    return "DEV";
+        case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
@@ -383,7 +383,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _TEXT:   return encoder_btn_pressed ? "Select text left/right" : "Move cursor left/right";
         case _MEDIA:  return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
-        case _DEV:    return "Mouse wheel up/down";
+        case _DEV:    return "Weapon or inventory scroll";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
@@ -1220,9 +1220,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         UG_SATU,     UG_SATD, UG_VALD
     ),
     [_DEV] = LAYOUT(
-        MO(_SELECT), MS_UP,   KC_LSFT,
-        MS_LEFT,     MS_BTN1, MS_RGHT,
-        KC_LALT,     MS_DOWN, MS_BTN2
+        MO(_SELECT), KC_ESC,  KC_TAB,
+        KC_A,        KC_W,    KC_D,
+        KC_LSFT,     KC_S,    KC_SPC
     ),
     [_VSC] = LAYOUT(
         MO(_SELECT), VSC_BAR, VSC_CHAT,
