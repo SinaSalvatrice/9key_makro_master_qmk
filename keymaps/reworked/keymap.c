@@ -220,7 +220,7 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _MEDIA,     18, 255, 130, "MEDIA",    true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
-    { _PROMPT, 224, 180, 120, "PROMT",  true  },
+    { _PROMPT,   8, 255, 140, "PROMT",  true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
@@ -1020,6 +1020,17 @@ static void render_vsc_wild(void) {
     }
 }
 
+static void render_prompt_wild(void) {
+    uint32_t now = timer_read32();
+    hsv_config_t prompt = palette_for_layer(_PROMPT);
+    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+        uint8_t glow = triwave8_period(now, 2100, i * 19);
+        uint8_t hue = prompt.hue + (glow / 5);
+        uint8_t val = pulse_val(now, 1500 + (i * 35), i * 17, palette_floor(prompt.val / 5, 22), prompt.val);
+        set_key_hsv(i, hue, prompt.sat, val);
+    }
+}
+
 static void render_select_wild(void) {
     uint32_t now = timer_read32();
     uint8_t target_slot = slot_for_layer(selector_target);
@@ -1174,6 +1185,7 @@ static void render_rgb_layer_visuals(void) {
         case _RGB:    render_rgb_wild(); break;
         case _DEV:    render_dev_wild(); break;
         case _VSC:    render_vsc_wild(); break;
+        case _PROMPT: render_prompt_wild(); break;
         case _SELECT: render_select_wild(); break;
         default:      render_base_wild(); break;
     }
