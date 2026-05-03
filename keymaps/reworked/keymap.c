@@ -18,10 +18,12 @@
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
 #endif
+    static bool gp12_combo_used = false;
 #define PAD_KEY_COUNT        9
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
 #define BUTTON_DEBOUNCE_MS   150
+#define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS 3000
 #define VIA_LAYER_SLOT_COUNT 7
 #define ENCODER_HELP_HOLD_MS 700
@@ -36,6 +38,7 @@ enum layers {
     _DEV,
     _VSC,
     _RGB,
+    _PROMPT,
     _SELECT,
     _LAYER_COUNT
 };
@@ -145,6 +148,8 @@ static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
 static uint32_t encoder_help_started = 0;
 static uint32_t encoder_help_until   = 0;
 static bool encoder_help_fired       = false;
+static uint8_t selector_origin_layer = _BASE;
+static uint32_t selector_last_tap    = 0;
 
 // Physical key numbering:
 //  1 2 3
@@ -203,7 +208,7 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _MEDIA,     18, 255, 130, "MEDIA",    true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
-    { _SELECT,   0,   0,  24, "RESET",  false },
+    { _PROMPT, 224, 180, 120, "PROMT",  true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
@@ -269,7 +274,8 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"SEL",  "SPD-", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-", "VAL-"},
     [_DEV]    = {"SEL",  "M^",   "SHIFT","M<-",  "BTN1", "M->",  "ALT",  "Mv",   "BTN2"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
-    [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "DEV",  "VSC",  "RGB",  "RESET"},
+    [_PROMPT] = {"SEL",  "----", "----", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
+    [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "DEV",  "VSC",  "RGB",  "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -280,7 +286,8 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"Select layer", "Speed down", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_DEV]    = {"Select layer", "Mouse up", "Hold Shift", "Mouse left", "Mouse button 1", "Mouse right", "Hold Alt", "Mouse down", "Mouse button 2"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
-    [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to DEV", "Go to VSC", "Go to RGB", "Clear VIA EEPROM"},
+    [_PROMPT] = {"Select layer", "Unused", "Unused", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
+    [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to DEV", "Go to VSC", "Go to RGB", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -292,6 +299,7 @@ static const char *layer_name_short(uint8_t l) {
         case _RGB:    return "RGB";
         case _DEV:    return "DEV";
         case _VSC:    return "VSC";
+        case _PROMPT: return "PRM";
         case _SELECT: return "SEL";
         default:      return "BASE";
     }
@@ -306,6 +314,7 @@ static const char *layer_name_long(uint8_t l) {
         case _RGB:    return "RGB";
         case _DEV:    return "DEV";
         case _VSC:    return "VSC";
+        case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
         default:      return "BASE";
     }
@@ -339,6 +348,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _RGB:    return "RGB brightness +/-";
         case _DEV:    return "Mouse wheel up/down";
         case _VSC:    return "VSCode page prev/next";
+        case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
         default:      return "Encoder fallback volume";
     }
@@ -713,6 +723,12 @@ static void send_vsc_command(const char *command) {
 
 static void trigger_vsc_target(uint8_t slot) {
     if (slot >= 6) return;
+    if (active_layer_raw() == _PROMPT) {
+        send_vsc_command("GitHub Copilot Chat: Focus on Chat View");
+        wait_ms(30);
+        send_string(vsc_chat_macros[slot]);
+        return;
+    }
     vsc_mode_t mode = current_vsc_preview_mode();
     if (mode == VSC_MODE_NONE) return;
     if (mode == VSC_MODE_BAR) {
@@ -1104,14 +1120,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
+    [_PROMPT] = LAYOUT(
+        MO(_SELECT), KC_NO,   KC_NO,
+        VSC_1,       VSC_2,   VSC_3,
+        VSC_4,       VSC_5,   VSC_6
+    ),
     [_SELECT] = LAYOUT(
         SEL_BASE,  SEL_WINDOW, SEL_TEXT,
         SEL_MEDIA, RGB_PROFILE,SEL_DEV,
-        SEL_VSC,   SEL_RGB,    EE_CLR
+        SEL_VSC,   SEL_RGB,    TO(_PROMPT)
     ),
 };
-
-static bool r0c0_held = false;
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     static layer_state_t last_state = 0;
@@ -1136,27 +1155,24 @@ static void select_target_layer(uint8_t layer) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.key.row == SELECTOR_MATRIX_ROW && record->event.key.col == SELECTOR_MATRIX_COL) {
-        r0c0_held = record->event.pressed;
-    }
-
-    if (record->event.key.row == 2 && record->event.key.col == 2) {
-        if (record->event.pressed && r0c0_held) {
-            selector_target = _BASE;
-            select_cursor = slot_for_layer(selector_target);
-            layer_move(_BASE);
-            return false;
-        }
-    }
-
     if (keycode == MO(_SELECT)) {
         if (record->event.pressed) {
+            selector_origin_layer = active_layer_raw();
+            if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
             matrix_select_held = true;
             update_select_layer_state();
         } else {
             matrix_select_held = false;
             update_select_layer_state();
-            layer_move(selector_target);
+            if (selector_target == selector_origin_layer && timer_elapsed32(selector_last_tap) <= SELECTOR_DOUBLE_TAP_MS) {
+                selector_target = _BASE;
+                select_cursor = slot_for_layer(selector_target);
+                layer_move(_BASE);
+                selector_last_tap = 0;
+            } else {
+                layer_move(selector_target);
+                selector_last_tap = (selector_target == selector_origin_layer) ? timer_read32() : 0;
+            }
         }
         return false;
     }
@@ -1248,6 +1264,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
         case _VSC:
+        case _PROMPT:
             tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
             break;
         case _SELECT:
@@ -1266,12 +1283,12 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 void matrix_scan_user(void) {
 #ifdef OLED_TOGGLE_BTN_PIN
     static bool oled_toggle_was_pressed = false;
+    static bool oled_toggle_combo_used = false;
     static uint32_t oled_toggle_last_action = 0;
 #endif
 #ifdef SELECTOR_BTN_PIN
     bool gp12_pressed = false;
     static bool gp12_was_pressed = false;
-    static bool gp12_combo_used = false;
 #endif
 
 #ifdef ENCODER_BTN_PIN
@@ -1305,8 +1322,32 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
 #ifdef OLED_TOGGLE_BTN_PIN
     bool oled_toggle_pressed = (gpio_read_pin(OLED_TOGGLE_BTN_PIN) == 0);
 
-    if (oled_toggle_pressed && !oled_toggle_was_pressed) {
-        if (timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
+    bool clear_buttons_pressed = encoder_btn_pressed && oled_toggle_pressed;
+
+    if (clear_buttons_pressed) {
+        oled_toggle_combo_used = true;
+
+        if (button_clear_started == 0) {
+            button_clear_started = timer_read32() | 1;
+        } else if (!button_clear_armed && timer_elapsed32(button_clear_started) >= CLEAR_EEPROM_HOLD_MS) {
+            button_clear_armed = true;
+
+            eeconfig_init();
+
+#    ifdef VIA_ENABLE
+            set_via_config_defaults();
+            save_via_config();
+#    endif
+
+            soft_reset_keyboard();
+        }
+    } else {
+        button_clear_started = 0;
+        button_clear_armed = false;
+    }
+
+    if (!oled_toggle_pressed && oled_toggle_was_pressed) {
+        if (!oled_toggle_combo_used && timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
             oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
 
 #    ifdef VIA_ENABLE
@@ -1316,6 +1357,8 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
 
             oled_toggle_last_action = timer_read32();
         }
+
+        oled_toggle_combo_used = false;
     }
 
     oled_toggle_was_pressed = oled_toggle_pressed;
@@ -1323,37 +1366,6 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
 
 #ifdef SELECTOR_BTN_PIN
     gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
-
-#    ifdef ENCODER_BTN_PIN
-    bool clear_buttons_pressed = encoder_btn_pressed && gp12_pressed;
-
-    if (clear_buttons_pressed) {
-        gp12_combo_used = true;
-
-        if (button_clear_started == 0) {
-            button_clear_started = timer_read32() | 1;
-        } else if (!button_clear_armed && timer_elapsed32(button_clear_started) >= CLEAR_EEPROM_HOLD_MS) {
-            button_clear_armed = true;
-
-            // Safe reset: initialize EEPROM to sane QMK defaults instead of disabling it.
-            eeconfig_init();
-
-#        ifdef VIA_ENABLE
-            set_via_config_defaults();
-            save_via_config();
-#        endif
-
-            soft_reset_keyboard();
-        }
-    } else {
-        button_clear_started = 0;
-        button_clear_armed = false;
-    }
-#    endif
-
-    if (!gp12_pressed && gp12_was_pressed) {
-        gp12_combo_used = false;
-    }
 
     gp12_was_pressed = gp12_pressed;
 #endif
