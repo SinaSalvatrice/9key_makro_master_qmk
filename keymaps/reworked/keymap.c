@@ -945,6 +945,16 @@ static void tap_window_target(uint8_t slot) {
         return;
     }
 
+    switch (slot) {
+        case 0: tap_code16(G(C(KC_LEFT))); break;
+        case 1: tap_code16(G(KC_TAB)); break;
+        case 2: tap_code16(G(C(KC_RGHT))); break;
+        case 3: tap_code16(S(A(KC_TAB))); break;
+        case 4: tap_code16(G(KC_D)); break;
+        case 5: tap_code16(A(KC_TAB)); break;
+    }
+}
+
 static void tap_game_target(uint8_t slot) {
     if (slot >= 6) return;
     if (current_game_preview_mode() == GAME_MODE_NAV) {
@@ -965,15 +975,6 @@ static void tap_game_target(uint8_t slot) {
             case 4: tap_code(KC_S); break;
             case 5: tap_code(KC_D); break;
         }
-    }
-}
-    switch (slot) {
-        case 0: tap_code16(G(C(KC_LEFT))); break;
-        case 1: tap_code16(G(KC_TAB)); break;
-        case 2: tap_code16(G(C(KC_RGHT))); break;
-        case 3: tap_code16(S(A(KC_TAB))); break;
-        case 4: tap_code16(G(KC_D)); break;
-        case 5: tap_code16(A(KC_TAB)); break;
     }
 }
 
@@ -1019,9 +1020,9 @@ static void render_minimal_profile(uint8_t layer) {
 static void render_base_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t base = palette_for_layer(_BASE);
+    uint8_t hue_shift = (uint8_t)(now / 64);
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
-        uint8_t mix = triwave8_period(now, 5200, i * 17);
-        uint8_t hue = base.hue + (mix / 5);
+        uint8_t hue = hue_shift + (i * 6);
         uint8_t val = pulse_val(now, 2600, i * 11, palette_floor(base.val / 4, 18), base.val);
         set_key_hsv(i, hue, base.sat, val);
     }
@@ -1513,7 +1514,6 @@ void matrix_scan_user(void) {
 #endif
 #ifdef SELECTOR_BTN_PIN
     bool gp12_pressed = false;
-    static bool gp12_was_pressed = false;
 #endif
 
 #ifdef ENCODER_BTN_PIN
@@ -1591,8 +1591,6 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
 
 #ifdef SELECTOR_BTN_PIN
     gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
-
-    gp12_was_pressed = gp12_pressed;
 #endif
 
 #ifdef RGBLIGHT_ENABLE
