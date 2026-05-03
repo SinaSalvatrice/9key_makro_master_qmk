@@ -7,7 +7,7 @@
 
 // ============================================================
 // RGB / OLED selector build
-// - GP12 toggles OLED Legend <-> Last Key view
+// - GP11 toggles OLED Legend <-> Last Key view
 // - Long encoder-button hold shows temporary Encoder Help view
 // - DEV / MEDIA FX colors swapped
 // ============================================================
@@ -235,12 +235,12 @@ static const char *const vsc_bar_commands[6] = {
 static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const vsc_chat_functions[6] = {"Summarize", "Review", "Suggest fix", "Write tests", "Explain code", "Commit message"};
 static const char *const vsc_chat_macros[6] = {
-   
+
   "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
-    
+
 "Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
 "Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
-"create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.", 
+"create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.",
 "Check my QMK environment in VS code, but don't change files. Execute diagnostic commands such as 'qmk doctor', 'qmk config', and userspace 'qmk userspace-doctor'. Analyze OS, shell, dependencies, compilers, paths, VS code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps."
 "Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
 "Check notes.md and start working on it.",
@@ -1264,11 +1264,14 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 }
 
 void matrix_scan_user(void) {
-    bool gp12_pressed = false;
+#ifdef OLED_TOGGLE_BTN_PIN
+    static bool oled_toggle_was_pressed = false;
+    static uint32_t oled_toggle_last_action = 0;
+#endif
 #ifdef SELECTOR_BTN_PIN
+    bool gp12_pressed = false;
     static bool gp12_was_pressed = false;
     static bool gp12_combo_used = false;
-    static uint32_t gp12_last_action = 0;
 #endif
 
 #ifdef ENCODER_BTN_PIN
@@ -1297,6 +1300,25 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
         }
     }
 
+#endif
+
+#ifdef OLED_TOGGLE_BTN_PIN
+    bool oled_toggle_pressed = (gpio_read_pin(OLED_TOGGLE_BTN_PIN) == 0);
+
+    if (oled_toggle_pressed && !oled_toggle_was_pressed) {
+        if (timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
+            oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
+
+#    ifdef VIA_ENABLE
+            via_user_config.oled_view = oled_view;
+            save_via_config();
+#    endif
+
+            oled_toggle_last_action = timer_read32();
+        }
+    }
+
+    oled_toggle_was_pressed = oled_toggle_pressed;
 #endif
 
 #ifdef SELECTOR_BTN_PIN
@@ -1329,22 +1351,7 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
     }
 #    endif
 
-    // Toggle OLED only on RELEASE, not on press.
-    // This prevents accidental toggles during combo/clear actions.
     if (!gp12_pressed && gp12_was_pressed) {
-        if (!gp12_combo_used && timer_elapsed32(gp12_last_action) > BUTTON_DEBOUNCE_MS) {
-            oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
-
-#    ifdef VIA_ENABLE
-            // Optional but recommended:
-            // keep VIA state in sync so it does not overwrite your runtime choice later.
-            via_user_config.oled_view = oled_view;
-            save_via_config();
-#    endif
-
-            gp12_last_action = timer_read32();
-        }
-
         gp12_combo_used = false;
     }
 
@@ -1366,6 +1373,9 @@ void keyboard_post_init_user(void) {
 #endif
 #ifdef ENCODER_BTN_PIN
     gpio_set_pin_input_high(ENCODER_BTN_PIN);
+#endif
+#ifdef OLED_TOGGLE_BTN_PIN
+    gpio_set_pin_input_high(OLED_TOGGLE_BTN_PIN);
 #endif
     gpio_set_pin_output(GP25);
     gpio_write_pin_high(GP25);
@@ -1534,8 +1544,8 @@ static void render_legend_view(uint8_t layer) {
     } else if (layer == _WINDOW) {
         snprintf(line, sizeof(line), "WIN %s%s", window_browser_held ? "BRO" : "WIN", window_browser_held ? " [HELD]" : "");
     } else {
-#ifdef SELECTOR_BTN_PIN
-        snprintf(line, sizeof(line), "GP12: Lay <-> Last");
+#ifdef OLED_TOGGLE_BTN_PIN
+        snprintf(line, sizeof(line), "GP11: Lay <-> Last");
 #else
         snprintf(line, sizeof(line), "Hold SEL for grid");
 #endif
@@ -1557,8 +1567,8 @@ static void render_last_key_view(void) {
     write_line(5, buf);
     snprintf(buf, sizeof(buf), "Pos:   %u (%u,%u)", (last_row * 3) + last_col + 1, last_row, last_col);
     write_line(6, buf);
-#ifdef SELECTOR_BTN_PIN
-    write_line(7, "GP12: back to Lay");
+#ifdef OLED_TOGGLE_BTN_PIN
+    write_line(7, "GP11: back to Lay");
 #else
     write_line(7, "Last-key details");
 #endif
