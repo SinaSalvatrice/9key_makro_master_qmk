@@ -61,13 +61,14 @@
 
 ### Encoder behavior by layer
 - `BASE` → mouse wheel up/down
-- `WINDOW` → previous / next window (`Alt+Tab` style) , with btn held down previous / next desktop
-- `TXT` → cursor left / right , with btn held down, select text, further push copies text
-- `MEDIA` → volume down / up , with btn held down, next track, previous track
-- `RGB` → brightness down / up , with btn held down cycle throug modi
-- `DEV` → mouse wheel up/down 
-- `VSC` → up / down , with btn held down `Ctrl+PgUp` / `Ctrl+PgDn` ,
-- `SELECT` → move through layer targets 
+- `WINDOW` → previous / next window by default; when browser mode is active, previous / next page
+- `TXT` → cursor left / right by default; with encoder button held, select left / right, and a follow-up button tap copies the selection
+- `MEDIA` → volume down / up
+- `RGB` → brightness down / up
+- `DEV` → mouse wheel up/down
+- `VSC` → `Ctrl+PgUp` / `Ctrl+PgDn`
+- `PRMPT` → `Ctrl+PgUp` / `Ctrl+PgDn`
+- `SELECT` → move through layer targets, but only while the encoder button is held
 
 ### OLED
 - Main OLED view shows a 3x3 legend for the active layer.
