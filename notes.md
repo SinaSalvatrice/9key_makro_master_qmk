@@ -22,8 +22,10 @@
 ## Current behavior
 
 ### GAME layer
-- `GAME` is now a keyboard-style gaming layer, not a mouse/dev utilities layer.
-- Layout is `SEL / ESC / TAB`, `A / W / D`, `SHIFT / S / SPACE`.
+- `GAME` is now a keyboard-style gaming layer with two modes.
+- Top row is `SEL / NAV / WASD`.
+- `NAV` mode uses `ESC / UP / ENT`, `LEFT / DOWN / RGHT` for menus and in-game navigation.
+- `WASD` mode uses `SHIFT / W / SPACE`, `A / S / D` for compact movement controls.
 - The encoder stays on scroll so it can act like weapon or inventory cycling in games that support mouse-wheel switching.
 
 ### Layers in use
@@ -61,6 +63,7 @@
 - Main OLED view shows a 3x3 legend for the active layer.
 - Last-key view shows layer, key label, keycode, function, and matrix position.
 - While `SELECT` is active, the OLED intentionally forces the selector legend/grid view.
+- On the `GAME` layer, the OLED header shows the active game mode: `NAV` or `WASD`.
 - On the `VSC` layer, the OLED preview changes depending on whether `BAR` or `CHAT` is the current held/last-used mode.
 - On the `PROMPT` layer, the OLED header shows the active prompt mode: `BASE`, `PICS`, or `ETSY`.
 - `GP11` toggles between legend view and last-key view.

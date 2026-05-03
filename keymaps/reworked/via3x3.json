@@ -82,12 +82,12 @@
               "content": ["id_via_layer_brightness[3]", 0, 4, 3]
             },
             {
-              "label": "DEV Color",
+              "label": "GAME Color",
               "type": "color",
               "content": ["id_via_layer_color[4]", 0, 3, 4]
             },
             {
-              "label": "DEV Brightness",
+              "label": "GAME Brightness",
               "type": "range",
               "options": [0, 255],
               "content": ["id_via_layer_brightness[4]", 0, 4, 4]
@@ -113,6 +113,17 @@
               "type": "range",
               "options": [0, 255],
               "content": ["id_via_layer_brightness[6]", 0, 4, 6]
+            },
+            {
+              "label": "PROMPT Color",
+              "type": "color",
+              "content": ["id_via_layer_color[7]", 0, 3, 7]
+            },
+            {
+              "label": "PROMPT Brightness",
+              "type": "range",
+              "options": [0, 255],
+              "content": ["id_via_layer_brightness[7]", 0, 4, 7]
             }
           ]
         }
@@ -125,11 +136,19 @@
     {"name": "SEL_TEXT", "title": "Go to TXT layer", "shortName": "TXT"},
     {"name": "SEL_MEDIA", "title": "Go to MEDIA layer", "shortName": "MED"},
     {"name": "SEL_RGB", "title": "Go to RGB layer", "shortName": "RGB"},
-    {"name": "SEL_DEV", "title": "Go to DEV layer", "shortName": "DEV"},
+    {"name": "SEL_DEV", "title": "Go to GAME layer", "shortName": "GAME"},
     {"name": "SEL_VSC", "title": "Go to VSC layer", "shortName": "VSC"},
     {"name": "SEL_PROMPT", "title": "Go to PROMPT layer", "shortName": "PRM"},
     {"name": "PRM_PICS", "title": "Prompt picture mode", "shortName": "PICS"},
     {"name": "PRM_ETSY", "title": "Prompt Etsy mode", "shortName": "ETSY"},
+    {"name": "GM_NAV", "title": "GAME navigation mode", "shortName": "NAV"},
+    {"name": "GM_WASD", "title": "GAME movement mode", "shortName": "WASD"},
+    {"name": "GM_1", "title": "GAME target 1", "shortName": "G1"},
+    {"name": "GM_2", "title": "GAME target 2", "shortName": "G2"},
+    {"name": "GM_3", "title": "GAME target 3", "shortName": "G3"},
+    {"name": "GM_4", "title": "GAME target 4", "shortName": "G4"},
+    {"name": "GM_5", "title": "GAME target 5", "shortName": "G5"},
+    {"name": "GM_6", "title": "GAME target 6", "shortName": "G6"},
     {"name": "WIN_BRO", "title": "Window browser mode", "shortName": "BRO"},
     {"name": "WIN_AUX", "title": "Window aux key", "shortName": "AUX"},
     {"name": "WIN_1", "title": "Window target 1", "shortName": "W1"},

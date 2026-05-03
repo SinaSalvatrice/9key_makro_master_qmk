@@ -431,7 +431,7 @@
               ]
             },
             {
-              "label": "DEV Color",
+              "label": "GAME Color",
               "type": "color",
               "content": [
                 "id_via_layer_color[4]",
@@ -441,7 +441,7 @@
               ]
             },
             {
-              "label": "DEV Brightness",
+              "label": "GAME Brightness",
               "type": "range",
               "options": [
                 0,
@@ -455,7 +455,7 @@
               ]
             },
             {
-              "label": "DEV Effect",
+              "label": "GAME Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -511,7 +511,7 @@
               ]
             },
             {
-              "label": "DEV Effect Speed",
+              "label": "GAME Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -711,6 +711,100 @@
                 6,
                 6
               ]
+            },
+            {
+              "label": "PROMPT Color",
+              "type": "color",
+              "content": [
+                "id_via_layer_color[7]",
+                0,
+                3,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[7]",
+                0,
+                4,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ]
+              ],
+              "content": [
+                "id_via_rgb_effect[7]",
+                0,
+                5,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[7]",
+                0,
+                6,
+                7
+              ]
             }
           ]
         }
@@ -745,8 +839,8 @@
     },
     {
       "name": "SEL_DEV",
-      "title": "Go to DEV layer",
-      "shortName": "DEV"
+      "title": "Go to GAME layer",
+      "shortName": "GAME"
     },
     {
       "name": "SEL_VSC",
@@ -767,6 +861,46 @@
       "name": "PRM_ETSY",
       "title": "Prompt Etsy mode",
       "shortName": "ETSY"
+    },
+    {
+      "name": "GM_NAV",
+      "title": "GAME navigation mode",
+      "shortName": "NAV"
+    },
+    {
+      "name": "GM_WASD",
+      "title": "GAME movement mode",
+      "shortName": "WASD"
+    },
+    {
+      "name": "GM_1",
+      "title": "GAME target 1",
+      "shortName": "G1"
+    },
+    {
+      "name": "GM_2",
+      "title": "GAME target 2",
+      "shortName": "G2"
+    },
+    {
+      "name": "GM_3",
+      "title": "GAME target 3",
+      "shortName": "G3"
+    },
+    {
+      "name": "GM_4",
+      "title": "GAME target 4",
+      "shortName": "G4"
+    },
+    {
+      "name": "GM_5",
+      "title": "GAME target 5",
+      "shortName": "G5"
+    },
+    {
+      "name": "GM_6",
+      "title": "GAME target 6",
+      "shortName": "G6"
     },
     {
       "name": "WIN_BRO",

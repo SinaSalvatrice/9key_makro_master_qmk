@@ -24,8 +24,8 @@
 #define BUTTON_DEBOUNCE_MS   150
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS 3000
-#define VIA_LAYER_SLOT_COUNT 7
-#define REWORKED_LAYOUT_VERSION 2
+#define VIA_LAYER_SLOT_COUNT 8
+#define REWORKED_LAYOUT_VERSION 4
 #define ENCODER_HELP_HOLD_MS 700
 #define ENCODER_HELP_SHOW_MS 2500
 
@@ -55,6 +55,14 @@ enum custom_keycodes {
     SEL_PROMPT,
     PRM_PICS,
     PRM_ETSY,
+    GM_NAV,
+    GM_WASD,
+    GM_1,
+    GM_2,
+    GM_3,
+    GM_4,
+    GM_5,
+    GM_6,
     WIN_BRO,
     WIN_AUX,
     WIN_1,
@@ -123,6 +131,11 @@ typedef enum {
 } window_mode_t;
 
 typedef enum {
+    GAME_MODE_NAV,
+    GAME_MODE_WASD,
+} game_mode_t;
+
+typedef enum {
     PROMPT_MODE_BASE,
     PROMPT_MODE_PICS,
     PROMPT_MODE_ETSY,
@@ -153,6 +166,8 @@ static bool text_edit_held           = false;
 static text_mode_t last_key_text_mode = TEXT_MODE_WIN;
 static bool window_browser_held       = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
+static game_mode_t game_mode          = GAME_MODE_WASD;
+static game_mode_t last_key_game_mode = GAME_MODE_WASD;
 static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
 static prompt_mode_t prompt_mode      = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
@@ -224,18 +239,19 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 5, 3, 6, 7
+    0, 1, 2, 5, 3, 6, 7, 8
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, GAME(old DEV slot), MEDIA, VSC, RGB.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {160, 220, 120},
     {176, 240, 120},
     { 96, 220, 110},
-    { 18, 255, 130}, // GAME
-    { 32, 255, 130}, // MEDIA
+    { 18, 255, 130}, // MEDIA
+    { 32, 255, 130}, // GAME
     {200, 255, 130},
     {215, 240, 130},
+    {  8, 255, 140}, // PROMPT
 };
 
 static const char *const vsc_bar_labels[6] = {"EXPL", "SRC", "GH-A", "GHUB", "GPT", "FREE"};
@@ -303,13 +319,19 @@ static const char *const window_browser_labels[6] = {"BACK", "REFR", "FWD", "TAB
 static const char *const window_win_functions[6]     = {"Previous desktop", "Task view", "Next desktop", "Previous window", "Show desktop", "Next window"};
 static const char *const window_browser_functions[6] = {"Browser back", "Refresh page", "Browser forward", "Previous tab", "New tab", "Next tab"};
 
+static const char *const game_nav_labels[6]  = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
+static const char *const game_wasd_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
+
+static const char *const game_nav_functions[6]  = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
+static const char *const game_wasd_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
+
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
     [_WINDOW] = {"SEL",  "BRO",  "AUX",  "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
     [_RGB]    = {"SEL",  "SPD-", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-", "VAL-"},
-    [_DEV]    = {"SEL",  "ESC",  "TAB",  "A",    "W",    "D",    "SHIFT","S",    "SPC"},
+    [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "GAME", "VSC",  "RGB",  "PROMT"},
@@ -321,7 +343,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
     [_RGB]    = {"Select layer", "Speed down", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
-    [_DEV]    = {"Select layer", "Game escape", "Game tab", "Move left", "Move forward", "Move right", "Sprint or crouch modifier", "Move back", "Jump or confirm"},
+    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
@@ -374,6 +396,10 @@ static text_mode_t current_text_preview_mode(void) {
 
 static window_mode_t current_window_preview_mode(void) {
     return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_WIN;
+}
+
+static game_mode_t current_game_preview_mode(void) {
+    return game_mode;
 }
 
 static const char *encoder_function_for_layer(uint8_t layer) {
@@ -449,6 +475,35 @@ static const char *text_label_for(uint8_t index) { return text_label_for_mode(cu
 static const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
 static const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
 static const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
+
+static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
+    if (index == 0) return "SEL";
+    if (index == 1) return "NAV";
+    if (index == 2) return "WASD";
+    if (index >= 3 && index < 9) {
+        uint8_t slot = index - 3;
+        return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_wasd_labels[slot];
+    }
+    return "----";
+}
+
+static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
+    if (index == 0) return "Select layer";
+    if (index == 1) return "Switch to menu navigation";
+    if (index == 2) return "Switch to movement controls";
+    if (index >= 3 && index < 9) {
+        uint8_t slot = index - 3;
+        return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_wasd_functions[slot];
+    }
+    return "Unknown";
+}
+
+static const char *game_label_for(uint8_t index) { return game_label_for_mode(current_game_preview_mode(), index); }
+static const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
+
+static const char *game_mode_name(game_mode_t mode) {
+    return mode == GAME_MODE_NAV ? "NAV" : "WASD";
+}
 
 static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
@@ -770,6 +825,7 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (layer == _TEXT) return text_label_for(index);
     if (layer == _WINDOW) return window_label_for(index);
+    if (layer == _DEV) return game_label_for(index);
     if (layer == _VSC) return vsc_label_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_label_for(index);
     return layer_legend[layer][index];
@@ -780,6 +836,7 @@ static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (layer == _TEXT) return text_function_for(index);
     if (layer == _WINDOW) return window_function_for(index);
+    if (layer == _DEV) return game_function_for(index);
     if (layer == _VSC) return vsc_function_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_function_for(index);
     return layer_function[layer][index];
@@ -790,6 +847,7 @@ static const char *last_key_label_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (last_key_layer == _TEXT) return text_label_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_label_for_mode(last_key_window_mode, index);
+    if (last_key_layer == _DEV) return game_label_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_label_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_label_for_mode(last_key_prompt_mode, index);
     return layer_legend[last_key_layer][index];
@@ -800,6 +858,7 @@ static const char *last_key_function_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (last_key_layer == _TEXT) return text_function_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_function_for_mode(last_key_window_mode, index);
+    if (last_key_layer == _DEV) return game_function_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_function_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_function_for_mode(last_key_prompt_mode, index);
     return layer_function[last_key_layer][index];
@@ -885,6 +944,29 @@ static void tap_window_target(uint8_t slot) {
         }
         return;
     }
+
+static void tap_game_target(uint8_t slot) {
+    if (slot >= 6) return;
+    if (current_game_preview_mode() == GAME_MODE_NAV) {
+        switch (slot) {
+            case 0: tap_code(KC_ESC); break;
+            case 1: tap_code(KC_UP); break;
+            case 2: tap_code(KC_ENT); break;
+            case 3: tap_code(KC_LEFT); break;
+            case 4: tap_code(KC_DOWN); break;
+            case 5: tap_code(KC_RGHT); break;
+        }
+    } else {
+        switch (slot) {
+            case 0: set_oneshot_mods(MOD_LSFT); break;
+            case 1: tap_code(KC_W); break;
+            case 2: tap_code(KC_SPC); break;
+            case 3: tap_code(KC_A); break;
+            case 4: tap_code(KC_S); break;
+            case 5: tap_code(KC_D); break;
+        }
+    }
+}
     switch (slot) {
         case 0: tap_code16(G(C(KC_LEFT))); break;
         case 1: tap_code16(G(KC_TAB)); break;
@@ -1220,9 +1302,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         UG_SATU,     UG_SATD, UG_VALD
     ),
     [_DEV] = LAYOUT(
-        MO(_SELECT), KC_ESC,  KC_TAB,
-        KC_A,        KC_W,    KC_D,
-        KC_LSFT,     KC_S,    KC_SPC
+        MO(_SELECT), GM_NAV,  GM_WASD,
+        GM_1,        GM_2,    GM_3,
+        GM_4,        GM_5,    GM_6
     ),
     [_VSC] = LAYOUT(
         MO(_SELECT), VSC_BAR, VSC_CHAT,
@@ -1293,6 +1375,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_col = record->event.key.col;
         last_key_text_mode = current_text_preview_mode();
         last_key_window_mode = current_window_preview_mode();
+        last_key_game_mode = current_game_preview_mode();
         last_key_vsc_mode = current_vsc_preview_mode();
         last_key_prompt_mode = prompt_mode;
     }
@@ -1326,6 +1409,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 select_cursor = slot_for_layer(selector_target);
                 layer_move(_PROMPT);
             }
+            return false;
+
+        case GM_NAV:
+            if (record->event.pressed) game_mode = GAME_MODE_NAV;
+            return false;
+        case GM_WASD:
+            if (record->event.pressed) game_mode = GAME_MODE_WASD;
+            return false;
+        case GM_1: case GM_2: case GM_3: case GM_4: case GM_5: case GM_6:
+            if (record->event.pressed) tap_game_target((uint8_t)(keycode - GM_1));
             return false;
 
         case WIN_BRO: window_browser_held = record->event.pressed; return false;
@@ -1570,6 +1663,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s", layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _PROMPT) {
         snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
+    } else if (layer == _DEV) {
+        snprintf(line, sizeof(line), "GME %-4s FX:%s", game_mode_name(game_mode), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-7s FX:%s", "WIN BRO", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT && text_action_held) {
