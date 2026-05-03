@@ -759,6 +759,16 @@
       "shortName": "PRM"
     },
     {
+      "name": "PRM_PICS",
+      "title": "Prompt picture mode",
+      "shortName": "PICS"
+    },
+    {
+      "name": "PRM_ETSY",
+      "title": "Prompt Etsy mode",
+      "shortName": "ETSY"
+    },
+    {
       "name": "WIN_BRO",
       "title": "Window browser mode",
       "shortName": "BRO"

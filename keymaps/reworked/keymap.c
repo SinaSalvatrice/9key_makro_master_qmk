@@ -18,7 +18,6 @@
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
 #endif
-    static bool gp12_combo_used = false;
 #define PAD_KEY_COUNT        9
 #define RGB_FRAME_MS         33
 #define BOOT_TOTAL_MS        2800
@@ -53,6 +52,8 @@ enum custom_keycodes {
     SEL_DEV,
     SEL_VSC,
     SEL_PROMPT,
+    PRM_PICS,
+    PRM_ETSY,
     WIN_BRO,
     WIN_AUX,
     WIN_1,
@@ -120,6 +121,12 @@ typedef enum {
     WINDOW_MODE_BROWSER,
 } window_mode_t;
 
+typedef enum {
+    PROMPT_MODE_BASE,
+    PROMPT_MODE_PICS,
+    PROMPT_MODE_ETSY,
+} prompt_mode_t;
+
 // ── State ───────────────────────────────────────────────────
 static uint16_t last_keycode         = KC_NO;
 static uint8_t  last_key_layer       = _BASE;
@@ -146,6 +153,8 @@ static text_mode_t last_key_text_mode = TEXT_MODE_WIN;
 static bool window_browser_held       = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
+static prompt_mode_t prompt_mode      = PROMPT_MODE_BASE;
+static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
 static uint32_t encoder_help_started = 0;
 static uint32_t encoder_help_until   = 0;
 static bool encoder_help_fired       = false;
@@ -253,6 +262,31 @@ static const char *const vsc_chat_macros[6] = {
 
 };
 
+static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
+static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"};
+
+static const char *const prompt_pics_labels[6] = {"TAB", "SHOT", "ALT", "SEO", "MOCK", "CHK"};
+static const char *const prompt_pics_functions[6] = {"Picture tab", "Shot list", "Alt text", "SEO image text", "Mockup ideas", "Image QA checklist"};
+static const char *const prompt_pics_macros[6] = {
+    "Create a picture-tab plan for this Etsy listing. Propose the ideal image order for the tabs, what each image should show, and the customer goal of each tab.",
+    "Create a concise Etsy product photography shot list for this item. Include hero image, scale shot, detail shots, lifestyle shots, packaging, and any trust-building images.",
+    "Write Etsy-ready alt text for product listing images. Keep each line descriptive, concrete, and accessible, with no keyword stuffing.",
+    "Write image overlay text and SEO-friendly captions for Etsy listing pictures. Keep them short, readable, and conversion-focused.",
+    "Suggest mockup and staging ideas for Etsy listing photos. Focus on believable scenes, useful props, scale clarity, and conversion impact.",
+    "Create an image QA checklist for this Etsy listing. Check clarity, cropping, lighting, consistency, branding, scale communication, and policy-safe content."
+};
+
+static const char *const prompt_etsy_labels[6] = {"TAGS", "TITLE", "DESC", "BULL", "LIST", "SEO"};
+static const char *const prompt_etsy_functions[6] = {"Tag list", "Listing title", "Listing description", "Bullet highlights", "Listing creation", "Etsy SEO pass"};
+static const char *const prompt_etsy_macros[6] = {
+    "Generate Etsy tag ideas for this product. Create high-intent tags, avoid duplicates, vary phrase length, and explain which tags are strongest.",
+    "Write multiple Etsy listing title options for this product. Optimize for clarity, search intent, and readability instead of stuffing every keyword.",
+    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care.",
+    "Write concise bullet-style highlights for this Etsy product listing. Focus on benefits, materials, sizing, personalization, and gift appeal.",
+    "Create a complete Etsy listing draft for this product, including title, description, tags, image plan, and quick notes on pricing or variation structure.",
+    "Perform an Etsy SEO pass on this listing draft. Improve titles, tags, wording, scannability, and conversion clarity without making it sound spammy."
+};
+
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
 static const char *const text_action_labels[6] = {"ALL", "COPY", "PASTE", "CUT", "UNDO", "REDO"};
 static const char *const text_edit_labels[6]   = {"ENT", "BSPC", "SPC", "TAB", "SHIFT", "BTN1"};
@@ -275,7 +309,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"SEL",  "SPD-", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-", "VAL-"},
     [_DEV]    = {"SEL",  "M^",   "SHIFT","M<-",  "BTN1", "M->",  "ALT",  "Mv",   "BTN2"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
-    [_PROMPT] = {"SEL",  "----", "----", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
+    [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "DEV",  "VSC",  "RGB",  "PROMT"},
 };
 
@@ -287,7 +321,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"Select layer", "Speed down", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_DEV]    = {"Select layer", "Mouse up", "Hold Shift", "Mouse left", "Mouse button 1", "Mouse right", "Hold Alt", "Mouse down", "Mouse button 2"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
-    [_PROMPT] = {"Select layer", "Unused", "Unused", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
+    [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to DEV", "Go to VSC", "Go to RGB", "Go to prompt"},
 };
 
@@ -413,6 +447,41 @@ static const char *text_label_for(uint8_t index) { return text_label_for_mode(cu
 static const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
 static const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
 static const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
+
+static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
+    if (index == 0) return "SEL";
+    if (index == 1) return "PICS";
+    if (index == 2) return "ETSY";
+    if (index >= 3 && index < 9) {
+        uint8_t slot = index - 3;
+        switch (mode) {
+            case PROMPT_MODE_PICS: return prompt_pics_labels[slot];
+            case PROMPT_MODE_ETSY: return prompt_etsy_labels[slot];
+            case PROMPT_MODE_BASE:
+            default:               return prompt_base_labels[slot];
+        }
+    }
+    return "----";
+}
+
+static const char *prompt_function_for_mode(prompt_mode_t mode, uint8_t index) {
+    if (index == 0) return "Select layer";
+    if (index == 1) return "Switch to picture prompts";
+    if (index == 2) return "Switch to Etsy prompts";
+    if (index >= 3 && index < 9) {
+        uint8_t slot = index - 3;
+        switch (mode) {
+            case PROMPT_MODE_PICS: return prompt_pics_functions[slot];
+            case PROMPT_MODE_ETSY: return prompt_etsy_functions[slot];
+            case PROMPT_MODE_BASE:
+            default:               return prompt_base_functions[slot];
+        }
+    }
+    return "Unknown";
+}
+
+static const char *prompt_label_for(uint8_t index) { return prompt_label_for_mode(prompt_mode, index); }
+static const char *prompt_function_for(uint8_t index) { return prompt_function_for_mode(prompt_mode, index); }
 
 static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
@@ -684,6 +753,7 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer == _TEXT) return text_label_for(index);
     if (layer == _WINDOW) return window_label_for(index);
     if (layer == _VSC) return vsc_label_for(current_vsc_preview_mode(), index);
+    if (layer == _PROMPT) return prompt_label_for(index);
     return layer_legend[layer][index];
 }
 
@@ -693,6 +763,7 @@ static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer == _TEXT) return text_function_for(index);
     if (layer == _WINDOW) return window_function_for(index);
     if (layer == _VSC) return vsc_function_for(current_vsc_preview_mode(), index);
+    if (layer == _PROMPT) return prompt_function_for(index);
     return layer_function[layer][index];
 }
 
@@ -702,6 +773,7 @@ static const char *last_key_label_for(void) {
     if (last_key_layer == _TEXT) return text_label_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_label_for_mode(last_key_window_mode, index);
     if (last_key_layer == _VSC) return vsc_label_for(last_key_vsc_mode, index);
+    if (last_key_layer == _PROMPT) return prompt_label_for_mode(last_key_prompt_mode, index);
     return layer_legend[last_key_layer][index];
 }
 
@@ -711,6 +783,7 @@ static const char *last_key_function_for(void) {
     if (last_key_layer == _TEXT) return text_function_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_function_for_mode(last_key_window_mode, index);
     if (last_key_layer == _VSC) return vsc_function_for(last_key_vsc_mode, index);
+    if (last_key_layer == _PROMPT) return prompt_function_for_mode(last_key_prompt_mode, index);
     return layer_function[last_key_layer][index];
 }
 
@@ -727,7 +800,12 @@ static void trigger_vsc_target(uint8_t slot) {
     if (active_layer_raw() == _PROMPT) {
         send_vsc_command("GitHub Copilot Chat: Focus on Chat View");
         wait_ms(30);
-        send_string(vsc_chat_macros[slot]);
+        switch (prompt_mode) {
+            case PROMPT_MODE_PICS: send_string(prompt_pics_macros[slot]); break;
+            case PROMPT_MODE_ETSY: send_string(prompt_etsy_macros[slot]); break;
+            case PROMPT_MODE_BASE:
+            default:               send_string(vsc_chat_macros[slot]); break;
+        }
         return;
     }
     vsc_mode_t mode = current_vsc_preview_mode();
@@ -1122,7 +1200,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         VSC_4,       VSC_5,   VSC_6
     ),
     [_PROMPT] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_NO,
+        MO(_SELECT), PRM_PICS, PRM_ETSY,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
@@ -1161,7 +1239,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             selector_origin_layer = active_layer_raw();
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
             matrix_select_held = true;
-  TO(       )update_select_layer_state();
+            update_select_layer_state();
         } else {
             matrix_select_held = false;
             update_select_layer_state();
@@ -1186,6 +1264,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_key_text_mode = current_text_preview_mode();
         last_key_window_mode = current_window_preview_mode();
         last_key_vsc_mode = current_vsc_preview_mode();
+        last_key_prompt_mode = prompt_mode;
     }
 
     switch (keycode) {
@@ -1196,13 +1275,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_RGB:    if (record->event.pressed) select_target_layer(_RGB); return false;
         case SEL_DEV:    if (record->event.pressed) select_target_layer(_DEV); return false;
         case SEL_VSC:    if (record->event.pressed) select_target_layer(_VSC); return false;
-        case SEL_PROMPT:
-            if (record->event.pressed) {
-                selector_target = _PROMPT;
-                select_cursor = slot_for_layer(selector_target);
-                layer_move(_PROMPT);
-            }
-            return false;
+        case SEL_PROMPT: if (record->event.pressed) select_target_layer(_PROMPT); return false;
+        case PRM_PICS:   if (record->event.pressed) prompt_mode = PROMPT_MODE_PICS; return false;
+        case PRM_ETSY:   if (record->event.pressed) prompt_mode = PROMPT_MODE_ETSY; return false;
 
         case WIN_BRO: window_browser_held = record->event.pressed; return false;
         case WIN_AUX: return false;

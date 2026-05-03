@@ -128,6 +128,8 @@
     {"name": "SEL_DEV", "title": "Go to DEV layer", "shortName": "DEV"},
     {"name": "SEL_VSC", "title": "Go to VSC layer", "shortName": "VSC"},
     {"name": "SEL_PROMPT", "title": "Go to PROMPT layer", "shortName": "PRM"},
+    {"name": "PRM_PICS", "title": "Prompt picture mode", "shortName": "PICS"},
+    {"name": "PRM_ETSY", "title": "Prompt Etsy mode", "shortName": "ETSY"},
     {"name": "WIN_BRO", "title": "Window browser mode", "shortName": "BRO"},
     {"name": "WIN_AUX", "title": "Window aux key", "shortName": "AUX"},
     {"name": "WIN_1", "title": "Window target 1", "shortName": "W1"},
