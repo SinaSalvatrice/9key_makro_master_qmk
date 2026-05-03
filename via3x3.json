@@ -754,6 +754,11 @@
       "shortName": "VSC"
     },
     {
+      "name": "SEL_PROMPT",
+      "title": "Go to PROMPT layer",
+      "shortName": "PRM"
+    },
+    {
       "name": "WIN_BRO",
       "title": "Window browser mode",
       "shortName": "BRO"

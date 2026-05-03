@@ -52,6 +52,7 @@ enum custom_keycodes {
     SEL_RGB,
     SEL_DEV,
     SEL_VSC,
+    SEL_PROMPT,
     WIN_BRO,
     WIN_AUX,
     WIN_1,
@@ -1128,7 +1129,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_SELECT] = LAYOUT(
         SEL_BASE,  SEL_WINDOW, SEL_TEXT,
         SEL_MEDIA, RGB_PROFILE,SEL_DEV,
-        SEL_VSC,   SEL_RGB,    TO(_PROMPT)
+        SEL_VSC,   SEL_RGB,    SEL_PROMPT
     ),
 };
 
@@ -1195,6 +1196,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_RGB:    if (record->event.pressed) select_target_layer(_RGB); return false;
         case SEL_DEV:    if (record->event.pressed) select_target_layer(_DEV); return false;
         case SEL_VSC:    if (record->event.pressed) select_target_layer(_VSC); return false;
+        case SEL_PROMPT: if (record->event.pressed) select_target_layer(_PROMPT); return false;
 
         case WIN_BRO: window_browser_held = record->event.pressed; return false;
         case WIN_AUX: return false;
