@@ -1033,24 +1033,24 @@ static void render_base_wild(void) {
     }
 }
 
-static void render_window_wild(void) {
+static void render_key_gap_alternating(const hsv_config_t *palette, uint16_t period_ms, uint8_t hue_swing) {
     uint32_t now = timer_read32();
-    uint8_t spike = (now / 110) % RGBLIGHT_LED_COUNT;
-    hsv_config_t window = palette_for_layer(_WINDOW);
+    uint8_t phase = triwave8_period(now, period_ms, 0);
+    uint8_t key_val = (uint8_t)(palette_floor(palette->val / 5, 16) + ((uint16_t)(palette->val - palette_floor(palette->val / 5, 16)) * phase) / 255);
+    uint8_t gap_val = (uint8_t)(palette_floor(palette->val / 5, 16) + ((uint16_t)(palette->val - palette_floor(palette->val / 5, 16)) * (255 - phase)) / 255);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t dist = (i > spike) ? (i - spike) : (spike - i);
-        uint8_t hue = window.hue;
-        uint8_t sat = window.sat;
-        uint8_t val = pulse_val(now, 1800, i * 19, palette_floor(window.val / 5, 10), palette_floor(window.val / 2, 40));
-        if (dist == 0) {
-            hue = window.hue - 8;
-            val = palette_floor(window.val + 30, window.val);
-        } else if (dist == 1) {
-            hue = window.hue + 6;
-            val = palette_floor(window.val - 20, palette_floor(window.val / 2, 40));
-        }
-        set_led_hsv(i, hue, sat, val);
+        bool is_gap_led = (i % 5) % 2;
+        uint8_t local_phase = triwave8_period(now, period_ms, (uint8_t)(i * 9));
+        uint8_t hue = palette->hue + (is_gap_led ? hue_swing : 0) + (local_phase / 32);
+        uint8_t val = is_gap_led ? gap_val : key_val;
+        set_led_hsv(i, hue, palette->sat, val);
     }
+}
+
+static void render_window_wild(void) {
+    hsv_config_t window = palette_for_layer(_WINDOW);
+    render_key_gap_alternating(&window, 1800, 10);
 }
 
 static void render_text_wild(void) {
@@ -1087,14 +1087,8 @@ static void render_rgb_wild(void) {
 }
 
 static void render_dev_wild(void) {
-    uint32_t now = timer_read32();
     hsv_config_t dev = palette_for_layer(_DEV);
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t swing = triwave8_period(now, 2200, i * 23);
-        uint8_t hue = dev.hue + (swing / 9);
-        uint8_t val = pulse_val(now, 900 + (i * 40), i * 17, palette_floor(dev.val / 5, 18), palette_floor(dev.val + 20, dev.val));
-        set_led_hsv(i, hue, dev.sat, val);
-    }
+    render_key_gap_alternating(&dev, 1200, 16);
 }
 
 static void render_vsc_wild(void) {
