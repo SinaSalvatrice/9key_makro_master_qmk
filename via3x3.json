@@ -2,7 +2,7 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "firmwareVersion": 7,
+  "firmwareVersion": 8,
   "menus": [
     "qmk_rgblight",
     {

@@ -1,100 +1,52 @@
 {
     "manufacturer": "Sina",
-    "keyboard_name": "RGB 3x3 24LED Macropad",
+    "keyboard_name": "9key_makro_master",
     "maintainer": "Sina",
-    "url": "",
     "processor": "RP2040",
     "bootloader": "rp2040",
-    "usb": {
-        "vid": "0xFEED",
-        "pid": "0x9324",
-        "device_version": "0.1.0"
-    },
-    "features": {
-        "bootmagic": true,
-        "extrakey": true,
-        "mousekey": true,
-        "nkro": true,
-        "rgb_matrix": true
-    },
+    "board": "QMK_BLOK",
     "diode_direction": "ROW2COL",
     "matrix_pins": {
         "rows": ["GP2", "GP3", "GP4"],
         "cols": ["GP5", "GP6", "GP7"]
     },
-    "ws2812": {
-        "pin": "GP8",
-        "driver": "vendor"
-    },
-    "rgb_matrix": {
-        "driver": "ws2812",
-        "sleep": true,
-        "center_point": [112, 32],
-        "max_brightness": 96,
-        "default": {
-            "animation": "cycle_left_right",
-            "val": 64,
-            "speed": 128
-        },
-        "animations": {
-            "solid_color": true,
-            "breathing": true,
-            "cycle_left_right": true,
-            "cycle_up_down": true,
-            "rainbow_moving_chevron": true,
-            "solid_reactive_simple": true,
-            "solid_reactive": true,
-            "typing_heatmap": true
-        },
-        "layout": [
-            { "matrix": [0, 0], "x": 16,  "y": 0,  "flags": 4 },
-            {                  "x": 40,  "y": 0,  "flags": 4 },
-            {                  "x": 70,  "y": 0,  "flags": 2 },
-
-            { "matrix": [0, 1], "x": 100, "y": 0,  "flags": 4 },
-            {                  "x": 124, "y": 0,  "flags": 4 },
-            {                  "x": 154, "y": 0,  "flags": 2 },
-
-            { "matrix": [0, 2], "x": 184, "y": 0,  "flags": 4 },
-            {                  "x": 208, "y": 0,  "flags": 4 },
-
-            { "matrix": [1, 0], "x": 16,  "y": 32, "flags": 4 },
-            {                  "x": 40,  "y": 32, "flags": 4 },
-            {                  "x": 70,  "y": 32, "flags": 2 },
-
-            { "matrix": [1, 1], "x": 100, "y": 32, "flags": 4 },
-            {                  "x": 124, "y": 32, "flags": 4 },
-            {                  "x": 154, "y": 32, "flags": 2 },
-
-            { "matrix": [1, 2], "x": 184, "y": 32, "flags": 4 },
-            {                  "x": 208, "y": 32, "flags": 4 },
-
-            { "matrix": [2, 0], "x": 16,  "y": 64, "flags": 4 },
-            {                  "x": 40,  "y": 64, "flags": 4 },
-            {                  "x": 70,  "y": 64, "flags": 2 },
-
-            { "matrix": [2, 1], "x": 100, "y": 64, "flags": 4 },
-            {                  "x": 124, "y": 64, "flags": 4 },
-            {                  "x": 154, "y": 64, "flags": 2 },
-
-            { "matrix": [2, 2], "x": 184, "y": 64, "flags": 4 },
-            {                  "x": 208, "y": 64, "flags": 4 }
+    "encoder": {
+        "rotary": [
+            {
+                "pin_a": "GP9",
+                "pin_b": "GP10",
+                "resolution": 4
+            }
         ]
     },
+    "ws2812": {
+        "pin": "GP13"
+    },
+    "rgblight": {
+        "led_count": 15,
+        "animations": {
+            "breathing": true,
+            "rainbow_mood": true,
+            "rainbow_swirl": true
+        }
+    },
+    "usb": {
+        "vid": "0xFEED",
+        "pid": "0x9B01",
+        "device_version": "1.0.0"
+    },
     "layouts": {
-        "LAYOUT_3x3": {
+        "LAYOUT": {
             "layout": [
-                { "matrix": [0, 0], "x": 0, "y": 0 },
-                { "matrix": [0, 1], "x": 1, "y": 0 },
-                { "matrix": [0, 2], "x": 2, "y": 0 },
-
-                { "matrix": [1, 0], "x": 0, "y": 1 },
-                { "matrix": [1, 1], "x": 1, "y": 1 },
-                { "matrix": [1, 2], "x": 2, "y": 1 },
-
-                { "matrix": [2, 0], "x": 0, "y": 2 },
-                { "matrix": [2, 1], "x": 1, "y": 2 },
-                { "matrix": [2, 2], "x": 2, "y": 2 }
+                {"matrix": [0, 0], "x": 0, "y": 0},
+                {"matrix": [0, 1], "x": 1, "y": 0},
+                {"matrix": [0, 2], "x": 2, "y": 0},
+                {"matrix": [1, 0], "x": 0, "y": 1},
+                {"matrix": [1, 1], "x": 1, "y": 1},
+                {"matrix": [1, 2], "x": 2, "y": 1},
+                {"matrix": [2, 0], "x": 0, "y": 2},
+                {"matrix": [2, 1], "x": 1, "y": 2},
+                {"matrix": [2, 2], "x": 2, "y": 2}
             ]
         }
     }

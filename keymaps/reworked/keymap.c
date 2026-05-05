@@ -13,7 +13,7 @@
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
-#define RGBLIGHT_LED_COUNT 9
+#define RGBLIGHT_LED_COUNT 15
 #endif
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
@@ -177,14 +177,15 @@ static bool encoder_help_fired       = false;
 static uint8_t selector_origin_layer = _BASE;
 static uint32_t selector_last_tap    = 0;
 
-// Physical key numbering:
-//  1 2 3
-//  4 5 6
-//  7 8 9
+// Physical LED order is 3 rows of 5 LEDs:
+//  K1 - K2 - K3
+//  K4 - K5 - K6
+//  K7 - K8 - K9
+// Each key LED sits at positions 0,2,4 of its row; the spacer LEDs are 1 and 3.
 static const uint8_t key_led_map[PAD_KEY_COUNT] = {
-    0, 1, 2,
-    3, 4, 5,
-    6, 7, 8
+    0, 2, 4,
+    5, 7, 9,
+    10, 12, 14
 };
 
 typedef struct {
@@ -991,15 +992,19 @@ static uint8_t pulse_val(uint32_t now, uint16_t period, uint8_t phase, uint8_t m
 }
 
 #ifdef RGBLIGHT_ENABLE
+static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
+    if (led_index >= RGBLIGHT_LED_COUNT) return;
+    rgblight_sethsv_at(h, s, v, led_index);
+}
+
 static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v) {
     if (key_index >= PAD_KEY_COUNT) return;
     uint8_t led = key_led_map[key_index];
-    if (led >= RGBLIGHT_LED_COUNT) return;
-    rgblight_sethsv_at(h, s, v, led);
+    set_led_hsv(led, h, s, v);
 }
 
 static void clear_all_keys(void) {
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) set_key_hsv(i, 0, 0, 0);
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) set_led_hsv(i, 0, 0, 0);
 }
 
 static void render_minimal_profile(uint8_t layer) {
@@ -1021,18 +1026,18 @@ static void render_base_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t base = palette_for_layer(_BASE);
     uint8_t hue_shift = (uint8_t)(now / 64);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t hue = hue_shift + (i * 6);
         uint8_t val = pulse_val(now, 2600, i * 11, palette_floor(base.val / 4, 18), base.val);
-        set_key_hsv(i, hue, base.sat, val);
+        set_led_hsv(i, hue, base.sat, val);
     }
 }
 
 static void render_window_wild(void) {
     uint32_t now = timer_read32();
-    uint8_t spike = (now / 110) % PAD_KEY_COUNT;
+    uint8_t spike = (now / 110) % RGBLIGHT_LED_COUNT;
     hsv_config_t window = palette_for_layer(_WINDOW);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (i > spike) ? (i - spike) : (spike - i);
         uint8_t hue = window.hue;
         uint8_t sat = window.sat;
@@ -1044,29 +1049,29 @@ static void render_window_wild(void) {
             hue = window.hue + 6;
             val = palette_floor(window.val - 20, palette_floor(window.val / 2, 40));
         }
-        set_key_hsv(i, hue, sat, val);
+        set_led_hsv(i, hue, sat, val);
     }
 }
 
 static void render_text_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t text = palette_for_layer(_TEXT);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t drift = triwave8_period(now, 7600, i * 13);
         uint8_t hue = text.hue + (drift / 12);
         uint8_t val = pulse_val(now, 3600, i * 9, palette_floor(text.val / 5, 10), text.val);
-        set_key_hsv(i, hue, text.sat, val);
+        set_led_hsv(i, hue, text.sat, val);
     }
 }
 
 static void render_media_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t media = palette_for_layer(_MEDIA);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 3000, i * 18);
         uint8_t hue = media.hue + (swing / 14);
         uint8_t val = pulse_val(now, 2000, i * 14, palette_floor(media.val / 5, 14), media.val);
-        set_key_hsv(i, hue, media.sat, val);
+        set_led_hsv(i, hue, media.sat, val);
     }
 }
 
@@ -1074,49 +1079,50 @@ static void render_rgb_wild(void) {
     uint32_t now = timer_read32();
     bool beatflash = ((now % 1100) < 120);
     hsv_config_t rgb = palette_for_layer(_RGB);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t hue = (uint8_t)(rgb.hue + (now / 18) + i * 28);
         uint8_t val = pulse_val(now, 1400, i * 15, palette_floor(rgb.val / 4, 34), beatflash ? palette_floor(rgb.val + 40, rgb.val) : rgb.val);
-        set_key_hsv(i, hue, rgb.sat, val);
+        set_led_hsv(i, hue, rgb.sat, val);
     }
 }
 
 static void render_dev_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t dev = palette_for_layer(_DEV);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 2200, i * 23);
         uint8_t hue = dev.hue + (swing / 9);
         uint8_t val = pulse_val(now, 900 + (i * 40), i * 17, palette_floor(dev.val / 5, 18), palette_floor(dev.val + 20, dev.val));
-        set_key_hsv(i, hue, dev.sat, val);
+        set_led_hsv(i, hue, dev.sat, val);
     }
 }
 
 static void render_vsc_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t vsc = palette_for_layer(_VSC);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 1800, i * 21);
         uint8_t hue = vsc.hue + (swing / 6);
         uint8_t val = pulse_val(now, 1100 + (i * 30), i * 13, palette_floor(vsc.val / 5, 18), palette_floor(vsc.val + 15, vsc.val));
-        set_key_hsv(i, hue, vsc.sat, val);
+        set_led_hsv(i, hue, vsc.sat, val);
     }
 }
 
 static void render_prompt_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t prompt = palette_for_layer(_PROMPT);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t glow = triwave8_period(now, 2100, i * 19);
         uint8_t hue = prompt.hue + (glow / 5);
         uint8_t val = pulse_val(now, 1500 + (i * 35), i * 17, palette_floor(prompt.val / 5, 22), prompt.val);
-        set_key_hsv(i, hue, prompt.sat, val);
+        set_led_hsv(i, hue, prompt.sat, val);
     }
 }
 
 static void render_select_wild(void) {
     uint32_t now = timer_read32();
     uint8_t target_slot = slot_for_layer(selector_target);
+    clear_all_keys();
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         const select_slot_t *slot = &select_slots[i];
         uint8_t val = slot->selectable ? 34 : 10;
@@ -1134,28 +1140,28 @@ static void render_select_wild(void) {
 
 static void render_effect_solid(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, p.val); }
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, p.val); }
 }
 
 static void render_effect_breathing(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 2200);
     uint8_t val = pulse_val(timer_read32(), period, 0, palette_floor(p.val / 8, 8), p.val);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, val); }
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, val); }
 }
 
 static void render_effect_running(uint8_t layer) {
     uint32_t now = timer_read32();
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 990);
-    uint8_t head = (now / (period / PAD_KEY_COUNT + 1)) % PAD_KEY_COUNT;
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
-        uint8_t dist = (i + PAD_KEY_COUNT - head) % PAD_KEY_COUNT;
+    uint8_t head = (now / (period / RGBLIGHT_LED_COUNT + 1)) % RGBLIGHT_LED_COUNT;
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        uint8_t dist = (i + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT;
         uint8_t val = palette_floor(p.val / 8, 8);
         if (dist == 0) val = p.val;
-        else if (dist == 1 || dist == 8) val = palette_floor(p.val / 2, 30);
-        else if (dist == 2 || dist == 7) val = palette_floor(p.val / 4, 16);
-        set_key_hsv(i, p.hue, p.sat, val);
+        else if (dist == 1 || dist == RGBLIGHT_LED_COUNT - 1) val = palette_floor(p.val / 2, 30);
+        else if (dist == 2 || dist == RGBLIGHT_LED_COUNT - 2) val = palette_floor(p.val / 4, 16);
+        set_led_hsv(i, p.hue, p.sat, val);
     }
 }
 
@@ -1163,13 +1169,13 @@ static void render_effect_twinkle(uint8_t layer) {
     uint32_t now = timer_read32();
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 1233);
-    uint8_t sparkle = ((now / (period / 9 + 1)) * 5 + 1) % PAD_KEY_COUNT;
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    uint8_t sparkle = ((now / (period / RGBLIGHT_LED_COUNT + 1)) * 5 + 1) % RGBLIGHT_LED_COUNT;
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t base = palette_floor(p.val / 10, 6);
         uint8_t shimmer = triwave8_period(now, effect_period_for_layer(layer, 900) + i * 73, i * 29) / 8;
         uint8_t val = palette_floor(base + shimmer, base);
         if (i == sparkle) val = p.val;
-        set_key_hsv(i, p.hue + i * 2, p.sat, val);
+        set_led_hsv(i, p.hue + i * 2, p.sat, val);
     }
 }
 
@@ -1179,22 +1185,22 @@ static void render_effect_pulse(uint8_t layer) {
     uint16_t period = effect_period_for_layer(layer, 1400);
     bool flash = (now % period) < (period / 10 + 10);
     uint8_t val = flash ? p.val : palette_floor(p.val / 5, 12);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) { set_key_hsv(i, p.hue, p.sat, val); }
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, val); }
 }
 
 static void render_effect_comet(uint8_t layer) {
     uint32_t now = timer_read32();
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 1100);
-    uint8_t head = (now / (period / PAD_KEY_COUNT + 1)) % PAD_KEY_COUNT;
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
-        uint8_t dist = (head + PAD_KEY_COUNT - i) % PAD_KEY_COUNT;
+    uint8_t head = (now / (period / RGBLIGHT_LED_COUNT + 1)) % RGBLIGHT_LED_COUNT;
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        uint8_t dist = (head + RGBLIGHT_LED_COUNT - i) % RGBLIGHT_LED_COUNT;
         uint8_t val = palette_floor(p.val / 12, 6);
         if (dist == 0) val = p.val;
         else if (dist == 1) val = palette_floor((p.val * 3) / 4, 24);
         else if (dist == 2) val = palette_floor(p.val / 2, 18);
         else if (dist == 3) val = palette_floor(p.val / 4, 12);
-        set_key_hsv(i, p.hue + dist * 3, p.sat, val);
+        set_led_hsv(i, p.hue + dist * 3, p.sat, val);
     }
 }
 
@@ -1203,13 +1209,13 @@ static void render_effect_scan(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 1800);
     uint8_t pos = triwave8_period(now, period, 0);
-    uint8_t head = ((uint16_t)pos * (PAD_KEY_COUNT - 1)) / 255;
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    uint8_t head = ((uint16_t)pos * (RGBLIGHT_LED_COUNT - 1)) / 255;
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (i > head) ? (i - head) : (head - i);
         uint8_t val = palette_floor(p.val / 12, 8);
         if (dist == 0) val = p.val;
         else if (dist == 1) val = palette_floor(p.val / 3, 18);
-        set_key_hsv(i, p.hue, p.sat, val);
+        set_led_hsv(i, p.hue, p.sat, val);
     }
 }
 
@@ -1218,9 +1224,9 @@ static void render_effect_rainbow(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 3200);
     uint8_t offset = (uint8_t)((now * 255UL) / period);
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t val = pulse_val(now, effect_period_for_layer(layer, 1800), i * 18, palette_floor(p.val / 4, 20), p.val);
-        set_key_hsv(i, offset + i * 28, p.sat, val);
+        set_led_hsv(i, offset + i * 28, p.sat, val);
     }
 }
 
@@ -1228,10 +1234,10 @@ static void render_effect_stack(uint8_t layer) {
     uint32_t now = timer_read32();
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 2200);
-    uint8_t filled = ((now % period) * (PAD_KEY_COUNT + 1)) / period;
-    for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
+    uint8_t filled = ((now % period) * (RGBLIGHT_LED_COUNT + 1)) / period;
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t val = (i < filled) ? p.val : palette_floor(p.val / 12, 6);
-        set_key_hsv(i, p.hue + i * 2, p.sat, val);
+        set_led_hsv(i, p.hue + i * 2, p.sat, val);
     }
 }
 
