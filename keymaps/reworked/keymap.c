@@ -1067,21 +1067,30 @@ static void render_text_wild(void) {
 static void render_media_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t media = palette_for_layer(_MEDIA);
+    uint8_t head = ((uint16_t)triwave8_period(now, 2400, 0) * (RGBLIGHT_LED_COUNT - 1)) / 255;
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t swing = triwave8_period(now, 3000, i * 18);
-        uint8_t hue = media.hue + (swing / 14);
-        uint8_t val = pulse_val(now, 2000, i * 14, palette_floor(media.val / 5, 14), media.val);
+        uint8_t dist = (i > head) ? (i - head) : (head - i);
+        uint8_t hue = media.hue + triwave8_period(now, 3200, i * 12) / 18;
+        uint8_t val = palette_floor(media.val / 10, 10);
+        if (dist == 0) val = palette_floor(media.val + 24, media.val);
+        else if (dist == 1) val = palette_floor((media.val * 3) / 4, 28);
+        else if (dist == 2) val = palette_floor(media.val / 2, 18);
+        else if (dist == 3) val = palette_floor(media.val / 3, 12);
         set_led_hsv(i, hue, media.sat, val);
     }
 }
 
 static void render_rgb_wild(void) {
     uint32_t now = timer_read32();
-    bool beatflash = ((now % 1100) < 120);
     hsv_config_t rgb = palette_for_layer(_RGB);
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t hue = (uint8_t)(rgb.hue + (now / 18) + i * 28);
-        uint8_t val = pulse_val(now, 1400, i * 15, palette_floor(rgb.val / 4, 34), beatflash ? palette_floor(rgb.val + 40, rgb.val) : rgb.val);
+        uint8_t hue = (uint8_t)(rgb.hue + i * 19 + triwave8_period(now, 3600, i * 17) / 10);
+        uint8_t base = palette_floor(rgb.val / 12, 6);
+        uint8_t shimmer = triwave8_period(now, 850 + (i * 37), i * 23) / 10;
+        uint8_t val = palette_floor(base + shimmer, base);
+        if ((((now / 180) + (i * 3)) % 11) == 0) {
+            val = palette_floor(rgb.val + 32, rgb.val);
+        }
         set_led_hsv(i, hue, rgb.sat, val);
     }
 }

@@ -8,7 +8,7 @@
     "diode_direction": "ROW2COL",
     "matrix_pins": {
         "rows": ["GP2", "GP4", "GP3"],
-        "cols": ["GP5", "GP6", "GP7"]
+        "cols": ["GP5", "GP7", "GP6"]
     },
     "encoder": {
         "rotary": [
