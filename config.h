@@ -3,6 +3,9 @@
 #define ENCODER_BTN_PIN GP8
 #define OLED_TOGGLE_BTN_PIN GP11
 
+// Milliseconds of inactivity before OLED switches to eyes mode
+#define OLED_EYES_TIMEOUT_MS 20000
+
 // Selector is the first matrix key (top-left / row 0, col 0), not a dedicated GPIO pin.
 #define SELECTOR_MATRIX_ROW 0
 #define SELECTOR_MATRIX_COL 0
