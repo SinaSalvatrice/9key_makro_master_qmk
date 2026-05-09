@@ -29,6 +29,18 @@
 #define ENCODER_HELP_HOLD_MS 700
 #define ENCODER_HELP_SHOW_MS 2500
 
+#ifndef OLED_EYES_TIMEOUT_MS
+#    define OLED_EYES_TIMEOUT_MS 20000
+#endif
+
+#ifndef OLED_EYES_BLINK_INTERVAL_MS
+#    define OLED_EYES_BLINK_INTERVAL_MS 4500
+#endif
+
+#ifndef OLED_EYES_BLINK_DURATION_MS
+#    define OLED_EYES_BLINK_DURATION_MS 180
+#endif
+
 // ── Layer enum ──────────────────────────────────────────────
 enum layers {
     _BASE,
@@ -150,6 +162,7 @@ static uint8_t  selector_target      = _BASE;
 static uint8_t  select_cursor        = 0;
 static uint32_t rgb_frame_timer      = 0;
 static uint32_t boot_start           = 0;
+static uint32_t oled_last_activity_time = 0;
 static oled_view_t oled_view         = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
@@ -1353,6 +1366,12 @@ static void select_target_layer(uint8_t layer) {
     selector_target = layer;
     select_cursor = slot_for_layer(selector_target);
     if (!matrix_select_held) layer_move(selector_target);
+
+    
+}
+
+static void oled_note_activity(void) {
+    oled_last_activity_time = timer_read32();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -1654,6 +1673,7 @@ static void write_line(uint8_t row, const char *str) {
     oled_set_cursor(0, row);
     oled_write(buf, false);
 }
+
 
 static void render_boot(void) {
     if (boot_start == 0) boot_start = timer_read32() | 1;
