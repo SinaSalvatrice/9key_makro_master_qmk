@@ -15,19 +15,21 @@
 #ifndef RGBLIGHT_LED_COUNT
 #define RGBLIGHT_LED_COUNT 15
 #endif
+
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
 #endif
-#define PAD_KEY_COUNT        9
-#define RGB_FRAME_MS         33
-#define BOOT_TOTAL_MS        2800
-#define BUTTON_DEBOUNCE_MS   150
+
+#define PAD_KEY_COUNT          9
+#define RGB_FRAME_MS           33
+#define BOOT_TOTAL_MS          2800
+#define BUTTON_DEBOUNCE_MS     150
 #define SELECTOR_DOUBLE_TAP_MS 300
-#define CLEAR_EEPROM_HOLD_MS 3000
-#define VIA_LAYER_SLOT_COUNT 8
+#define CLEAR_EEPROM_HOLD_MS   3000
+#define VIA_LAYER_SLOT_COUNT   8
 #define REWORKED_LAYOUT_VERSION 4
-#define ENCODER_HELP_HOLD_MS 700
-#define ENCODER_HELP_SHOW_MS 2500
+#define ENCODER_HELP_HOLD_MS   700
+#define ENCODER_HELP_SHOW_MS   2500
 
 #ifndef OLED_EYES_TIMEOUT_MS
 #    define OLED_EYES_TIMEOUT_MS 20000
@@ -154,41 +156,41 @@ typedef enum {
 } prompt_mode_t;
 
 // ── State ───────────────────────────────────────────────────
-static uint16_t last_keycode         = KC_NO;
-static uint8_t  last_key_layer       = _BASE;
-static uint8_t  last_row             = 0;
-static uint8_t  last_col             = 0;
-static uint8_t  selector_target      = _BASE;
-static uint8_t  select_cursor        = 0;
-static uint32_t rgb_frame_timer      = 0;
-static uint32_t boot_start           = 0;
-static uint32_t oled_last_activity_time = 0;
-static oled_view_t oled_view         = OLED_VIEW_LEGEND;
-static vsc_mode_t vsc_mode           = VSC_MODE_NONE;
-static vsc_mode_t last_vsc_mode      = VSC_MODE_BAR;
-static text_mode_t text_mode         = TEXT_MODE_WIN;
-static bool matrix_select_held       = false;
-static bool encoder_btn_pressed      = false;
-static bool encoder_btn_was_pressed  = false;
-static bool encoder_btn_rotated      = false;
-static bool button_clear_armed       = false;
-static uint32_t button_clear_started = 0;
-static bool text_selection_pending_copy = false;
-static bool text_action_held         = false;
-static bool text_edit_held           = false;
-static text_mode_t last_key_text_mode = TEXT_MODE_WIN;
-static bool window_browser_held       = false;
+static uint16_t last_keycode              = KC_NO;
+static uint8_t  last_key_layer            = _BASE;
+static uint8_t  last_row                  = 0;
+static uint8_t  last_col                  = 0;
+static uint8_t  selector_target           = _BASE;
+static uint8_t  select_cursor             = 0;
+static uint32_t rgb_frame_timer           = 0;
+static uint32_t boot_start                = 0;
+static uint32_t oled_last_activity_time   = 0;
+static oled_view_t oled_view              = OLED_VIEW_LEGEND;
+static vsc_mode_t vsc_mode                = VSC_MODE_NONE;
+static vsc_mode_t last_vsc_mode           = VSC_MODE_BAR;
+static text_mode_t text_mode              = TEXT_MODE_WIN;
+static bool matrix_select_held            = false;
+static bool encoder_btn_pressed           = false;
+static bool encoder_btn_was_pressed       = false;
+static bool encoder_btn_rotated           = false;
+static bool button_clear_armed            = false;
+static uint32_t button_clear_started      = 0;
+static bool text_selection_pending_copy   = false;
+static bool text_action_held              = false;
+static bool text_edit_held                = false;
+static text_mode_t last_key_text_mode     = TEXT_MODE_WIN;
+static bool window_browser_held           = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
-static game_mode_t game_mode          = GAME_MODE_WASD;
-static game_mode_t last_key_game_mode = GAME_MODE_WASD;
-static vsc_mode_t last_key_vsc_mode  = VSC_MODE_BAR;
-static prompt_mode_t prompt_mode      = PROMPT_MODE_BASE;
+static game_mode_t game_mode              = GAME_MODE_WASD;
+static game_mode_t last_key_game_mode     = GAME_MODE_WASD;
+static vsc_mode_t last_key_vsc_mode       = VSC_MODE_BAR;
+static prompt_mode_t prompt_mode          = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
-static uint32_t encoder_help_started = 0;
-static uint32_t encoder_help_until   = 0;
-static bool encoder_help_fired       = false;
-static uint8_t selector_origin_layer = _BASE;
-static uint32_t selector_last_tap    = 0;
+static uint32_t encoder_help_started      = 0;
+static uint32_t encoder_help_until        = 0;
+static bool encoder_help_fired            = false;
+static uint8_t selector_origin_layer      = _BASE;
+static uint32_t selector_last_tap         = 0;
 
 // Physical LED order is 3 rows of 5 LEDs:
 //  K1 - K2 - K3
@@ -218,12 +220,12 @@ typedef struct {
 
 #ifdef VIA_ENABLE
 enum via_custom_value {
-    id_via_oled_view           = 1,
-    id_via_fx_mode             = 2,
-    id_via_layer_color         = 3,
-    id_via_layer_brightness    = 4,
-    id_via_rgb_effect          = 5,
-    id_via_layer_effect_speed  = 6,
+    id_via_oled_view          = 1,
+    id_via_fx_mode            = 2,
+    id_via_layer_color        = 3,
+    id_via_layer_brightness   = 4,
+    id_via_rgb_effect         = 5,
+    id_via_layer_effect_speed = 6,
 };
 
 typedef struct {
@@ -241,12 +243,12 @@ static via_user_config_t via_user_config;
 
 // GAME / MEDIA share the old DEV slot to keep VIA layer indexing stable.
 static select_slot_t select_slots[PAD_KEY_COUNT] = {
-    { _BASE,   160, 220, 120, "BASE",   true  },
+    { _BASE,    160, 220, 120, "BASE",   true  },
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
-    { _DEV,   32, 255, 130, "GAME", true  },
+    { _DEV,     32, 255, 130, "GAME",   true  },
     { _SELECT,   0,   0, 120, "SELECT", false },
-    { _MEDIA,     18, 255, 130, "MEDIA",    true  },
+    { _MEDIA,   18, 255, 130, "MEDIA",  true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
     { _PROMPT,   8, 255, 140, "PROMT",  true  },
@@ -282,16 +284,17 @@ static const char *const vsc_bar_commands[6] = {
 static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const vsc_chat_functions[6] = {"Summarize", "Review", "Suggest fix", "Write tests", "Explain code", "Commit message"};
 static const char *const vsc_chat_macros[6] = {
+    "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
 
-  "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
+    "Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
 
-"Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
-"Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
-"create an Arduino sketch with pin output. it should show coordinate in the matrix, function, if available and recognized gppin. Make two versions, one as serial sketch and one as real keyboard. incule rgbs, oled and encoder if given.",
-"Check my QMK environment in VS code, but don't change files. Execute diagnostic commands such as 'qmk doctor', 'qmk config', and userspace 'qmk userspace-doctor'. Analyze OS, shell, dependencies, compilers, paths, VS code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps."
-"Repair my QMK development environment in VS code. Use the output of 'qmk doctor', build errors, and VS code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with 'qmk doctor' and a test build.",
-"Check notes.md and start working on it.",
+    "Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
 
+    "Create an Arduino sketch with pin output. It should show coordinate in the matrix, function, and if available and recognized, the GPIO pin. Make two versions: one as serial sketch and one as real keyboard. Include RGBs, OLED and encoder if given.",
+
+    "Check my QMK environment in VS Code, but don't change files. Execute diagnostic commands such as qmk doctor, qmk config, and qmk userspace-doctor. Analyze OS, shell, dependencies, compilers, paths, VS Code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps.",
+
+    "Repair my QMK development environment in VS Code. Use the output of qmk doctor, build errors, and VS Code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with qmk doctor and a test build."
 };
 
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
@@ -669,15 +672,17 @@ static void apply_via_runtime_config(void) {
 }
 
 static void set_via_config_defaults(void) {
-    via_user_config.signature  = 0x94;
+    via_user_config.signature = 0x94;
     via_user_config.layout_version = REWORKED_LAYOUT_VERSION;
-    via_user_config.oled_view  = OLED_VIEW_LEGEND;
-    via_user_config.fx_mode    = 0;
+    via_user_config.oled_view = OLED_VIEW_LEGEND;
+    via_user_config.fx_mode = 0;
+
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
         via_user_config.layer_effect[i] = RGB_EFFECT_WILD;
         via_user_config.layer_speed[i] = 128;
         via_user_config.layer_palette[i] = via_default_palette[i];
     }
+
     apply_via_runtime_config();
 }
 
@@ -690,33 +695,17 @@ static void load_via_config(void) {
 
     bool invalid_config = false;
 
-    if (via_user_config.signature != 0x94) {
-        invalid_config = true;
-    }
-
-    if (via_user_config.layout_version != REWORKED_LAYOUT_VERSION) {
-        invalid_config = true;
-    }
-
-    if (via_user_config.oled_view > OLED_VIEW_LAST_KEY) {
-        invalid_config = true;
-    }
-
-    if (via_user_config.fx_mode > 1) {
-        invalid_config = true;
-    }
+    if (via_user_config.signature != 0x94) invalid_config = true;
+    if (via_user_config.layout_version != REWORKED_LAYOUT_VERSION) invalid_config = true;
+    if (via_user_config.oled_view > OLED_VIEW_LAST_KEY) invalid_config = true;
+    if (via_user_config.fx_mode > 1) invalid_config = true;
 
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
-        if (via_user_config.layer_effect[i] >= RGB_EFFECT_COUNT) {
-            invalid_config = true;
-        }
-        if (via_user_config.layer_speed[i] < 1) {
-            invalid_config = true;
-        }
+        if (via_user_config.layer_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
+        if (via_user_config.layer_speed[i] < 1) invalid_config = true;
     }
 
     if (invalid_config) {
-        // The layout changed; reset EEPROM-backed key assignments so new defaults apply.
         eeconfig_init();
         set_via_config_defaults();
         save_via_config();
@@ -803,6 +792,7 @@ static void via_config_get_value(uint8_t *data) {
 
 void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     (void)length;
+
     uint8_t *command_id = &data[0];
     uint8_t *channel_id = &data[1];
     uint8_t *value_id_and_data = &data[2];
@@ -816,6 +806,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
         }
         return;
     }
+
     *command_id = id_unhandled;
 }
 #endif
@@ -831,6 +822,7 @@ static uint8_t next_select_slot(uint8_t idx, bool clockwise) {
         idx = clockwise ? ((idx + 1) % PAD_KEY_COUNT) : ((idx + PAD_KEY_COUNT - 1) % PAD_KEY_COUNT);
         if (select_slots[idx].selectable || idx == 4) return idx;
     }
+
     return idx;
 }
 
@@ -880,6 +872,7 @@ static const char *last_key_function_for(void) {
 
 static void send_vsc_command(const char *command) {
     if (command == NULL || command[0] == '\0') return;
+
     tap_code16(C(S(KC_P)));
     wait_ms(30);
     send_string(command);
@@ -888,19 +881,24 @@ static void send_vsc_command(const char *command) {
 
 static void trigger_vsc_target(uint8_t slot) {
     if (slot >= 6) return;
+
     if (active_layer_raw() == _PROMPT) {
         send_vsc_command("GitHub Copilot Chat: Focus on Chat View");
         wait_ms(30);
+
         switch (prompt_mode) {
             case PROMPT_MODE_PICS: send_string(prompt_pics_macros[slot]); break;
             case PROMPT_MODE_ETSY: send_string(prompt_etsy_macros[slot]); break;
             case PROMPT_MODE_BASE:
             default:               send_string(vsc_chat_macros[slot]); break;
         }
+
         return;
     }
+
     vsc_mode_t mode = current_vsc_preview_mode();
     if (mode == VSC_MODE_NONE) return;
+
     if (mode == VSC_MODE_BAR) {
         send_vsc_command(vsc_bar_commands[slot]);
     } else if (mode == VSC_MODE_CHAT) {
@@ -910,6 +908,7 @@ static void trigger_vsc_target(uint8_t slot) {
 
 static void tap_text_target(uint8_t slot) {
     if (slot >= 6) return;
+
     switch (current_text_preview_mode()) {
         case TEXT_MODE_ACTIONS:
             switch (slot) {
@@ -921,6 +920,7 @@ static void tap_text_target(uint8_t slot) {
                 case 5: tap_code16(C(KC_Z)); break;
             }
             break;
+
         case TEXT_MODE_EDIT:
             switch (slot) {
                 case 0: tap_code(KC_ENT); break;
@@ -931,6 +931,7 @@ static void tap_text_target(uint8_t slot) {
                 case 5: tap_code(MS_BTN1); break;
             }
             break;
+
         case TEXT_MODE_WIN:
         default:
             switch (slot) {
@@ -947,6 +948,7 @@ static void tap_text_target(uint8_t slot) {
 
 static void tap_window_target(uint8_t slot) {
     if (slot >= 6) return;
+
     if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
         switch (slot) {
             case 0: tap_code16(A(KC_LEFT)); break;
@@ -971,6 +973,7 @@ static void tap_window_target(uint8_t slot) {
 
 static void tap_game_target(uint8_t slot) {
     if (slot >= 6) return;
+
     if (current_game_preview_mode() == GAME_MODE_NAV) {
         switch (slot) {
             case 0: tap_code(KC_ESC); break;
@@ -994,8 +997,10 @@ static void tap_game_target(uint8_t slot) {
 
 static uint8_t triwave8_period(uint32_t now, uint16_t period_ms, uint8_t phase) {
     if (period_ms == 0) return 0;
+
     uint32_t t = (now + ((uint32_t)phase * period_ms) / 255) % period_ms;
     uint32_t x = (t * 510UL) / period_ms;
+
     return (x > 255) ? (uint8_t)(510 - x) : (uint8_t)x;
 }
 
@@ -1012,16 +1017,20 @@ static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
 
 static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v) {
     if (key_index >= PAD_KEY_COUNT) return;
+
     uint8_t led = key_led_map[key_index];
     set_led_hsv(led, h, s, v);
 }
 
 static void clear_all_keys(void) {
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) set_led_hsv(i, 0, 0, 0);
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        set_led_hsv(i, 0, 0, 0);
+    }
 }
 
 static void render_minimal_profile(uint8_t layer) {
     clear_all_keys();
+
     if (layer == _SELECT) {
         uint8_t target_slot = slot_for_layer(selector_target);
         const select_slot_t *slot = &select_slots[target_slot];
@@ -1029,6 +1038,7 @@ static void render_minimal_profile(uint8_t layer) {
         set_key_hsv(target_slot, slot->hue, slot->sat, val);
         return;
     }
+
     uint8_t slot = slot_for_layer(layer);
     const select_slot_t *info = &select_slots[slot];
     uint8_t val = pulse_val(timer_read32(), 2400, 0, 12, 90);
@@ -1039,6 +1049,7 @@ static void render_base_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t base = palette_for_layer(_BASE);
     uint8_t hue_shift = (uint8_t)(now / 64);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t hue = hue_shift + (i * 6);
         uint8_t val = pulse_val(now, 2600, i * 11, palette_floor(base.val / 4, 18), base.val);
@@ -1049,8 +1060,9 @@ static void render_base_wild(void) {
 static void render_key_gap_alternating(const hsv_config_t *palette, uint16_t period_ms, uint8_t hue_swing) {
     uint32_t now = timer_read32();
     uint8_t phase = triwave8_period(now, period_ms, 0);
-    uint8_t key_val = (uint8_t)(palette_floor(palette->val / 5, 16) + ((uint16_t)(palette->val - palette_floor(palette->val / 5, 16)) * phase) / 255);
-    uint8_t gap_val = (uint8_t)(palette_floor(palette->val / 5, 16) + ((uint16_t)(palette->val - palette_floor(palette->val / 5, 16)) * (255 - phase)) / 255);
+    uint8_t key_floor = palette_floor(palette->val / 5, 16);
+    uint8_t key_val = (uint8_t)(key_floor + ((uint16_t)(palette->val - key_floor) * phase) / 255);
+    uint8_t gap_val = (uint8_t)(key_floor + ((uint16_t)(palette->val - key_floor) * (255 - phase)) / 255);
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         bool is_gap_led = (i % 5) % 2;
@@ -1069,6 +1081,7 @@ static void render_window_wild(void) {
 static void render_text_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t text = palette_for_layer(_TEXT);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t drift = triwave8_period(now, 7600, i * 13);
         uint8_t hue = text.hue + (drift / 12);
@@ -1081,14 +1094,17 @@ static void render_media_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t media = palette_for_layer(_MEDIA);
     uint8_t head = ((uint16_t)triwave8_period(now, 2400, 0) * (RGBLIGHT_LED_COUNT - 1)) / 255;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (i > head) ? (i - head) : (head - i);
         uint8_t hue = media.hue + triwave8_period(now, 3200, i * 12) / 18;
         uint8_t val = palette_floor(media.val / 10, 10);
+
         if (dist == 0) val = palette_floor(media.val + 24, media.val);
         else if (dist == 1) val = palette_floor((media.val * 3) / 4, 28);
         else if (dist == 2) val = palette_floor(media.val / 2, 18);
         else if (dist == 3) val = palette_floor(media.val / 3, 12);
+
         set_led_hsv(i, hue, media.sat, val);
     }
 }
@@ -1096,14 +1112,17 @@ static void render_media_wild(void) {
 static void render_rgb_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t rgb = palette_for_layer(_RGB);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t hue = (uint8_t)(rgb.hue + i * 19 + triwave8_period(now, 3600, i * 17) / 10);
         uint8_t base = palette_floor(rgb.val / 12, 6);
         uint8_t shimmer = triwave8_period(now, 850 + (i * 37), i * 23) / 10;
         uint8_t val = palette_floor(base + shimmer, base);
+
         if ((((now / 180) + (i * 3)) % 11) == 0) {
             val = palette_floor(rgb.val + 32, rgb.val);
         }
+
         set_led_hsv(i, hue, rgb.sat, val);
     }
 }
@@ -1116,6 +1135,7 @@ static void render_dev_wild(void) {
 static void render_vsc_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t vsc = palette_for_layer(_VSC);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t swing = triwave8_period(now, 1800, i * 21);
         uint8_t hue = vsc.hue + (swing / 6);
@@ -1127,6 +1147,7 @@ static void render_vsc_wild(void) {
 static void render_prompt_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t prompt = palette_for_layer(_PROMPT);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t glow = triwave8_period(now, 2100, i * 19);
         uint8_t hue = prompt.hue + (glow / 5);
@@ -1138,32 +1159,53 @@ static void render_prompt_wild(void) {
 static void render_select_wild(void) {
     uint32_t now = timer_read32();
     uint8_t target_slot = slot_for_layer(selector_target);
+
     clear_all_keys();
+
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         const select_slot_t *slot = &select_slots[i];
         uint8_t val = slot->selectable ? 34 : 10;
         uint8_t sat = slot->sat;
         uint8_t hue = slot->hue;
-        if (i == 4) { sat = 0; val = 24; }
-        if (i == target_slot && i != select_cursor && slot->selectable && val < 72) val = 72;
-        if (i == select_cursor) {
-            if (slot->selectable) val = pulse_val(now, 900, 0, 80, 170);
-            else { sat = 0; val = pulse_val(now, 900, 0, 46, 120); }
+
+        if (i == 4) {
+            sat = 0;
+            val = 24;
         }
+
+        if (i == target_slot && i != select_cursor && slot->selectable && val < 72) {
+            val = 72;
+        }
+
+        if (i == select_cursor) {
+            if (slot->selectable) {
+                val = pulse_val(now, 900, 0, 80, 170);
+            } else {
+                sat = 0;
+                val = pulse_val(now, 900, 0, 46, 120);
+            }
+        }
+
         set_key_hsv(i, hue, sat, val);
     }
 }
 
 static void render_effect_solid(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, p.val); }
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        set_led_hsv(i, p.hue, p.sat, p.val);
+    }
 }
 
 static void render_effect_breathing(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 2200);
     uint8_t val = pulse_val(timer_read32(), period, 0, palette_floor(p.val / 8, 8), p.val);
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, val); }
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
 }
 
 static void render_effect_running(uint8_t layer) {
@@ -1171,12 +1213,15 @@ static void render_effect_running(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 990);
     uint8_t head = (now / (period / RGBLIGHT_LED_COUNT + 1)) % RGBLIGHT_LED_COUNT;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (i + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT;
         uint8_t val = palette_floor(p.val / 8, 8);
+
         if (dist == 0) val = p.val;
         else if (dist == 1 || dist == RGBLIGHT_LED_COUNT - 1) val = palette_floor(p.val / 2, 30);
         else if (dist == 2 || dist == RGBLIGHT_LED_COUNT - 2) val = palette_floor(p.val / 4, 16);
+
         set_led_hsv(i, p.hue, p.sat, val);
     }
 }
@@ -1186,11 +1231,14 @@ static void render_effect_twinkle(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 1233);
     uint8_t sparkle = ((now / (period / RGBLIGHT_LED_COUNT + 1)) * 5 + 1) % RGBLIGHT_LED_COUNT;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t base = palette_floor(p.val / 10, 6);
         uint8_t shimmer = triwave8_period(now, effect_period_for_layer(layer, 900) + i * 73, i * 29) / 8;
         uint8_t val = palette_floor(base + shimmer, base);
+
         if (i == sparkle) val = p.val;
+
         set_led_hsv(i, p.hue + i * 2, p.sat, val);
     }
 }
@@ -1201,7 +1249,10 @@ static void render_effect_pulse(uint8_t layer) {
     uint16_t period = effect_period_for_layer(layer, 1400);
     bool flash = (now % period) < (period / 10 + 10);
     uint8_t val = flash ? p.val : palette_floor(p.val / 5, 12);
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) { set_led_hsv(i, p.hue, p.sat, val); }
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
 }
 
 static void render_effect_comet(uint8_t layer) {
@@ -1209,13 +1260,16 @@ static void render_effect_comet(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 1100);
     uint8_t head = (now / (period / RGBLIGHT_LED_COUNT + 1)) % RGBLIGHT_LED_COUNT;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (head + RGBLIGHT_LED_COUNT - i) % RGBLIGHT_LED_COUNT;
         uint8_t val = palette_floor(p.val / 12, 6);
+
         if (dist == 0) val = p.val;
         else if (dist == 1) val = palette_floor((p.val * 3) / 4, 24);
         else if (dist == 2) val = palette_floor(p.val / 2, 18);
         else if (dist == 3) val = palette_floor(p.val / 4, 12);
+
         set_led_hsv(i, p.hue + dist * 3, p.sat, val);
     }
 }
@@ -1226,11 +1280,14 @@ static void render_effect_scan(uint8_t layer) {
     uint16_t period = effect_period_for_layer(layer, 1800);
     uint8_t pos = triwave8_period(now, period, 0);
     uint8_t head = ((uint16_t)pos * (RGBLIGHT_LED_COUNT - 1)) / 255;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t dist = (i > head) ? (i - head) : (head - i);
         uint8_t val = palette_floor(p.val / 12, 8);
+
         if (dist == 0) val = p.val;
         else if (dist == 1) val = palette_floor(p.val / 3, 18);
+
         set_led_hsv(i, p.hue, p.sat, val);
     }
 }
@@ -1240,6 +1297,7 @@ static void render_effect_rainbow(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 3200);
     uint8_t offset = (uint8_t)((now * 255UL) / period);
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t val = pulse_val(now, effect_period_for_layer(layer, 1800), i * 18, palette_floor(p.val / 4, 20), p.val);
         set_led_hsv(i, offset + i * 28, p.sat, val);
@@ -1251,6 +1309,7 @@ static void render_effect_stack(uint8_t layer) {
     hsv_config_t p = palette_for_layer(layer);
     uint16_t period = effect_period_for_layer(layer, 2200);
     uint8_t filled = ((now % period) * (RGBLIGHT_LED_COUNT + 1)) / period;
+
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         uint8_t val = (i < filled) ? p.val : palette_floor(p.val / 12, 6);
         set_led_hsv(i, p.hue + i * 2, p.sat, val);
@@ -1261,7 +1320,10 @@ static void render_rgb_layer_visuals(void) {
     uint8_t layer = active_layer_raw();
     rgb_effect_mode_t effect = effect_for_layer(layer);
 
-    if (effect == RGB_EFFECT_OFF) { clear_all_keys(); return; }
+    if (effect == RGB_EFFECT_OFF) {
+        clear_all_keys();
+        return;
+    }
 
     if (rgb_minimal_mode) {
         render_minimal_profile(layer);
@@ -1301,8 +1363,8 @@ static void render_rgb_layer_visuals(void) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
         MO(_SELECT), KC_HOME,     KC_BSPC,
-        KC_LEFT,     KC_ENT,    KC_RGHT,
-        LCTL(KC_Y),  KC_END,   LCTL(KC_Z)
+        KC_LEFT,     KC_ENT,      KC_RGHT,
+        LCTL(KC_Y),  KC_END,      LCTL(KC_Z)
     ),
     [_WINDOW] = LAYOUT(
         MO(_SELECT), WIN_BRO, WIN_AUX,
@@ -1341,7 +1403,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         SEL_BASE,  SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA, RGB_PROFILE,SEL_DEV,
+        SEL_MEDIA, RGB_PROFILE, SEL_DEV,
         SEL_VSC,   SEL_RGB,    SEL_PROMPT
     ),
 };
@@ -1354,10 +1416,13 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     if (select_now && !select_before) {
         layer_state_t without_select = (state | default_layer_state) & ~((layer_state_t)1 << _SELECT);
         uint8_t base = get_highest_layer(without_select);
+
         if (base >= _SELECT) base = _BASE;
+
         selector_target = base;
         select_cursor = slot_for_layer(selector_target);
     }
+
     last_state = state;
     return state;
 }
@@ -1365,9 +1430,10 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 static void select_target_layer(uint8_t layer) {
     selector_target = layer;
     select_cursor = slot_for_layer(selector_target);
-    if (!matrix_select_held) layer_move(selector_target);
 
-    
+    if (!matrix_select_held) {
+        layer_move(selector_target);
+    }
 }
 
 static void oled_note_activity(void) {
@@ -1375,15 +1441,21 @@ static void oled_note_activity(void) {
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    if (record->event.pressed) {
+        oled_note_activity();
+    }
+
     if (keycode == MO(_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = active_layer_raw();
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
+
             matrix_select_held = true;
             update_select_layer_state();
         } else {
             matrix_select_held = false;
             update_select_layer_state();
+
             if (selector_target == selector_origin_layer && timer_elapsed32(selector_last_tap) <= SELECTOR_DOUBLE_TAP_MS) {
                 selector_target = _BASE;
                 select_cursor = slot_for_layer(selector_target);
@@ -1394,6 +1466,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 selector_last_tap = (selector_target == selector_origin_layer) ? timer_read32() : 0;
             }
         }
+
         return false;
     }
 
@@ -1410,19 +1483,41 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
-        case SEL_BASE:   if (record->event.pressed) select_target_layer(_BASE); return false;
-        case SEL_WINDOW: if (record->event.pressed) select_target_layer(_WINDOW); return false;
-        case SEL_TEXT:   if (record->event.pressed) select_target_layer(_TEXT); return false;
-        case SEL_MEDIA:  if (record->event.pressed) select_target_layer(_MEDIA); return false;
-        case SEL_RGB:    if (record->event.pressed) select_target_layer(_RGB); return false;
-        case SEL_DEV:    if (record->event.pressed) select_target_layer(_DEV); return false;
-        case SEL_VSC:    if (record->event.pressed) select_target_layer(_VSC); return false;
+        case SEL_BASE:
+            if (record->event.pressed) select_target_layer(_BASE);
+            return false;
+
+        case SEL_WINDOW:
+            if (record->event.pressed) select_target_layer(_WINDOW);
+            return false;
+
+        case SEL_TEXT:
+            if (record->event.pressed) select_target_layer(_TEXT);
+            return false;
+
+        case SEL_MEDIA:
+            if (record->event.pressed) select_target_layer(_MEDIA);
+            return false;
+
+        case SEL_RGB:
+            if (record->event.pressed) select_target_layer(_RGB);
+            return false;
+
+        case SEL_DEV:
+            if (record->event.pressed) select_target_layer(_DEV);
+            return false;
+
+        case SEL_VSC:
+            if (record->event.pressed) select_target_layer(_VSC);
+            return false;
+
         case SEL_PROMPT:
             if (record->event.pressed) {
                 prompt_mode = PROMPT_MODE_BASE;
                 select_target_layer(_PROMPT);
             }
             return false;
+
         case PRM_PICS:
             if (record->event.pressed) {
                 prompt_mode = PROMPT_MODE_PICS;
@@ -1431,6 +1526,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 layer_move(_PROMPT);
             }
             return false;
+
         case PRM_ETSY:
             if (record->event.pressed) {
                 prompt_mode = PROMPT_MODE_ETSY;
@@ -1443,16 +1539,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case GM_NAV:
             if (record->event.pressed) game_mode = GAME_MODE_NAV;
             return false;
+
         case GM_WASD:
             if (record->event.pressed) game_mode = GAME_MODE_WASD;
             return false;
-        case GM_1: case GM_2: case GM_3: case GM_4: case GM_5: case GM_6:
+
+        case GM_1:
+        case GM_2:
+        case GM_3:
+        case GM_4:
+        case GM_5:
+        case GM_6:
             if (record->event.pressed) tap_game_target((uint8_t)(keycode - GM_1));
             return false;
 
-        case WIN_BRO: window_browser_held = record->event.pressed; return false;
-        case WIN_AUX: return false;
-        case WIN_1: case WIN_2: case WIN_3: case WIN_4: case WIN_5: case WIN_6:
+        case WIN_BRO:
+            window_browser_held = record->event.pressed;
+            return false;
+
+        case WIN_AUX:
+            return false;
+
+        case WIN_1:
+        case WIN_2:
+        case WIN_3:
+        case WIN_4:
+        case WIN_5:
+        case WIN_6:
             if (record->event.pressed) tap_window_target((uint8_t)(keycode - WIN_1));
             return false;
 
@@ -1460,23 +1573,45 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             text_edit_held = false;
             text_action_held = record->event.pressed;
             return false;
+
         case TXT_EDT:
             text_action_held = false;
             text_edit_held = record->event.pressed;
             return false;
-        case TXT_1: case TXT_2: case TXT_3: case TXT_4: case TXT_5: case TXT_6:
+
+        case TXT_1:
+        case TXT_2:
+        case TXT_3:
+        case TXT_4:
+        case TXT_5:
+        case TXT_6:
             if (record->event.pressed) tap_text_target((uint8_t)(keycode - TXT_1));
             return false;
 
         case VSC_BAR:
-            if (record->event.pressed) { vsc_mode = VSC_MODE_BAR; last_vsc_mode = VSC_MODE_BAR; }
-            else vsc_mode = VSC_MODE_NONE;
+            if (record->event.pressed) {
+                vsc_mode = VSC_MODE_BAR;
+                last_vsc_mode = VSC_MODE_BAR;
+            } else {
+                vsc_mode = VSC_MODE_NONE;
+            }
             return false;
+
         case VSC_CHAT:
-            if (record->event.pressed) { vsc_mode = VSC_MODE_CHAT; last_vsc_mode = VSC_MODE_CHAT; }
-            else vsc_mode = VSC_MODE_NONE;
+            if (record->event.pressed) {
+                vsc_mode = VSC_MODE_CHAT;
+                last_vsc_mode = VSC_MODE_CHAT;
+            } else {
+                vsc_mode = VSC_MODE_NONE;
+            }
             return false;
-        case VSC_1: case VSC_2: case VSC_3: case VSC_4: case VSC_5: case VSC_6:
+
+        case VSC_1:
+        case VSC_2:
+        case VSC_3:
+        case VSC_4:
+        case VSC_5:
+        case VSC_6:
             if (record->event.pressed) trigger_vsc_target((uint8_t)(keycode - VSC_1));
             return false;
 
@@ -1484,20 +1619,30 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) rgb_minimal_mode = !rgb_minimal_mode;
             return false;
     }
+
     return true;
 }
 
 bool encoder_update_user(uint8_t index, bool clockwise) {
     (void)index;
+
+    oled_note_activity();
+
     switch (active_layer_raw()) {
         case _BASE:
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
+
         case _WINDOW:
-            if (current_window_preview_mode() == WINDOW_MODE_BROWSER) tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
-            else if (clockwise) tap_code16(A(KC_TAB));
-            else tap_code16(S(A(KC_TAB)));
+            if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
+                tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
+            } else if (clockwise) {
+                tap_code16(A(KC_TAB));
+            } else {
+                tap_code16(S(A(KC_TAB)));
+            }
             break;
+
         case _TEXT:
             if (encoder_btn_pressed) {
                 encoder_btn_rotated = true;
@@ -1508,29 +1653,36 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
                 tap_code(clockwise ? KC_RGHT : KC_LEFT);
             }
             break;
+
         case _MEDIA:
             tap_code(clockwise ? KC_VOLU : KC_VOLD);
             break;
+
         case _RGB:
             tap_code16(clockwise ? UG_VALU : UG_VALD);
             break;
+
         case _DEV:
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
+
         case _VSC:
         case _PROMPT:
             tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
             break;
+
         case _SELECT:
             if (encoder_btn_pressed) {
                 select_cursor = next_select_slot(select_cursor, clockwise);
                 sync_selector_target_from_cursor();
             }
             break;
+
         default:
             tap_code(clockwise ? KC_VOLU : KC_VOLD);
             break;
     }
+
     return false;
 }
 
@@ -1540,28 +1692,27 @@ void matrix_scan_user(void) {
     static bool oled_toggle_combo_used = false;
     static uint32_t oled_toggle_last_action = 0;
 #endif
-#ifdef SELECTOR_BTN_PIN
-    bool gp12_pressed = false;
-#endif
 
 #ifdef ENCODER_BTN_PIN
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
 
-if (encoder_btn_pressed && !encoder_btn_was_pressed) {
-    encoder_btn_rotated = false;
+    if (encoder_btn_pressed && !encoder_btn_was_pressed) {
+        oled_note_activity();
+        encoder_btn_rotated = false;
 
-    if (active_layer_raw() == _TEXT && text_selection_pending_copy) {
-        tap_code16(C(KC_C));
-        text_selection_pending_copy = false;
+        if (active_layer_raw() == _TEXT && text_selection_pending_copy) {
+            tap_code16(C(KC_C));
+            text_selection_pending_copy = false;
 
-        // Verhindert, dass dieser Kopierdruck noch Encoder-Help auslöst
-        encoder_help_started = 0;
-        encoder_help_fired = true;
-    } else {
-        encoder_help_started = timer_read32() | 1;
-        encoder_help_fired = false;
+            // Verhindert, dass dieser Kopierdruck noch Encoder-Help auslöst.
+            encoder_help_started = 0;
+            encoder_help_fired = true;
+        } else {
+            encoder_help_started = timer_read32() | 1;
+            encoder_help_fired = false;
+        }
     }
-}
+
     if (encoder_btn_pressed && encoder_help_started != 0 && !encoder_help_fired) {
         if (timer_elapsed32(encoder_help_started) >= ENCODER_HELP_HOLD_MS) {
             encoder_help_fired = true;
@@ -1570,10 +1721,20 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
         }
     }
 
+    if (!encoder_btn_pressed && encoder_btn_was_pressed) {
+        encoder_help_started = 0;
+        encoder_btn_rotated = false;
+    }
+
+    encoder_btn_was_pressed = encoder_btn_pressed;
 #endif
 
 #ifdef OLED_TOGGLE_BTN_PIN
     bool oled_toggle_pressed = (gpio_read_pin(OLED_TOGGLE_BTN_PIN) == 0);
+
+    if (oled_toggle_pressed && !oled_toggle_was_pressed) {
+        oled_note_activity();
+    }
 
     bool clear_buttons_pressed = encoder_btn_pressed && oled_toggle_pressed;
 
@@ -1617,10 +1778,6 @@ if (encoder_btn_pressed && !encoder_btn_was_pressed) {
     oled_toggle_was_pressed = oled_toggle_pressed;
 #endif
 
-#ifdef SELECTOR_BTN_PIN
-    gp12_pressed = (gpio_read_pin(SELECTOR_BTN_PIN) == 0);
-#endif
-
 #ifdef RGBLIGHT_ENABLE
     if (timer_elapsed32(rgb_frame_timer) >= RGB_FRAME_MS) {
         rgb_frame_timer = timer_read32();
@@ -1634,17 +1791,22 @@ void keyboard_post_init_user(void) {
     rgblight_enable_noeeprom();
     rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT);
 #endif
+
 #ifdef ENCODER_BTN_PIN
     gpio_set_pin_input_high(ENCODER_BTN_PIN);
 #endif
+
 #ifdef OLED_TOGGLE_BTN_PIN
     gpio_set_pin_input_high(OLED_TOGGLE_BTN_PIN);
 #endif
+
     gpio_set_pin_output(GP25);
     gpio_write_pin_high(GP25);
+
 #ifdef SELECTOR_BTN_PIN
     gpio_set_pin_input_high(SELECTOR_BTN_PIN);
 #endif
+
 #ifdef FORCE_EEPROM_RESET_ON_BOOT
     // Emergency recovery switch: define FORCE_EEPROM_RESET_ON_BOOT in config.h,
     // flash once, let the board boot, then remove the define and flash again.
@@ -1654,10 +1816,13 @@ void keyboard_post_init_user(void) {
 #ifdef VIA_ENABLE
     load_via_config();
 #endif
+
     boot_start = timer_read32() | 1;
     selector_target = _BASE;
     select_cursor = slot_for_layer(selector_target);
     rgb_frame_timer = timer_read32();
+
+    oled_note_activity();
 }
 
 #ifdef OLED_ENABLE
@@ -1674,10 +1839,11 @@ static void write_line(uint8_t row, const char *str) {
     oled_write(buf, false);
 }
 
-
 static void render_boot(void) {
     if (boot_start == 0) boot_start = timer_read32() | 1;
+
     uint32_t t = timer_elapsed32(boot_start);
+
     write_line(0, "");
     write_line(1, t >= 700 ? "       I AM" : "");
     write_line(2, t >= 1200 ? "      ROOT" : "");
@@ -1686,6 +1852,7 @@ static void render_boot(void) {
 
 static void render_header(uint8_t layer) {
     char line[22];
+
     if (layer == _SELECT) {
         snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s", layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _PROMPT) {
@@ -1703,28 +1870,37 @@ static void render_header(uint8_t layer) {
     } else {
         snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     }
+
     write_line(0, line);
 }
 
 static void render_legend_view(uint8_t layer) {
     char line[22];
+
     render_header(layer);
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 0, 0), legend_label_for(layer, 0, 1), legend_label_for(layer, 0, 2));
     write_line(1, line);
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 1, 0), legend_label_for(layer, 1, 1), legend_label_for(layer, 1, 2));
     write_line(2, line);
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 2, 0), legend_label_for(layer, 2, 1), legend_label_for(layer, 2, 2));
     write_line(3, line);
 }
 
 static void render_last_key_view(void) {
     char buf[22];
+
     snprintf(buf, sizeof(buf), "LAST %-6.6s", layer_name_short(last_key_layer));
     write_line(0, buf);
+
     snprintf(buf, sizeof(buf), "K:%-7.7s %04X", last_key_label_for(), last_keycode);
     write_line(1, buf);
+
     snprintf(buf, sizeof(buf), "F:%.18s", last_key_function_for());
     write_line(2, buf);
+
     snprintf(buf, sizeof(buf), "P:%u (%u,%u)", (last_row * 3) + last_col + 1, last_row, last_col);
     write_line(3, buf);
 }
@@ -1732,12 +1908,62 @@ static void render_last_key_view(void) {
 static void render_encoder_view(void) {
     char buf[22];
     uint8_t layer = active_layer_raw();
+
     render_header(layer);
     write_line(1, "ENCODER MODE");
+
     snprintf(buf, sizeof(buf), "L:%-6.6s", layer_name_short(layer));
     write_line(2, buf);
+
     snprintf(buf, sizeof(buf), "%.21s", encoder_function_for_layer(layer));
     write_line(3, buf);
+}
+
+static void render_oled_eyes_open(void) {
+    write_line(0, "");
+    write_line(1, "   ( o )   ( o )");
+    write_line(2, "     \\_______/");
+    write_line(3, "");
+}
+
+static void render_oled_eyes_blink(void) {
+    write_line(0, "");
+    write_line(1, "   ( - )   ( - )");
+    write_line(2, "     \\_______/");
+    write_line(3, "");
+}
+
+static void render_oled_eyes(void) {
+    uint32_t now = timer_read32();
+
+    if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
+        render_oled_eyes_blink();
+        return;
+    }
+
+    switch ((now / 2500) % 3) {
+        case 0:
+            render_oled_eyes_open();
+            break;
+
+        case 1:
+            write_line(0, "");
+            write_line(1, "   (o  )   (o  )");
+            write_line(2, "     \\_______/");
+            write_line(3, "");
+            break;
+
+        default:
+            write_line(0, "");
+            write_line(1, "   (  o)   (  o)");
+            write_line(2, "     \\_______/");
+            write_line(3, "");
+            break;
+    }
+}
+
+static bool oled_should_show_eyes(void) {
+    return timer_elapsed32(oled_last_activity_time) > OLED_EYES_TIMEOUT_MS;
 }
 
 bool oled_task_user(void) {
@@ -1756,13 +1982,25 @@ bool oled_task_user(void) {
     }
 
     uint8_t layer = active_layer_raw();
-    if (layer == _SELECT) render_legend_view(_SELECT);
-    else if (oled_view == OLED_VIEW_LAST_KEY) render_last_key_view();
-    else render_legend_view(layer);
+
+    if (layer != _SELECT && oled_should_show_eyes()) {
+        render_oled_eyes();
+        return false;
+    }
+
+    if (layer == _SELECT) {
+        render_legend_view(_SELECT);
+    } else if (oled_view == OLED_VIEW_LAST_KEY) {
+        render_last_key_view();
+    } else {
+        render_legend_view(layer);
+    }
+
     return false;
 }
 
 #else
+
 static void write_line(uint8_t row, const char *str) {
     char buf[22];
     snprintf(buf, sizeof(buf), "%-21.21s", str);
@@ -1772,7 +2010,9 @@ static void write_line(uint8_t row, const char *str) {
 
 static void render_boot(void) {
     if (boot_start == 0) boot_start = timer_read32() | 1;
+
     uint32_t t = timer_elapsed32(boot_start);
+
     write_line(0, "");
     write_line(1, "");
     write_line(2, t >= 800 ? "          I AM" : "             I");
@@ -1785,24 +2025,32 @@ static void render_boot(void) {
 
 static void render_header(uint8_t layer) {
     char line[22];
+
     if (layer == _PROMPT) {
         snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
     } else {
         snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     }
+
     write_line(0, line);
 }
 
 static void render_legend_view(uint8_t layer) {
     char line[22];
+
     render_header(layer);
     write_line(1, "1      2      3");
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 0, 0), legend_label_for(layer, 0, 1), legend_label_for(layer, 0, 2));
     write_line(2, line);
+
     write_line(3, "4      5      6");
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 1, 0), legend_label_for(layer, 1, 1), legend_label_for(layer, 1, 2));
     write_line(4, line);
+
     write_line(5, "7      8      9");
+
     snprintf(line, sizeof(line), "%-6.6s %-6.6s %-6.6s", legend_label_for(layer, 2, 0), legend_label_for(layer, 2, 1), legend_label_for(layer, 2, 2));
     write_line(6, line);
 
@@ -1822,23 +2070,31 @@ static void render_legend_view(uint8_t layer) {
         snprintf(line, sizeof(line), "Hold SEL for grid");
 #endif
     }
+
     write_line(7, line);
 }
 
 static void render_last_key_view(void) {
     char buf[22];
+
     render_header(last_key_layer);
     write_line(1, "LAST KEY");
+
     snprintf(buf, sizeof(buf), "Layer: %s", layer_name_long(last_key_layer));
     write_line(2, buf);
+
     snprintf(buf, sizeof(buf), "Key:   %.14s", last_key_label_for());
     write_line(3, buf);
+
     snprintf(buf, sizeof(buf), "Code:  0x%04X", last_keycode);
     write_line(4, buf);
+
     snprintf(buf, sizeof(buf), "Func:  %.14s", last_key_function_for());
     write_line(5, buf);
+
     snprintf(buf, sizeof(buf), "Pos:   %u (%u,%u)", (last_row * 3) + last_col + 1, last_row, last_col);
     write_line(6, buf);
+
 #ifdef OLED_TOGGLE_BTN_PIN
     write_line(7, "GP11: back to Lay");
 #else
@@ -1849,15 +2105,83 @@ static void render_last_key_view(void) {
 static void render_encoder_view(void) {
     char buf[22];
     uint8_t layer = active_layer_raw();
+
     render_header(layer);
     write_line(1, "ENCODER MODE");
+
     snprintf(buf, sizeof(buf), "Layer: %s", layer_name_long(layer));
     write_line(2, buf);
+
     write_line(3, "Function:");
+
     snprintf(buf, sizeof(buf), "%.21s", encoder_function_for_layer(layer));
     write_line(4, buf);
+
     write_line(6, "Hold encoder btn");
     write_line(7, "for encoder help");
+}
+
+static void render_oled_eyes_open(void) {
+    write_line(0, "");
+    write_line(1, "");
+    write_line(2, "     ( o )   ( o )");
+    write_line(3, "");
+    write_line(4, "       \\_______/");
+    write_line(5, "");
+    write_line(6, "");
+    write_line(7, "");
+}
+
+static void render_oled_eyes_blink(void) {
+    write_line(0, "");
+    write_line(1, "");
+    write_line(2, "     ( - )   ( - )");
+    write_line(3, "");
+    write_line(4, "       \\_______/");
+    write_line(5, "");
+    write_line(6, "");
+    write_line(7, "");
+}
+
+static void render_oled_eyes(void) {
+    uint32_t now = timer_read32();
+
+    if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
+        render_oled_eyes_blink();
+        return;
+    }
+
+    switch ((now / 2500) % 3) {
+        case 0:
+            render_oled_eyes_open();
+            break;
+
+        case 1:
+            write_line(0, "");
+            write_line(1, "");
+            write_line(2, "     (o  )   (o  )");
+            write_line(3, "");
+            write_line(4, "       \\_______/");
+            write_line(5, "");
+            write_line(6, "");
+            write_line(7, "");
+            break;
+
+        default:
+            write_line(0, "");
+            write_line(1, "");
+            write_line(2, "     (  o)   (  o)");
+            write_line(3, "");
+            write_line(4, "       \\_______/");
+            write_line(5, "");
+            write_line(6, "");
+            write_line(7, "");
+            break;
+    }
+}
+
+static bool oled_should_show_eyes(void) {
+    return timer_elapsed32(oled_last_activity_time) > OLED_EYES_TIMEOUT_MS;
 }
 
 bool oled_task_user(void) {
@@ -1876,10 +2200,20 @@ bool oled_task_user(void) {
     }
 
     uint8_t layer = active_layer_raw();
-    if (layer == _SELECT) render_legend_view(_SELECT);
-    else if (oled_view == OLED_VIEW_LAST_KEY) render_last_key_view();
-    else render_legend_view(layer);
+
+    if (layer != _SELECT && oled_should_show_eyes()) {
+        render_oled_eyes();
+        return false;
+    }
+
+    if (layer == _SELECT) {
+        render_legend_view(_SELECT);
+    } else if (oled_view == OLED_VIEW_LAST_KEY) {
+        render_last_key_view();
+    } else {
+        render_legend_view(layer);
+    }
+
     return false;
 }
 #endif
-
