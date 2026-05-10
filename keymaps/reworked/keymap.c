@@ -1952,47 +1952,75 @@ static void render_encoder_view(void) {
     write_line(3, buf);
 }
 
+static void draw_filled_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
+        for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
+            oled_write_pixel(xx, yy, true);
+        }
+    }
+}
+
+static void draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+    for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
+        oled_write_pixel(xx, y, true);
+        oled_write_pixel(xx, (uint8_t)(y + h - 1), true);
+    }
+
+    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
+        oled_write_pixel(x, yy, true);
+        oled_write_pixel((uint8_t)(x + w - 1), yy, true);
+    }
+}
+
+static void draw_eye(uint8_t x, uint8_t y, int8_t pupil_offset) {
+    draw_rect(x, y, 32, 18);
+    draw_rect((uint8_t)(x + 1), (uint8_t)(y + 1), 30, 16);
+    draw_filled_rect((uint8_t)(x + 13 + pupil_offset), (uint8_t)(y + 6), 6, 6);
+    oled_write_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
+}
+
+static void draw_blink_eye(uint8_t x, uint8_t y) {
+    draw_filled_rect((uint8_t)(x + 3), (uint8_t)(y + 8), 26, 2);
+}
+
 static void render_oled_eyes_open(void) {
-    write_line(0, "");
-    write_line(1, "   ( o )   ( o )");
-    write_line(2, "     \\_______/");
-    write_line(3, "");
+    draw_eye(24, 6, 0);
+    draw_eye(72, 6, 0);
 }
 
 static void render_oled_eyes_blink(void) {
-    write_line(0, "");
-    write_line(1, "   ( - )   ( - )");
-    write_line(2, "     \\_______/");
-    write_line(3, "");
+    draw_blink_eye(24, 6);
+    draw_blink_eye(72, 6);
 }
 
 static void render_oled_eyes(void) {
     uint32_t now = timer_read32();
+    int8_t look = 0;
+
+    oled_clear();
 
     if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
         render_oled_eyes_blink();
-        return;
+    } else {
+        switch ((now / 2500) % 3) {
+            case 1:
+                look = -4;
+                break;
+
+            case 2:
+                look = 4;
+                break;
+
+            default:
+                look = 0;
+                break;
+        }
+
+        draw_eye(24, 6, look);
+        draw_eye(72, 6, look);
     }
 
-    switch ((now / 2500) % 3) {
-        case 0:
-            render_oled_eyes_open();
-            break;
-
-        case 1:
-            write_line(0, "");
-            write_line(1, "   (o  )   (o  )");
-            write_line(2, "     \\_______/");
-            write_line(3, "");
-            break;
-
-        default:
-            write_line(0, "");
-            write_line(1, "   (  o)   (  o)");
-            write_line(2, "     \\_______/");
-            write_line(3, "");
-            break;
-    }
+    draw_filled_rect(51, 27, 26, 1);
 }
 
 static bool oled_should_show_eyes(void) {
@@ -2154,63 +2182,75 @@ static void render_encoder_view(void) {
     write_line(7, "for encoder help");
 }
 
+static void draw_filled_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
+        for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
+            oled_write_pixel(xx, yy, true);
+        }
+    }
+}
+
+static void draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+    for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
+        oled_write_pixel(xx, y, true);
+        oled_write_pixel(xx, (uint8_t)(y + h - 1), true);
+    }
+
+    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
+        oled_write_pixel(x, yy, true);
+        oled_write_pixel((uint8_t)(x + w - 1), yy, true);
+    }
+}
+
+static void draw_eye(uint8_t x, uint8_t y, int8_t pupil_offset) {
+    draw_rect(x, y, 32, 18);
+    draw_rect((uint8_t)(x + 1), (uint8_t)(y + 1), 30, 16);
+    draw_filled_rect((uint8_t)(x + 13 + pupil_offset), (uint8_t)(y + 6), 6, 6);
+    oled_write_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
+}
+
+static void draw_blink_eye(uint8_t x, uint8_t y) {
+    draw_filled_rect((uint8_t)(x + 3), (uint8_t)(y + 8), 26, 2);
+}
+
 static void render_oled_eyes_open(void) {
-    write_line(0, "");
-    write_line(1, "");
-    write_line(2, "     ( o )   ( o )");
-    write_line(3, "");
-    write_line(4, "       \\_______/");
-    write_line(5, "");
-    write_line(6, "");
-    write_line(7, "");
+    draw_eye(24, 22, 0);
+    draw_eye(72, 22, 0);
 }
 
 static void render_oled_eyes_blink(void) {
-    write_line(0, "");
-    write_line(1, "");
-    write_line(2, "     ( - )   ( - )");
-    write_line(3, "");
-    write_line(4, "       \\_______/");
-    write_line(5, "");
-    write_line(6, "");
-    write_line(7, "");
+    draw_blink_eye(24, 22);
+    draw_blink_eye(72, 22);
 }
 
 static void render_oled_eyes(void) {
     uint32_t now = timer_read32();
+    int8_t look = 0;
+
+    oled_clear();
 
     if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
         render_oled_eyes_blink();
-        return;
+    } else {
+        switch ((now / 2500) % 3) {
+            case 1:
+                look = -4;
+                break;
+
+            case 2:
+                look = 4;
+                break;
+
+            default:
+                look = 0;
+                break;
+        }
+
+        draw_eye(24, 22, look);
+        draw_eye(72, 22, look);
     }
 
-    switch ((now / 2500) % 3) {
-        case 0:
-            render_oled_eyes_open();
-            break;
-
-        case 1:
-            write_line(0, "");
-            write_line(1, "");
-            write_line(2, "     (o  )   (o  )");
-            write_line(3, "");
-            write_line(4, "       \\_______/");
-            write_line(5, "");
-            write_line(6, "");
-            write_line(7, "");
-            break;
-
-        default:
-            write_line(0, "");
-            write_line(1, "");
-            write_line(2, "     (  o)   (  o)");
-            write_line(3, "");
-            write_line(4, "       \\_______/");
-            write_line(5, "");
-            write_line(6, "");
-            write_line(7, "");
-            break;
-    }
+    draw_filled_rect(51, 43, 26, 1);
 }
 
 static bool oled_should_show_eyes(void) {
