@@ -656,6 +656,28 @@ static uint16_t effect_period_for_layer(uint8_t layer, uint16_t base_period) {
     return (uint16_t)period;
 }
 
+static void adjust_layer_brightness(uint8_t layer, int16_t delta) {
+    uint8_t slot = slot_for_layer(layer);
+    uint16_t value = select_slots[slot].val;
+
+    if (delta < 0) {
+        uint16_t step = (uint16_t)(-delta);
+        value = value > step ? (value - step) : 0;
+    } else {
+        value = value + (uint16_t)delta;
+        if (value > UINT8_MAX) value = UINT8_MAX;
+    }
+
+    select_slots[slot].val = (uint8_t)value;
+
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT) {
+        via_user_config.layer_palette[index].val = (uint8_t)value;
+    }
+#endif
+}
+
 #ifdef VIA_ENABLE
 static void apply_palette_entry(uint8_t index) {
     if (index >= VIA_LAYER_SLOT_COUNT) return;
@@ -1486,6 +1508,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_BASE:
             if (record->event.pressed) select_target_layer(_BASE);
             return false;
+            case UG_VALU:
+                if (record->event.pressed && active_layer_raw() == _RGB) {
+                    adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
+                }
+                return true;
+
+            case UG_VALD:
+                if (record->event.pressed && active_layer_raw() == _RGB) {
+                    adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
+                }
+                return true;
 
         case SEL_WINDOW:
             if (record->event.pressed) select_target_layer(_WINDOW);
