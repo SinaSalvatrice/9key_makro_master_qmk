@@ -4,6 +4,7 @@
 #include "via.h"
 #endif
 #include <stdio.h>
+#include <string.h>
 
 // ============================================================
 // RGB / OLED selector build
@@ -647,6 +648,10 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
     return 128;
 }
 
+#ifdef RGBLIGHT_ENABLE
+static void render_rgb_layer_visuals(void);
+#endif
+
 static uint16_t effect_period_for_layer(uint8_t layer, uint16_t base_period) {
     uint8_t speed = effect_speed_for_layer(layer);
     if (speed < 1) speed = 1;
@@ -674,6 +679,12 @@ static void adjust_layer_brightness(uint8_t layer, int16_t delta) {
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
         via_user_config.layer_palette[index].val = (uint8_t)value;
+    }
+#endif
+
+#ifdef RGBLIGHT_ENABLE
+    if (active_layer_raw() == layer) {
+        render_rgb_layer_visuals();
     }
 #endif
 }
@@ -1508,17 +1519,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         case SEL_BASE:
             if (record->event.pressed) select_target_layer(_BASE);
             return false;
-            case UG_VALU:
-                if (record->event.pressed && active_layer_raw() == _RGB) {
-                    adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
-                }
-                return true;
 
-            case UG_VALD:
-                if (record->event.pressed && active_layer_raw() == _RGB) {
-                    adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
-                }
-                return true;
+        case UG_VALU:
+            if (record->event.pressed && active_layer_raw() == _RGB) {
+                adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
+            }
+            return true;
+
+        case UG_VALD:
+            if (record->event.pressed && active_layer_raw() == _RGB) {
+                adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
+            }
+            return true;
 
         case SEL_WINDOW:
             if (record->event.pressed) select_target_layer(_WINDOW);
@@ -1952,23 +1964,44 @@ static void render_encoder_view(void) {
     write_line(3, buf);
 }
 
+static char oled_eyes_buffer[OLED_MATRIX_SIZE];
+
+static void clear_oled_eyes_buffer(void) {
+    memset(oled_eyes_buffer, 0, sizeof(oled_eyes_buffer));
+}
+
+static void write_eye_pixel(uint8_t x, uint8_t y, bool on) {
+    if (x >= OLED_DISPLAY_WIDTH || y >= OLED_DISPLAY_HEIGHT) return;
+
+    uint16_t index = x + (y / 8) * OLED_DISPLAY_WIDTH;
+    uint8_t mask = (uint8_t)(1U << (y % 8));
+
+    if (index >= sizeof(oled_eyes_buffer)) return;
+
+    if (on) {
+        oled_eyes_buffer[index] |= mask;
+    } else {
+        oled_eyes_buffer[index] &= (uint8_t)~mask;
+    }
+}
+
 static void draw_filled_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
     for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
         for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-            oled_write_pixel(xx, yy, true);
+            write_eye_pixel(xx, yy, true);
         }
     }
 }
 
 static void draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
     for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-        oled_write_pixel(xx, y, true);
-        oled_write_pixel(xx, (uint8_t)(y + h - 1), true);
+        write_eye_pixel(xx, y, true);
+        write_eye_pixel(xx, (uint8_t)(y + h - 1), true);
     }
 
     for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
-        oled_write_pixel(x, yy, true);
-        oled_write_pixel((uint8_t)(x + w - 1), yy, true);
+        write_eye_pixel(x, yy, true);
+        write_eye_pixel((uint8_t)(x + w - 1), yy, true);
     }
 }
 
@@ -1976,7 +2009,7 @@ static void draw_eye(uint8_t x, uint8_t y, int8_t pupil_offset) {
     draw_rect(x, y, 32, 18);
     draw_rect((uint8_t)(x + 1), (uint8_t)(y + 1), 30, 16);
     draw_filled_rect((uint8_t)(x + 13 + pupil_offset), (uint8_t)(y + 6), 6, 6);
-    oled_write_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
+    write_eye_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
 }
 
 static void draw_blink_eye(uint8_t x, uint8_t y) {
@@ -1998,6 +2031,7 @@ static void render_oled_eyes(void) {
     int8_t look = 0;
 
     oled_clear();
+    clear_oled_eyes_buffer();
 
     if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
         render_oled_eyes_blink();
@@ -2021,6 +2055,7 @@ static void render_oled_eyes(void) {
     }
 
     draw_filled_rect(51, 27, 26, 1);
+    oled_write_raw(oled_eyes_buffer, sizeof(oled_eyes_buffer));
 }
 
 static bool oled_should_show_eyes(void) {
