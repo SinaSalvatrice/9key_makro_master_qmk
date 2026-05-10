@@ -14,7 +14,7 @@
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
-#define RGBLIGHT_LED_COUNT 15
+#define RGBLIGHT_LED_COUNT 59
 #endif
 
 #ifndef SELECTOR_BTN_PIN
