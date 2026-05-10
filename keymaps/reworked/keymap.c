@@ -1692,7 +1692,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _RGB:
-            tap_code16(clockwise ? UG_VALU : UG_VALD);
+            adjust_layer_brightness(_RGB, clockwise ? RGBLIGHT_VAL_STEP : -RGBLIGHT_VAL_STEP);
             break;
 
         case _DEV:
