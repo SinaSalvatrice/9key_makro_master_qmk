@@ -1704,6 +1704,13 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _RGB:
+#ifdef RGBLIGHT_ENABLE
+            if (clockwise) {
+                rgblight_increase_val_noeeprom();
+            } else {
+                rgblight_decrease_val_noeeprom();
+            }
+#endif
             adjust_layer_brightness(_RGB, clockwise ? RGBLIGHT_VAL_STEP : -RGBLIGHT_VAL_STEP);
             break;
 
