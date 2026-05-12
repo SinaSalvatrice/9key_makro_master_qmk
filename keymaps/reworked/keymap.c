@@ -1065,9 +1065,15 @@ static uint8_t ping_pong_index(uint32_t now, uint16_t period_ms, uint8_t count, 
 }
 
 #ifdef RGBLIGHT_ENABLE
+static void flush_led_frame(void) {
+    rgblight_driver.flush();
+}
+
 static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
     if (led_index >= RGBLIGHT_LED_COUNT) return;
-    rgblight_sethsv_at(h, s, v, led_index);
+
+    rgb_t rgb = hsv_to_rgb((hsv_t){h, s, v > RGBLIGHT_LIMIT_VAL ? RGBLIGHT_LIMIT_VAL : v});
+    rgblight_driver.set_color(led_index, rgb.r, rgb.g, rgb.b);
 }
 
 static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v) {
@@ -1098,6 +1104,7 @@ static void render_minimal_profile(uint8_t layer) {
     const select_slot_t *info = &select_slots[slot];
     uint8_t val = pulse_val(timer_read32(), 2400, 0, 12, 90);
     set_key_hsv(slot, info->hue, info->sat, val);
+    flush_led_frame();
 }
 
 static void render_base_wild(void) {
@@ -1120,6 +1127,8 @@ static void render_base_wild(void) {
 
         set_led_hsv(i, hue, base.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_window_wild(void) {
@@ -1149,6 +1158,8 @@ static void render_window_wild(void) {
 
         set_led_hsv(i, hue, window.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_text_wild(void) {
@@ -1194,6 +1205,8 @@ static void render_text_wild(void) {
             set_led_hsv(gap_led, text.hue + hue_bias + 10, text.sat, val);
         }
     }
+
+    flush_led_frame();
 }
 
 static void render_media_wild(void) {
@@ -1224,6 +1237,8 @@ static void render_media_wild(void) {
             set_led_hsv(led, hue, media.sat, val);
         }
     }
+
+    flush_led_frame();
 }
 
 static void render_rgb_wild(void) {
@@ -1248,6 +1263,8 @@ static void render_rgb_wild(void) {
 
         set_led_hsv(i, hue, rgb.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_dev_wild(void) {
@@ -1268,6 +1285,7 @@ static void render_dev_wild(void) {
             set_led_hsv(i, dev.hue + row * 4, dev.sat, val);
         }
 
+        flush_led_frame();
         return;
     }
 
@@ -1278,6 +1296,8 @@ static void render_dev_wild(void) {
         uint8_t hue = dev.hue - dist * 3;
         set_led_hsv(i, hue, dev.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_vsc_wild(void) {
@@ -1301,6 +1321,7 @@ static void render_vsc_wild(void) {
     }
 
     set_key_hsv(cursor_key, vsc.hue + (mode == VSC_MODE_CHAT ? 20 : 0), vsc.sat, cursor_flash ? palette_floor(vsc.val + 20, vsc.val) : palette_floor(vsc.val / 5, 12));
+    flush_led_frame();
 }
 
 static void render_prompt_wild(void) {
@@ -1316,6 +1337,8 @@ static void render_prompt_wild(void) {
         uint8_t hue = prompt.hue + mode_bias + dist * 2;
         set_led_hsv(i, hue, prompt.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_select_wild(void) {
@@ -1363,6 +1386,8 @@ static void render_select_wild(void) {
 
         set_key_hsv(i, hue, sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_solid(uint8_t layer) {
@@ -1371,6 +1396,8 @@ static void render_effect_solid(uint8_t layer) {
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         set_led_hsv(i, p.hue, p.sat, p.val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_breathing(uint8_t layer) {
@@ -1381,6 +1408,8 @@ static void render_effect_breathing(uint8_t layer) {
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         set_led_hsv(i, p.hue, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_running(uint8_t layer) {
@@ -1399,6 +1428,8 @@ static void render_effect_running(uint8_t layer) {
 
         set_led_hsv(i, p.hue, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_twinkle(uint8_t layer) {
@@ -1416,6 +1447,8 @@ static void render_effect_twinkle(uint8_t layer) {
 
         set_led_hsv(i, p.hue + i * 2, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_pulse(uint8_t layer) {
@@ -1428,6 +1461,8 @@ static void render_effect_pulse(uint8_t layer) {
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         set_led_hsv(i, p.hue, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_comet(uint8_t layer) {
@@ -1447,6 +1482,8 @@ static void render_effect_comet(uint8_t layer) {
 
         set_led_hsv(i, p.hue + dist * 3, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_scan(uint8_t layer) {
@@ -1465,6 +1502,8 @@ static void render_effect_scan(uint8_t layer) {
 
         set_led_hsv(i, p.hue, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_rainbow(uint8_t layer) {
@@ -1477,6 +1516,8 @@ static void render_effect_rainbow(uint8_t layer) {
         uint8_t val = pulse_val(now, effect_period_for_layer(layer, 1800), i * 18, palette_floor(p.val / 4, 20), p.val);
         set_led_hsv(i, offset + i * 28, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_effect_stack(uint8_t layer) {
@@ -1489,6 +1530,8 @@ static void render_effect_stack(uint8_t layer) {
         uint8_t val = (i < filled) ? p.val : palette_floor(p.val / 12, 6);
         set_led_hsv(i, p.hue + i * 2, p.sat, val);
     }
+
+    flush_led_frame();
 }
 
 static void render_rgb_layer_visuals(void) {
@@ -1497,6 +1540,7 @@ static void render_rgb_layer_visuals(void) {
 
     if (effect == RGB_EFFECT_OFF) {
         clear_all_keys();
+        flush_led_frame();
         return;
     }
 
