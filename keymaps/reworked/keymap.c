@@ -1268,23 +1268,46 @@ static void render_dev_wild(void) {
     hsv_config_t p = palette_for_layer(_DEV);
 
     if (game_mode == GAME_MODE_NAV) {
-        uint8_t head = ping_pong_index(now, effect_period_for_layer(_DEV, 750), 3, 0);
+    uint16_t period = effect_period_for_layer(_DEV, 850);
 
-        for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-            uint8_t row = led_row_index(i);
-            uint8_t d = distance_u8(row, head);
-            uint8_t val = palette_floor(p.val / 18, 5);
+    // 0..255 Welle: Keys hell, Gaps dunkel -> danach umgekehrt
+    uint8_t swap = triwave8_period(now, period, 0);
 
-            if (d == 0) val = palette_floor(p.val + 18, p.val);
-            else if (d == 1) val = palette_floor(p.val / 2, 20);
+    uint8_t key_val = palette_floor(
+        scale_val(p.val, 60 + swap / 2),
+        10
+    );
 
-            set_led_hsv(i, p.hue + row * 6 + (led_is_gap(i) ? 12 : 0), p.sat, val);
+    uint8_t gap_val = palette_floor(
+        scale_val(p.val, 60 + (255 - swap) / 2),
+        10
+    );
+
+    // kleine Laufbewegung über die Reihen, damit es nicht nur stumpf blinkt
+    uint8_t row_head = ping_pong_index(now, effect_period_for_layer(_DEV, 1400), 3, 0);
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        uint8_t row = led_row_index(i);
+        uint8_t row_dist = distance_u8(row, row_head);
+
+        bool gap = led_is_gap(i);
+
+        uint8_t hue = p.hue + row * 5 + (gap ? 14 : 0);
+        uint8_t val = gap ? gap_val : key_val;
+
+        // aktive Reihe leicht boosten
+        if (row_dist == 0) {
+            val = palette_floor(val + 34, val);
+        } else if (row_dist == 1) {
+            val = palette_floor(val + 12, val);
         }
 
-        flush_led_frame();
-        return;
+        set_led_hsv(i, hue, p.sat, val);
     }
 
+    flush_led_frame();
+    return;
+}
     uint8_t boom = triwave8_period(now, effect_period_for_layer(_DEV, 1150), 0);
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
