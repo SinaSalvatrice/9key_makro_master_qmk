@@ -4,7 +4,6 @@
 #include "via.h"
 #endif
 #include <stdio.h>
-#include <string.h>
 
 // ============================================================
 // RGB / OLED selector build
@@ -31,18 +30,6 @@
 #define REWORKED_LAYOUT_VERSION 4
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
-
-#ifndef OLED_EYES_TIMEOUT_MS
-#    define OLED_EYES_TIMEOUT_MS 20000
-#endif
-
-#ifndef OLED_EYES_BLINK_INTERVAL_MS
-#    define OLED_EYES_BLINK_INTERVAL_MS 4500
-#endif
-
-#ifndef OLED_EYES_BLINK_DURATION_MS
-#    define OLED_EYES_BLINK_DURATION_MS 180
-#endif
 
 // ── Layer enum ──────────────────────────────────────────────
 enum layers {
@@ -165,7 +152,6 @@ static uint8_t  selector_target           = _BASE;
 static uint8_t  select_cursor             = 0;
 static uint32_t rgb_frame_timer           = 0;
 static uint32_t boot_start                = 0;
-static uint32_t oled_last_activity_time   = 0;
 static oled_view_t oled_view              = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode                = VSC_MODE_NONE;
 static vsc_mode_t last_vsc_mode           = VSC_MODE_BAR;
@@ -1655,15 +1641,7 @@ static void select_target_layer(uint8_t layer) {
     }
 }
 
-static void oled_note_activity(void) {
-    oled_last_activity_time = timer_read32();
-}
-
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (record->event.pressed) {
-        oled_note_activity();
-    }
-
     if (keycode == MO(_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = active_layer_raw();
@@ -1857,8 +1835,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 bool encoder_update_user(uint8_t index, bool clockwise) {
     (void)index;
 
-    oled_note_activity();
-
     switch (active_layer_raw()) {
         case _BASE:
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
@@ -1935,7 +1911,6 @@ void matrix_scan_user(void) {
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
 
     if (encoder_btn_pressed && !encoder_btn_was_pressed) {
-        oled_note_activity();
         encoder_btn_rotated = false;
 
         if (active_layer_raw() == _TEXT && text_selection_pending_copy) {
@@ -1969,10 +1944,6 @@ void matrix_scan_user(void) {
 
 #ifdef OLED_TOGGLE_BTN_PIN
     bool oled_toggle_pressed = (gpio_read_pin(OLED_TOGGLE_BTN_PIN) == 0);
-
-    if (oled_toggle_pressed && !oled_toggle_was_pressed) {
-        oled_note_activity();
-    }
 
     bool clear_buttons_pressed = encoder_btn_pressed && oled_toggle_pressed;
 
@@ -2059,8 +2030,6 @@ void keyboard_post_init_user(void) {
     selector_target = _BASE;
     select_cursor = slot_for_layer(selector_target);
     rgb_frame_timer = timer_read32();
-
-    oled_note_activity();
 }
 
 #ifdef OLED_ENABLE
@@ -2157,104 +2126,6 @@ static void render_encoder_view(void) {
     write_line(3, buf);
 }
 
-static char oled_eyes_buffer[OLED_MATRIX_SIZE];
-
-static void clear_oled_eyes_buffer(void) {
-    memset(oled_eyes_buffer, 0, sizeof(oled_eyes_buffer));
-}
-
-static void write_eye_pixel(uint8_t x, uint8_t y, bool on) {
-    if (x >= OLED_DISPLAY_WIDTH || y >= OLED_DISPLAY_HEIGHT) return;
-
-    uint16_t index = x + (y / 8) * OLED_DISPLAY_WIDTH;
-    uint8_t mask = (uint8_t)(1U << (y % 8));
-
-    if (index >= sizeof(oled_eyes_buffer)) return;
-
-    if (on) {
-        oled_eyes_buffer[index] |= mask;
-    } else {
-        oled_eyes_buffer[index] &= (uint8_t)~mask;
-    }
-}
-
-static void draw_filled_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
-        for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-            write_eye_pixel(xx, yy, true);
-        }
-    }
-}
-
-static void draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-        write_eye_pixel(xx, y, true);
-        write_eye_pixel(xx, (uint8_t)(y + h - 1), true);
-    }
-
-    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
-        write_eye_pixel(x, yy, true);
-        write_eye_pixel((uint8_t)(x + w - 1), yy, true);
-    }
-}
-
-static void draw_eye(uint8_t x, uint8_t y, int8_t pupil_offset) {
-    draw_rect(x, y, 32, 18);
-    draw_rect((uint8_t)(x + 1), (uint8_t)(y + 1), 30, 16);
-    draw_filled_rect((uint8_t)(x + 13 + pupil_offset), (uint8_t)(y + 6), 6, 6);
-    write_eye_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
-}
-
-static void draw_blink_eye(uint8_t x, uint8_t y) {
-    draw_filled_rect((uint8_t)(x + 3), (uint8_t)(y + 8), 26, 2);
-}
-
-static void render_oled_eyes_open(void) {
-    draw_eye(24, 6, 0);
-    draw_eye(72, 6, 0);
-}
-
-static void render_oled_eyes_blink(void) {
-    draw_blink_eye(24, 6);
-    draw_blink_eye(72, 6);
-}
-
-static void render_oled_eyes(void) {
-    uint32_t now = timer_read32();
-    int8_t look = 0;
-
-    oled_clear();
-    clear_oled_eyes_buffer();
-
-    if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
-        render_oled_eyes_blink();
-    } else {
-        switch ((now / 2500) % 3) {
-            case 1:
-                look = -4;
-                break;
-
-            case 2:
-                look = 4;
-                break;
-
-            default:
-                look = 0;
-                break;
-        }
-
-        draw_eye(24, 6, look);
-        draw_eye(72, 6, look);
-    }
-
-    draw_filled_rect(51, 27, 26, 1);
-    oled_write_raw(oled_eyes_buffer, sizeof(oled_eyes_buffer));
-}
-
-static bool oled_should_show_eyes(void) {
-    return timer_elapsed32(oled_last_activity_time) > OLED_EYES_TIMEOUT_MS;
-}
-
 bool oled_task_user(void) {
     if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
         render_boot();
@@ -2271,11 +2142,6 @@ bool oled_task_user(void) {
     }
 
     uint8_t layer = active_layer_raw();
-
-    if (layer != _SELECT && oled_should_show_eyes()) {
-        render_oled_eyes();
-        return false;
-    }
 
     if (layer == _SELECT) {
         render_legend_view(_SELECT);
@@ -2410,81 +2276,6 @@ static void render_encoder_view(void) {
     write_line(7, "for encoder help");
 }
 
-static void draw_filled_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
-        for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-            oled_write_pixel(xx, yy, true);
-        }
-    }
-}
-
-static void draw_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-    for (uint8_t xx = x; xx < (uint8_t)(x + w); xx++) {
-        oled_write_pixel(xx, y, true);
-        oled_write_pixel(xx, (uint8_t)(y + h - 1), true);
-    }
-
-    for (uint8_t yy = y; yy < (uint8_t)(y + h); yy++) {
-        oled_write_pixel(x, yy, true);
-        oled_write_pixel((uint8_t)(x + w - 1), yy, true);
-    }
-}
-
-static void draw_eye(uint8_t x, uint8_t y, int8_t pupil_offset) {
-    draw_rect(x, y, 32, 18);
-    draw_rect((uint8_t)(x + 1), (uint8_t)(y + 1), 30, 16);
-    draw_filled_rect((uint8_t)(x + 13 + pupil_offset), (uint8_t)(y + 6), 6, 6);
-    oled_write_pixel((uint8_t)(x + 15 + pupil_offset), (uint8_t)(y + 7), false);
-}
-
-static void draw_blink_eye(uint8_t x, uint8_t y) {
-    draw_filled_rect((uint8_t)(x + 3), (uint8_t)(y + 8), 26, 2);
-}
-
-static void render_oled_eyes_open(void) {
-    draw_eye(24, 22, 0);
-    draw_eye(72, 22, 0);
-}
-
-static void render_oled_eyes_blink(void) {
-    draw_blink_eye(24, 22);
-    draw_blink_eye(72, 22);
-}
-
-static void render_oled_eyes(void) {
-    uint32_t now = timer_read32();
-    int8_t look = 0;
-
-    oled_clear();
-
-    if ((now % OLED_EYES_BLINK_INTERVAL_MS) < OLED_EYES_BLINK_DURATION_MS) {
-        render_oled_eyes_blink();
-    } else {
-        switch ((now / 2500) % 3) {
-            case 1:
-                look = -4;
-                break;
-
-            case 2:
-                look = 4;
-                break;
-
-            default:
-                look = 0;
-                break;
-        }
-
-        draw_eye(24, 22, look);
-        draw_eye(72, 22, look);
-    }
-
-    draw_filled_rect(51, 43, 26, 1);
-}
-
-static bool oled_should_show_eyes(void) {
-    return timer_elapsed32(oled_last_activity_time) > OLED_EYES_TIMEOUT_MS;
-}
-
 bool oled_task_user(void) {
     if (boot_start == 0 || timer_elapsed32(boot_start) < BOOT_TOTAL_MS) {
         render_boot();
@@ -2501,11 +2292,6 @@ bool oled_task_user(void) {
     }
 
     uint8_t layer = active_layer_raw();
-
-    if (layer != _SELECT && oled_should_show_eyes()) {
-        render_oled_eyes();
-        return false;
-    }
 
     if (layer == _SELECT) {
         render_legend_view(_SELECT);
