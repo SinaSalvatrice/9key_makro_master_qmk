@@ -1,0 +1,9 @@
+{
+  "appId": "com.sinasalvatrice.rgbviapreview",
+  "appName": "9key RGB VIA Preview",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
