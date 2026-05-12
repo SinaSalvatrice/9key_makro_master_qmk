@@ -1042,6 +1042,28 @@ static uint8_t pulse_val(uint32_t now, uint16_t period, uint8_t phase, uint8_t m
     return (uint8_t)(min_v + ((uint16_t)(max_v - min_v) * tri) / 255);
 }
 
+static bool led_is_gap(uint8_t led_index) {
+    uint8_t col = led_index % 5;
+    return col == 1 || col == 3;
+}
+
+static uint8_t led_row_index(uint8_t led_index) {
+    return led_index / 5;
+}
+
+static uint8_t led_col_index(uint8_t led_index) {
+    return led_index % 5;
+}
+
+static uint8_t distance_u8(uint8_t a, uint8_t b) {
+    return a > b ? (a - b) : (b - a);
+}
+
+static uint8_t ping_pong_index(uint32_t now, uint16_t period_ms, uint8_t count, uint8_t phase) {
+    if (count <= 1) return 0;
+    return (uint8_t)(((uint16_t)triwave8_period(now, period_ms, phase) * (count - 1)) / 255);
+}
+
 #ifdef RGBLIGHT_ENABLE
 static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
     if (led_index >= RGBLIGHT_LED_COUNT) return;
@@ -1081,79 +1103,147 @@ static void render_minimal_profile(uint8_t layer) {
 static void render_base_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t base = palette_for_layer(_BASE);
-    uint8_t hue_shift = (uint8_t)(now / 64);
+    uint16_t period = effect_period_for_layer(_BASE, 3200);
+    uint16_t drift_period = effect_period_for_layer(_BASE, 7600);
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t hue = hue_shift + (i * 6);
-        uint8_t val = pulse_val(now, 2600, i * 11, palette_floor(base.val / 4, 18), base.val);
+        uint8_t phase = (uint8_t)(i * 17 + led_row_index(i) * 29);
+        uint8_t drift = triwave8_period(now, drift_period, phase);
+        uint8_t hue = base.hue + (led_is_gap(i) ? 8 : 0) + (drift / 28);
+        uint8_t val;
+
+        if (led_is_gap(i)) {
+            val = pulse_val(now, period, (uint8_t)(phase + 128), palette_floor(base.val / 8, 8), palette_floor((base.val * 3) / 5, 18));
+        } else {
+            val = pulse_val(now, period, phase, palette_floor(base.val / 3, 26), base.val);
+        }
+
         set_led_hsv(i, hue, base.sat, val);
     }
 }
 
-static void render_key_gap_alternating(const hsv_config_t *palette, uint16_t period_ms, uint8_t hue_swing) {
+static void render_window_wild(void) {
     uint32_t now = timer_read32();
-    uint8_t phase = triwave8_period(now, period_ms, 0);
-    uint8_t key_floor = palette_floor(palette->val / 5, 16);
-    uint8_t key_val = (uint8_t)(key_floor + ((uint16_t)(palette->val - key_floor) * phase) / 255);
-    uint8_t gap_val = (uint8_t)(key_floor + ((uint16_t)(palette->val - key_floor) * (255 - phase)) / 255);
+    hsv_config_t window = palette_for_layer(_WINDOW);
+    uint16_t period = effect_period_for_layer(_WINDOW, window_browser_held ? 1250 : 1900);
+    uint8_t head = ping_pong_index(now, period, 5, window_browser_held ? 32 : 0);
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        bool is_gap_led = (i % 5) % 2;
-        uint8_t local_phase = triwave8_period(now, period_ms, (uint8_t)(i * 9));
-        uint8_t hue = palette->hue + (is_gap_led ? hue_swing : 0) + (local_phase / 32);
-        uint8_t val = is_gap_led ? gap_val : key_val;
-        set_led_hsv(i, hue, palette->sat, val);
-    }
-}
+        uint8_t col = led_col_index(i);
+        uint8_t row = led_row_index(i);
+        uint8_t dist = distance_u8(col, head);
+        uint8_t hue = window.hue + row * 3 + (led_is_gap(i) ? 10 : 0);
+        uint8_t val = palette_floor(window.val / 10, 8);
 
-static void render_window_wild(void) {
-    hsv_config_t window = palette_for_layer(_WINDOW);
-    render_key_gap_alternating(&window, 1800, 10);
+        if (dist == 0) {
+            val = led_is_gap(i) ? palette_floor(window.val + 16, window.val) : window.val;
+        } else if (dist == 1) {
+            val = palette_floor((window.val * 3) / 5, 24);
+        } else if (dist == 2) {
+            val = palette_floor(window.val / 4, 12);
+        }
+
+        if (!led_is_gap(i) && row == 1 && dist <= 1) {
+            val = palette_floor(val + 10, val);
+        }
+
+        set_led_hsv(i, hue, window.sat, val);
+    }
 }
 
 static void render_text_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t text = palette_for_layer(_TEXT);
+    uint16_t period = effect_period_for_layer(_TEXT, text_action_held ? 1200 : (text_edit_held ? 1450 : 2200));
+    uint8_t cursor = ping_pong_index(now, period, PAD_KEY_COUNT, 0);
+    uint8_t hue_bias = text_action_held ? 14 : (text_edit_held ? 28 : 0);
 
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t drift = triwave8_period(now, 7600, i * 13);
-        uint8_t hue = text.hue + (drift / 12);
-        uint8_t val = pulse_val(now, 3600, i * 9, palette_floor(text.val / 5, 10), text.val);
-        set_led_hsv(i, hue, text.sat, val);
+    clear_all_keys();
+
+    for (uint8_t key = 0; key < PAD_KEY_COUNT; key++) {
+        uint8_t dist = distance_u8(key, cursor);
+        uint8_t val = palette_floor(text.val / 12, 4);
+
+        if (dist == 0) {
+            val = text.val;
+        } else if (dist == 1) {
+            val = palette_floor((text.val * 2) / 5, 18);
+        } else if (dist == 2) {
+            val = palette_floor(text.val / 5, 10);
+        }
+
+        set_key_hsv(key, text.hue + hue_bias + key * 2, text.sat, val);
+    }
+
+    for (uint8_t row = 0; row < 3; row++) {
+        for (uint8_t gap = 0; gap < 2; gap++) {
+            uint8_t left_key = row * 3 + gap;
+            uint8_t right_key = left_key + 1;
+            uint8_t gap_led = row * 5 + (gap * 2) + 1;
+            uint8_t dist = distance_u8(left_key, cursor);
+
+            if (distance_u8(right_key, cursor) < dist) dist = distance_u8(right_key, cursor);
+
+            uint8_t val = palette_floor(text.val / 16, 4);
+            if (dist == 0) {
+                val = palette_floor((text.val * 3) / 5, 22);
+            } else if (dist == 1) {
+                val = palette_floor(text.val / 4, 12);
+            }
+
+            set_led_hsv(gap_led, text.hue + hue_bias + 10, text.sat, val);
+        }
     }
 }
 
 static void render_media_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t media = palette_for_layer(_MEDIA);
-    uint8_t head = ((uint16_t)triwave8_period(now, 2400, 0) * (RGBLIGHT_LED_COUNT - 1)) / 255;
 
-    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t dist = (i > head) ? (i - head) : (head - i);
-        uint8_t hue = media.hue + triwave8_period(now, 3200, i * 12) / 18;
-        uint8_t val = palette_floor(media.val / 10, 10);
+    for (uint8_t row = 0; row < 3; row++) {
+        uint8_t meter = (uint8_t)(((uint16_t)triwave8_period(now, effect_period_for_layer(_MEDIA, 1200 + row * 180), row * 64) * 5) / 255);
+        uint8_t peak = ping_pong_index(now, effect_period_for_layer(_MEDIA, 900 + row * 120), 5, row * 43);
 
-        if (dist == 0) val = palette_floor(media.val + 24, media.val);
-        else if (dist == 1) val = palette_floor((media.val * 3) / 4, 28);
-        else if (dist == 2) val = palette_floor(media.val / 2, 18);
-        else if (dist == 3) val = palette_floor(media.val / 3, 12);
+        for (uint8_t col = 0; col < 5; col++) {
+            uint8_t led = row * 5 + col;
+            uint8_t val = palette_floor(media.val / 14, 6);
+            uint8_t hue = media.hue + row * 6 + col * 2;
 
-        set_led_hsv(i, hue, media.sat, val);
+            if (col <= meter) {
+                val = palette_floor((media.val * (uint8_t)(6 - col)) / 6, 18);
+            }
+
+            if (col == peak) {
+                val = palette_floor(media.val + 20, media.val);
+            }
+
+            if (!led_is_gap(led) && col == 2) {
+                val = palette_floor(val + 12, val);
+            }
+
+            set_led_hsv(led, hue, media.sat, val);
+        }
     }
 }
 
 static void render_rgb_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t rgb = palette_for_layer(_RGB);
+    uint16_t period = effect_period_for_layer(_RGB, 2600);
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t hue = (uint8_t)(rgb.hue + i * 19 + triwave8_period(now, 3600, i * 17) / 10);
-        uint8_t base = palette_floor(rgb.val / 12, 6);
-        uint8_t shimmer = triwave8_period(now, 850 + (i * 37), i * 23) / 10;
+        uint8_t rainbow = (uint8_t)((now * 255UL) / period);
+        uint8_t hue = rainbow + i * 21 + triwave8_period(now, 1700, i * 29) / 9;
+        uint8_t base = palette_floor(rgb.val / 10, 8);
+        uint8_t shimmer = triwave8_period(now, 700 + (i * 41), i * 23) / 9;
         uint8_t val = palette_floor(base + shimmer, base);
 
         if ((((now / 180) + (i * 3)) % 11) == 0) {
             val = palette_floor(rgb.val + 32, rgb.val);
+        }
+
+        if (!led_is_gap(i)) {
+            val = palette_floor(val + 10, val);
         }
 
         set_led_hsv(i, hue, rgb.sat, val);
@@ -1161,30 +1251,69 @@ static void render_rgb_wild(void) {
 }
 
 static void render_dev_wild(void) {
+    uint32_t now = timer_read32();
     hsv_config_t dev = palette_for_layer(_DEV);
-    render_key_gap_alternating(&dev, 1200, 16);
+
+    if (game_mode == GAME_MODE_NAV) {
+        uint8_t row_head = ping_pong_index(now, effect_period_for_layer(_DEV, 900), 3, 0);
+
+        for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+            uint8_t row = led_row_index(i);
+            uint8_t dist = distance_u8(row, row_head);
+            uint8_t val = palette_floor(dev.val / 12, 6);
+
+            if (dist == 0) val = dev.val;
+            else if (dist == 1) val = palette_floor(dev.val / 2, 20);
+
+            set_led_hsv(i, dev.hue + row * 4, dev.sat, val);
+        }
+
+        return;
+    }
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        uint8_t dist = distance_u8(i, 7);
+        int16_t flare = (int16_t)triwave8_period(now, effect_period_for_layer(_DEV, 1200), i * 4) - (int16_t)(dist * 34);
+        uint8_t val = flare > 0 ? palette_floor((uint8_t)flare, palette_floor(dev.val / 10, 8)) : palette_floor(dev.val / 14, 4);
+        uint8_t hue = dev.hue - dist * 3;
+        set_led_hsv(i, hue, dev.sat, val);
+    }
 }
 
 static void render_vsc_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t vsc = palette_for_layer(_VSC);
+    vsc_mode_t mode = current_vsc_preview_mode();
+    uint8_t cursor_key = mode == VSC_MODE_CHAT ? 4 : 3;
+    uint8_t cursor_flash = ((now / effect_period_for_layer(_VSC, 260)) % 2) == 0;
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t swing = triwave8_period(now, 1800, i * 21);
-        uint8_t hue = vsc.hue + (swing / 6);
-        uint8_t val = pulse_val(now, 1100 + (i * 30), i * 13, palette_floor(vsc.val / 5, 18), palette_floor(vsc.val + 15, vsc.val));
+        uint8_t hue = vsc.hue + (mode == VSC_MODE_CHAT ? 12 : 0) + triwave8_period(now, 2400, i * 21) / 20;
+        uint8_t val;
+
+        if (led_is_gap(i)) {
+            val = pulse_val(now, effect_period_for_layer(_VSC, 1700), i * 17, palette_floor(vsc.val / 12, 6), palette_floor(vsc.val / 2, 22));
+        } else {
+            val = palette_floor(vsc.val / 6, 16);
+        }
+
         set_led_hsv(i, hue, vsc.sat, val);
     }
+
+    set_key_hsv(cursor_key, vsc.hue + (mode == VSC_MODE_CHAT ? 20 : 0), vsc.sat, cursor_flash ? palette_floor(vsc.val + 20, vsc.val) : palette_floor(vsc.val / 5, 12));
 }
 
 static void render_prompt_wild(void) {
     uint32_t now = timer_read32();
     hsv_config_t prompt = palette_for_layer(_PROMPT);
+    uint8_t mode_bias = prompt_mode == PROMPT_MODE_PICS ? 18 : (prompt_mode == PROMPT_MODE_ETSY ? 8 : 0);
+    uint16_t period = effect_period_for_layer(_PROMPT, prompt_mode == PROMPT_MODE_PICS ? 1300 : (prompt_mode == PROMPT_MODE_ETSY ? 2200 : 1800));
 
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
-        uint8_t glow = triwave8_period(now, 2100, i * 19);
-        uint8_t hue = prompt.hue + (glow / 5);
-        uint8_t val = pulse_val(now, 1500 + (i * 35), i * 17, palette_floor(prompt.val / 5, 22), prompt.val);
+        uint8_t dist = distance_u8(i, 7);
+        int16_t bloom = (int16_t)triwave8_period(now, period, 0) - (int16_t)(dist * 26);
+        uint8_t val = bloom > 0 ? palette_floor((uint8_t)bloom, palette_floor(prompt.val / 8, 10)) : palette_floor(prompt.val / 14, 4);
+        uint8_t hue = prompt.hue + mode_bias + dist * 2;
         set_led_hsv(i, hue, prompt.sat, val);
     }
 }
@@ -1192,8 +1321,21 @@ static void render_prompt_wild(void) {
 static void render_select_wild(void) {
     uint32_t now = timer_read32();
     uint8_t target_slot = slot_for_layer(selector_target);
+    uint8_t orbit = (uint8_t)((now / (effect_period_for_layer(_SELECT, 1200) / RGBLIGHT_LED_COUNT + 1)) % RGBLIGHT_LED_COUNT);
 
     clear_all_keys();
+
+    for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
+        const select_slot_t *slot = &select_slots[(i / 5) * 3 + ((i % 5) / 2)];
+        uint8_t val = led_is_gap(i) ? 8 : 0;
+        uint8_t sat = led_is_gap(i) ? palette_floor(slot->sat / 2, 24) : slot->sat;
+
+        if (led_is_gap(i) && i == orbit) {
+            val = 70;
+        }
+
+        set_led_hsv(i, slot->hue, sat, val);
+    }
 
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         const select_slot_t *slot = &select_slots[i];
@@ -1212,10 +1354,10 @@ static void render_select_wild(void) {
 
         if (i == select_cursor) {
             if (slot->selectable) {
-                val = pulse_val(now, 900, 0, 80, 170);
+                val = pulse_val(now, 780, 0, 84, 180);
             } else {
                 sat = 0;
-                val = pulse_val(now, 900, 0, 46, 120);
+                val = pulse_val(now, 780, 0, 46, 124);
             }
         }
 
