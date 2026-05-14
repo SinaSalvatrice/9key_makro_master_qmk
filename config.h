@@ -13,7 +13,7 @@
 // Milliseconds of inactivity before sending system sleep (5 minutes)
 #define IDLE_SLEEP_TIMEOUT_MS 300000
 
-#define RGBLIGHT_LED_COUNT 15
+#define RGBLIGHT_LED_COUNT 65
 #define RGBLIGHT_LIMIT_VAL 160
 #define RGBLIGHT_DEFAULT_HUE 128
 #define RGBLIGHT_DEFAULT_SAT 255
