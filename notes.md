@@ -41,11 +41,13 @@
 
 ### Selector flow
 - Key 1 on the main layers is `MO(_SELECT)` and acts as the main selector button.
+- The `SELECT` layer now keeps `SEL` on `r0c0` as well, so top-left stays the selector button on every layer.
 - Holding `SEL` opens the `SELECT` grid.
 - Releasing `SEL` moves to the currently highlighted target layer.
 - Turning the encoder while in `SELECT` cycles through the available layer slots.
 - The selector correctly remembers the current layer when entering the grid instead of always snapping back to `BASE`.
 - Double-tapping `SEL` without changing the target returns to `BASE`.
+- `BASE` now lives on `r2c1` in the selector grid.
 - The last selector slot selects the `PROMPT` layer.
 
 ### Encoder behavior by layer
@@ -71,7 +73,8 @@
 ### RGB
 - RGB is handled explicitly per key rather than relying only on stock global effects.
 - Layer visuals and selector visuals are timer-driven.
-- The center key in the selector grid toggles the FX profile (`RGB_PROFILE`).
+- The `RGB` slot now occupies the selector-grid center key.
+- The FX profile toggle (`RGB_PROFILE`) now lives on the `RGB` layer at `r2c1`.
 - Overall feel is already strong; this is now mostly a polish/taste area.
 
 ### VSC layer

@@ -244,19 +244,19 @@ static via_user_config_t via_user_config;
 
 // GAME / MEDIA share the old DEV slot to keep VIA layer indexing stable.
 static select_slot_t select_slots[PAD_KEY_COUNT] = {
-    { _BASE,    160, 220, 120, "BASE",   true  },
+    { _SELECT,   0,   0, 120, "SELECT", false },
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
-    { _DEV,     32, 255, 130, "GAME",   true  },
-    { _SELECT,   0,   0, 120, "SELECT", false },
     { _MEDIA,   18, 255, 130, "MEDIA",  true  },
-    { _VSC,    200, 255, 130, "VSC",    true  },
     { _RGB,    215, 240, 130, "RGB",    true  },
+    { _DEV,     32, 255, 130, "GAME",   true  },
+    { _VSC,    200, 255, 130, "VSC",    true  },
+    { _BASE,   160, 220, 120, "BASE",   true  },
     { _PROMPT,   8, 255, 140, "PROMT",  true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 5, 3, 6, 7, 8
+    7, 1, 2, 3, 5, 6, 4, 8
 };
 
 // Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
@@ -348,13 +348,13 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"SEL",  "BRO",  "AUX",  "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
-    [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FREE5", "FREE6"},
+    [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FX",    "FREE6"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN",  "TXT",  "MED",  "FX",   "GAME", "VSC",  "RGB",  "PROMT"},
+    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "RGB",  "GAME", "VSC",  "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -362,13 +362,13 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"Select layer", "Browser combo", "Reserved", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
-    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot"},
+    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Toggle FX mode", "Free slot"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to base", "Go to window", "Go to text", "Go to media", "Toggle FX mode", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
+    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to RGB", "Go to game", "Go to VSC", "Go to base", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -1703,7 +1703,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_RGB] = LAYOUT(
         MO(_SELECT), MO(_RGBMOD), MO(_RGBADJ),
         KC_NO,       KC_NO,       KC_NO,
-        KC_NO,       KC_NO,       KC_NO
+        KC_NO,       RGB_PROFILE, KC_NO
     ),
     [_RGBMOD] = LAYOUT(
         MO(_SELECT), KC_TRNS,        RGB_MOD_ALL,
@@ -1731,9 +1731,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         VSC_4,       VSC_5,   VSC_6
     ),
     [_SELECT] = LAYOUT(
-        SEL_BASE,  SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA, RGB_PROFILE, SEL_DEV,
-        SEL_VSC,   SEL_RGB,    SEL_PROMPT
+        MO(_SELECT), SEL_WINDOW, SEL_TEXT,
+        SEL_MEDIA,   SEL_RGB,    SEL_DEV,
+        SEL_VSC,     SEL_BASE,   SEL_PROMPT
     ),
 };
 
