@@ -350,7 +350,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
     [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FREE5", "FREE6"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
-    [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
+    [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
@@ -364,7 +364,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
     [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
-    [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
+    [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
@@ -1712,7 +1712,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_RGBADJ] = LAYOUT(
         MO(_SELECT), UG_SPDD,     KC_TRNS,
-        UG_TOGG,     UG_HUEU,     UG_HUED,
+        UG_VALD,     UG_HUEU,     UG_HUED,
         UG_VALU,     UG_SATU,     UG_SATD
     ),
     [_DEV] = LAYOUT(
