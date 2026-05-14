@@ -1,6 +1,6 @@
 #pragma once
 
-#define ENCODER_BTN_PIN GP08
+#define ENCODER_BTN_PIN GP8
 #define OLED_TOGGLE_BTN_PIN GP12
 
 // Milliseconds of inactivity before OLED switches to eyes mode
