@@ -13,7 +13,7 @@
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
-#define RGBLIGHT_LED_COUNT 15
+#define RGBLIGHT_LED_COUNT 65
 #endif
 
 #define RGB_CORE_LED_COUNT 15
@@ -47,6 +47,7 @@ enum layers {
     _VSC,
     _RGB,
     _RGBMOD,
+    _RGBADJ,
     _PROMPT,
     _SELECT,
     _LAYER_COUNT
@@ -347,8 +348,9 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"SEL",  "BRO",  "AUX",  "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
-    [_RGB]    = {"SEL",  "MOD",  "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-", "VAL-"},
+    [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FREE5", "FREE6"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
+    [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "TOG",  "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
@@ -360,8 +362,9 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"Select layer", "Browser combo", "Reserved", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
-    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
+    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot", "Free slot"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
+    [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Toggle RGB", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
@@ -376,6 +379,7 @@ static const char *layer_name_short(uint8_t l) {
         case _MEDIA:  return "MED";
         case _RGB:    return "RGB";
         case _RGBMOD: return "MOD";
+        case _RGBADJ: return "ADJ";
         case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PRM";
@@ -392,6 +396,7 @@ static const char *layer_name_long(uint8_t l) {
         case _MEDIA:  return "MEDIA";
         case _RGB:    return "RGB";
         case _RGBMOD: return "RGB MOD";
+        case _RGBADJ: return "ADJST";
         case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
@@ -401,7 +406,7 @@ static const char *layer_name_long(uint8_t l) {
 }
 
 static uint8_t canonical_rgb_layer(uint8_t layer) {
-    return layer == _RGBMOD ? _RGB : layer;
+    return (layer == _RGBMOD || layer == _RGBADJ) ? _RGB : layer;
 }
 
 static uint8_t active_layer_raw(void) {
@@ -435,6 +440,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _MEDIA:  return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
         case _RGBMOD: return "RGB brightness +/-";
+        case _RGBADJ: return "RGB brightness +/-";
         case _DEV:    return "Weapon or inventory scroll";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
@@ -1695,14 +1701,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_VOLD,     KC_MUTE, KC_VOLU
     ),
     [_RGB] = LAYOUT(
-        MO(_SELECT), MO(_RGBMOD), UG_TOGG,
-        UG_HUEU,     UG_HUED, UG_VALU,
-        UG_SATU,     UG_SATD, UG_VALD
+        MO(_SELECT), MO(_RGBMOD), MO(_RGBADJ),
+        KC_NO,       KC_NO,       KC_NO,
+        KC_NO,       KC_NO,       KC_NO
     ),
     [_RGBMOD] = LAYOUT(
         MO(_SELECT), KC_TRNS,        RGB_MOD_ALL,
         RGB_MOD_FRAME, RGB_MOD_KEYS, RGB_MOD_GAPS,
         KC_NO,         KC_NO,        KC_NO
+    ),
+    [_RGBADJ] = LAYOUT(
+        MO(_SELECT), UG_SPDD,     KC_TRNS,
+        UG_TOGG,     UG_HUEU,     UG_HUED,
+        UG_VALU,     UG_SATU,     UG_SATD
     ),
     [_DEV] = LAYOUT(
         MO(_SELECT), GM_NAV,  GM_WASD,
