@@ -261,15 +261,15 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
     { _MEDIA,   18, 255, 130, "MEDIA",  true  },
-    { _RGB,    215, 240, 130, "RGB",    true  },
+    { _BASE,   160, 220, 120, "BASE",   true  },
     { _DEV,     32, 255, 130, "GAME",   true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
-    { _BASE,   160, 220, 120, "BASE",   true  },
+    { _RGB,    215, 240, 130, "RGB",    true  },
     { _PROMPT,   8, 255, 140, "PROMT",  true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    7, 1, 2, 3, 5, 6, 4, 8
+    4, 1, 2, 3, 5, 6, 7, 8
 };
 
 // Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
@@ -367,7 +367,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "RGB",  "GAME", "VSC",  "BASE", "PROMT"},
+    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "BASE", "GAME", "VSC",  "RGB",  "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -381,7 +381,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to RGB", "Go to game", "Go to VSC", "Go to base", "Go to prompt"},
+    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to base", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -1847,8 +1847,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         MO(_SELECT), SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA,   SEL_RGB,    SEL_DEV,
-        SEL_VSC,     SEL_BASE,   SEL_PROMPT
+        SEL_MEDIA,   SEL_BASE,   SEL_DEV,
+        SEL_VSC,     SEL_RGB,    SEL_PROMPT
     ),
 };
 
