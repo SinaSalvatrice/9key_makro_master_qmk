@@ -16,11 +16,10 @@
 #define RGBLIGHT_LED_COUNT 65
 #endif
 
-#define RGB_CORE_LED_COUNT 15
-#define RGB_GROUP_KEYS     0x01
-#define RGB_GROUP_GAPS     0x02
-#define RGB_GROUP_FRAME    0x04
-#define RGB_GROUP_ALL      (RGB_GROUP_KEYS | RGB_GROUP_GAPS | RGB_GROUP_FRAME)
+#define RGB_KEYFIELD_LED_COUNT 15
+#define RGB_FRAME_LED_FIRST    RGB_KEYFIELD_LED_COUNT
+#define RGB_FRAME_LED_COUNT    (RGBLIGHT_LED_COUNT - RGB_FRAME_LED_FIRST)
+#define RGB_CORE_LED_COUNT     RGB_KEYFIELD_LED_COUNT
 
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
@@ -98,14 +97,27 @@ enum custom_keycodes {
     VSC_5,
     VSC_6,
     RGB_PROFILE,
-    RGB_MOD_ALL,
-    RGB_MOD_FRAME,
-    RGB_MOD_KEYS,
-    RGB_MOD_GAPS
+    RGB_MODE,
+    RGB_TOG,
+    RGB_HUEU,
+    RGB_HUED,
+    RGB_VALU,
+    RGB_VALD,
+    RGB_SATU,
+    RGB_SATD
+};
+
+enum rgb_zone_bits {
+    RGB_ZONE_FRAME = 1 << 0,
+    RGB_ZONE_KEY   = 1 << 1,
+    RGB_ZONE_GAP   = 1 << 2,
+    RGB_ZONE_ALL   = RGB_ZONE_FRAME | RGB_ZONE_KEY | RGB_ZONE_GAP,
 };
 
 static bool rgb_minimal_mode = false;
-static uint8_t rgb_visible_groups = RGB_GROUP_ALL;
+static bool rgb_output_enabled = true;
+static bool rgb_mode_held = false;
+static uint8_t rgb_zone_mask = RGB_ZONE_ALL;
 
 typedef enum {
     VSC_MODE_NONE,
@@ -186,6 +198,7 @@ static game_mode_t last_key_game_mode     = GAME_MODE_WASD;
 static vsc_mode_t last_key_vsc_mode       = VSC_MODE_BAR;
 static prompt_mode_t prompt_mode          = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
+static bool last_key_rgb_mode             = false;
 static uint32_t encoder_help_started      = 0;
 static uint32_t encoder_help_until        = 0;
 static bool encoder_help_fired            = false;
@@ -348,7 +361,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"SEL",  "BRO",  "AUX",  "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
-    [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FX",    "FREE6"},
+    [_RGB]    = {"SEL",  "MODE", "TOG",   "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
@@ -362,7 +375,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"Select layer", "Browser combo", "Reserved", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
-    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Toggle FX mode", "Free slot"},
+    [_RGB]    = {"Select layer", "Hold RGB zone controls", "Toggle RGB output", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
@@ -507,6 +520,41 @@ static const char *text_label_for(uint8_t index) { return text_label_for_mode(cu
 static const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
 static const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
 static const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
+
+static const char *rgb_label_for_mode(bool mode_held, uint8_t index) {
+    static const char *const normal_labels[PAD_KEY_COUNT] = {
+        "SEL", "MODE", "TOG",
+        "HUE+", "HUE-", "VAL+",
+        "SAT+", "SAT-", "VAL-"
+    };
+    static const char *const mode_labels[PAD_KEY_COUNT] = {
+        "SEL", "MODE", "ALL",
+        "FRME", "KEY",  "GAP",
+        "----", "----", "----"
+    };
+
+    if (index >= PAD_KEY_COUNT) return "----";
+    return mode_held ? mode_labels[index] : normal_labels[index];
+}
+
+static const char *rgb_function_for_mode(bool mode_held, uint8_t index) {
+    static const char *const normal_functions[PAD_KEY_COUNT] = {
+        "Select layer", "Hold RGB zone controls", "Toggle RGB output",
+        "Hue up", "Hue down", "Brightness up",
+        "Saturation up", "Saturation down", "Brightness down"
+    };
+    static const char *const mode_functions[PAD_KEY_COUNT] = {
+        "Select layer", "Hold RGB zone controls", "Toggle all LED zones",
+        "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs",
+        "Unused", "Unused", "Unused"
+    };
+
+    if (index >= PAD_KEY_COUNT) return "Unknown";
+    return mode_held ? mode_functions[index] : normal_functions[index];
+}
+
+static const char *rgb_label_for(uint8_t index) { return rgb_label_for_mode(rgb_mode_held, index); }
+static const char *rgb_function_for(uint8_t index) { return rgb_function_for_mode(rgb_mode_held, index); }
 
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
@@ -699,7 +747,55 @@ static void adjust_layer_brightness(uint8_t layer, int16_t delta) {
 #endif
 
 #ifdef RGBLIGHT_ENABLE
-    if (active_layer_raw() == layer) {
+    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
+        render_rgb_layer_visuals();
+    }
+#endif
+}
+
+static void adjust_layer_hue(uint8_t layer, int16_t delta) {
+    uint8_t slot = slot_for_layer(layer);
+    uint8_t value = (uint8_t)(select_slots[slot].hue + delta);
+
+    select_slots[slot].hue = value;
+
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT) {
+        via_user_config.layer_palette[index].hue = value;
+    }
+#endif
+
+#ifdef RGBLIGHT_ENABLE
+    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
+        render_rgb_layer_visuals();
+    }
+#endif
+}
+
+static void adjust_layer_saturation(uint8_t layer, int16_t delta) {
+    uint8_t slot = slot_for_layer(layer);
+    uint16_t value = select_slots[slot].sat;
+
+    if (delta < 0) {
+        uint16_t step = (uint16_t)(-delta);
+        value = value > step ? (value - step) : 0;
+    } else {
+        value += (uint16_t)delta;
+        if (value > UINT8_MAX) value = UINT8_MAX;
+    }
+
+    select_slots[slot].sat = (uint8_t)value;
+
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT) {
+        via_user_config.layer_palette[index].sat = (uint8_t)value;
+    }
+#endif
+
+#ifdef RGBLIGHT_ENABLE
+    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
         render_rgb_layer_visuals();
     }
 #endif
@@ -880,6 +976,7 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (layer == _TEXT) return text_label_for(index);
     if (layer == _WINDOW) return window_label_for(index);
+    if (layer == _RGB) return rgb_label_for(index);
     if (layer == _DEV) return game_label_for(index);
     if (layer == _VSC) return vsc_label_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_label_for(index);
@@ -891,6 +988,7 @@ static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (layer == _TEXT) return text_function_for(index);
     if (layer == _WINDOW) return window_function_for(index);
+    if (layer == _RGB) return rgb_function_for(index);
     if (layer == _DEV) return game_function_for(index);
     if (layer == _VSC) return vsc_function_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_function_for(index);
@@ -902,6 +1000,7 @@ static const char *last_key_label_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (last_key_layer == _TEXT) return text_label_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_label_for_mode(last_key_window_mode, index);
+    if (last_key_layer == _RGB) return rgb_label_for_mode(last_key_rgb_mode, index);
     if (last_key_layer == _DEV) return game_label_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_label_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_label_for_mode(last_key_prompt_mode, index);
@@ -913,6 +1012,7 @@ static const char *last_key_function_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (last_key_layer == _TEXT) return text_function_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_function_for_mode(last_key_window_mode, index);
+    if (last_key_layer == _RGB) return rgb_function_for_mode(last_key_rgb_mode, index);
     if (last_key_layer == _DEV) return game_function_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_function_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_function_for_mode(last_key_prompt_mode, index);
@@ -1060,7 +1160,7 @@ static uint8_t pulse_val(uint32_t now, uint16_t period, uint8_t phase, uint8_t m
 
 
 static bool led_is_frame(uint8_t led_index) {
-    return led_index >= RGB_CORE_LED_COUNT;
+    return led_index >= RGB_FRAME_LED_FIRST;
 }
 
 static bool led_is_gap(uint8_t led_index) {
@@ -1069,11 +1169,19 @@ static bool led_is_gap(uint8_t led_index) {
     return col == 1 || col == 3;
 }
 
-static bool led_is_key(uint8_t led_index) {
+static bool led_is_mapped_key(uint8_t led_index) {
     if (led_is_frame(led_index)) return false;
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         if (key_led_map[i] == led_index) return true;
     }
+    return false;
+}
+
+static bool rgb_zone_enabled_for_led(uint8_t led_index) {
+    if (!rgb_output_enabled) return false;
+    if (led_index >= RGB_FRAME_LED_FIRST) return (rgb_zone_mask & RGB_ZONE_FRAME) != 0;
+    if (led_is_gap(led_index)) return (rgb_zone_mask & RGB_ZONE_GAP) != 0;
+    if (led_is_mapped_key(led_index)) return (rgb_zone_mask & RGB_ZONE_KEY) != 0;
     return false;
 }
 
@@ -1104,21 +1212,28 @@ static uint8_t ping_pong_index(uint32_t now, uint16_t period_ms, uint8_t count, 
     return (uint8_t)(((uint16_t)triwave8_period(now, period_ms, phase) * (count - 1)) / 255);
 }
 
-static uint8_t rgb_group_for_led(uint8_t led_index) {
-    if (led_is_frame(led_index)) return RGB_GROUP_FRAME;
-    return led_is_key(led_index) ? RGB_GROUP_KEYS : RGB_GROUP_GAPS;
+static void toggle_rgb_zone_bits(uint8_t zone_bits) {
+    rgb_zone_mask ^= zone_bits;
+
+#ifdef RGBLIGHT_ENABLE
+    render_rgb_layer_visuals();
+#endif
 }
 
-static bool rgb_led_group_enabled(uint8_t led_index) {
-    return (rgb_visible_groups & rgb_group_for_led(led_index)) != 0;
+static void toggle_rgb_all_zones(void) {
+    rgb_zone_mask = rgb_zone_mask == RGB_ZONE_ALL ? 0 : RGB_ZONE_ALL;
+
+#ifdef RGBLIGHT_ENABLE
+    render_rgb_layer_visuals();
+#endif
 }
 
-static void toggle_rgb_groups(uint8_t mask) {
-    rgb_visible_groups ^= mask;
-}
+static void toggle_rgb_output_state(void) {
+    rgb_output_enabled = !rgb_output_enabled;
 
-static void toggle_rgb_all_groups(void) {
-    rgb_visible_groups = rgb_visible_groups == RGB_GROUP_ALL ? 0 : RGB_GROUP_ALL;
+#ifdef RGBLIGHT_ENABLE
+    render_rgb_layer_visuals();
+#endif
 }
 
 #ifdef RGBLIGHT_ENABLE
@@ -1128,7 +1243,7 @@ static void flush_led_frame(void) {
 
 static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
     if (led_index >= RGBLIGHT_LED_COUNT) return;
-    if (!rgb_led_group_enabled(led_index)) {
+    if (!rgb_zone_enabled_for_led(led_index)) {
         rgblight_driver.set_color(led_index, 0, 0, 0);
         return;
     }
@@ -1701,19 +1816,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_VOLD,     KC_MUTE, KC_VOLU
     ),
     [_RGB] = LAYOUT(
-        MO(_SELECT), MO(_RGBMOD), MO(_RGBADJ),
-        KC_NO,       KC_NO,       KC_NO,
-        KC_NO,       RGB_PROFILE, KC_NO
+        MO(_SELECT), RGB_MODE, RGB_TOG,
+        RGB_HUEU,    RGB_HUED, RGB_VALU,
+        RGB_SATU,    RGB_SATD, RGB_VALD
     ),
     [_RGBMOD] = LAYOUT(
-        MO(_SELECT), KC_TRNS,        RGB_MOD_ALL,
-        RGB_MOD_FRAME, RGB_MOD_KEYS, RGB_MOD_GAPS,
-        KC_NO,         KC_NO,        KC_NO
+        MO(_SELECT), KC_TRNS, KC_NO,
+        KC_NO,       KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO
     ),
     [_RGBADJ] = LAYOUT(
-        MO(_SELECT), UG_SPDD,     KC_TRNS,
-        UG_VALD,     UG_HUEU,     UG_HUED,
-        UG_VALU,     UG_SATU,     UG_SATD
+        MO(_SELECT), KC_NO,   KC_TRNS,
+        KC_NO,       KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO
     ),
     [_DEV] = LAYOUT(
         MO(_SELECT), GM_NAV,  GM_WASD,
@@ -1798,6 +1913,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_col = record->event.key.col;
         last_key_text_mode = current_text_preview_mode();
         last_key_window_mode = current_window_preview_mode();
+        last_key_rgb_mode = rgb_mode_held;
         last_key_game_mode = current_game_preview_mode();
         last_key_vsc_mode = current_vsc_preview_mode();
         last_key_prompt_mode = prompt_mode;
@@ -1808,53 +1924,67 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) select_target_layer(_BASE);
             return false;
 
-        case RGB_MOD_ALL:
+        case RGB_MODE:
+            rgb_mode_held = record->event.pressed;
+            return false;
+
+        case RGB_TOG:
             if (record->event.pressed) {
-                toggle_rgb_all_groups();
-#ifdef RGBLIGHT_ENABLE
-                render_rgb_layer_visuals();
-#endif
+                if (rgb_mode_held) {
+                    toggle_rgb_all_zones();
+                } else {
+                    toggle_rgb_output_state();
+                }
             }
             return false;
 
-        case RGB_MOD_FRAME:
+        case RGB_HUEU:
             if (record->event.pressed) {
-                toggle_rgb_groups(RGB_GROUP_FRAME);
-#ifdef RGBLIGHT_ENABLE
-                render_rgb_layer_visuals();
-#endif
+                if (rgb_mode_held) {
+                    toggle_rgb_zone_bits(RGB_ZONE_FRAME);
+                } else {
+                    adjust_layer_hue(_RGB, RGBLIGHT_HUE_STEP);
+                }
             }
             return false;
 
-        case RGB_MOD_KEYS:
+        case RGB_HUED:
             if (record->event.pressed) {
-                toggle_rgb_groups(RGB_GROUP_KEYS);
-#ifdef RGBLIGHT_ENABLE
-                render_rgb_layer_visuals();
-#endif
+                if (rgb_mode_held) {
+                    toggle_rgb_zone_bits(RGB_ZONE_KEY);
+                } else {
+                    adjust_layer_hue(_RGB, -RGBLIGHT_HUE_STEP);
+                }
             }
             return false;
 
-        case RGB_MOD_GAPS:
+        case RGB_VALU:
             if (record->event.pressed) {
-                toggle_rgb_groups(RGB_GROUP_GAPS);
-#ifdef RGBLIGHT_ENABLE
-                render_rgb_layer_visuals();
-#endif
+                if (rgb_mode_held) {
+                    toggle_rgb_zone_bits(RGB_ZONE_GAP);
+                } else {
+                    adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
+                }
             }
             return false;
 
-        case UG_VALU:
-            if (record->event.pressed && canonical_rgb_layer(active_layer_raw()) == _RGB) {
-                adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
-            }
-            return true;
-
-        case UG_VALD:
-            if (record->event.pressed && canonical_rgb_layer(active_layer_raw()) == _RGB) {
+        case RGB_VALD:
+            if (record->event.pressed && !rgb_mode_held) {
                 adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
             }
-            return true;
+            return false;
+
+        case RGB_SATU:
+            if (record->event.pressed && !rgb_mode_held) {
+                adjust_layer_saturation(_RGB, RGBLIGHT_SAT_STEP);
+            }
+            return false;
+
+        case RGB_SATD:
+            if (record->event.pressed && !rgb_mode_held) {
+                adjust_layer_saturation(_RGB, -RGBLIGHT_SAT_STEP);
+            }
+            return false;
 
         case SEL_WINDOW:
             if (record->event.pressed) select_target_layer(_WINDOW);
@@ -2027,13 +2157,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 
         case _RGB:
         case _RGBMOD:
-#ifdef RGBLIGHT_ENABLE
-            if (clockwise) {
-                rgblight_increase_val_noeeprom();
-            } else {
-                rgblight_decrease_val_noeeprom();
-            }
-#endif
+        case _RGBADJ:
             adjust_layer_brightness(_RGB, clockwise ? RGBLIGHT_VAL_STEP : -RGBLIGHT_VAL_STEP);
             break;
 
