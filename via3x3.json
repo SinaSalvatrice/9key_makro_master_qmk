@@ -1026,6 +1026,46 @@
       "name": "RGB_PROFILE",
       "title": "Toggle FX mode",
       "shortName": "FX"
+    },
+    {
+      "name": "RGB_MODE",
+      "title": "Hold RGB zone controls",
+      "shortName": "MODE"
+    },
+    {
+      "name": "RGB_TOG",
+      "title": "Toggle RGB output or all zones",
+      "shortName": "TOG"
+    },
+    {
+      "name": "RGB_HUEU",
+      "title": "Hue up or toggle frame LEDs",
+      "shortName": "HUE+"
+    },
+    {
+      "name": "RGB_HUED",
+      "title": "Hue down or toggle key LEDs",
+      "shortName": "HUE-"
+    },
+    {
+      "name": "RGB_VALU",
+      "title": "Brightness up or toggle gap LEDs",
+      "shortName": "VAL+"
+    },
+    {
+      "name": "RGB_VALD",
+      "title": "Brightness down",
+      "shortName": "VAL-"
+    },
+    {
+      "name": "RGB_SATU",
+      "title": "Saturation up",
+      "shortName": "SAT+"
+    },
+    {
+      "name": "RGB_SATD",
+      "title": "Saturation down",
+      "shortName": "SAT-"
     }
   ],
   "matrix": {
