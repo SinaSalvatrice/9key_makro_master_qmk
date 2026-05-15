@@ -38,20 +38,6 @@
       "label": "Palette",
       "content": [
         {
-          "label": "FX",
-          "content": [
-            {
-              "label": "Minimal Mode",
-              "type": "toggle",
-              "content": [
-                "id_via_fx_mode",
-                0,
-                2
-              ]
-            }
-          ]
-        },
-        {
           "label": "Layers",
           "content": [
             {
@@ -1021,11 +1007,6 @@
       "name": "VSC_6",
       "title": "VSC target 6",
       "shortName": "V6"
-    },
-    {
-      "name": "RGB_PROFILE",
-      "title": "Toggle FX mode",
-      "shortName": "FX"
     },
     {
       "name": "RGB_MODE",

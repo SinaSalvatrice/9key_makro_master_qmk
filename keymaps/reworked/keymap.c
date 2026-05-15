@@ -114,7 +114,6 @@ enum rgb_zone_bits {
     RGB_ZONE_ALL   = RGB_ZONE_FRAME | RGB_ZONE_KEY | RGB_ZONE_GAP,
 };
 
-static bool rgb_minimal_mode = false;
 static bool rgb_output_enabled = true;
 static bool rgb_mode_held = false;
 static uint8_t rgb_zone_mask = RGB_ZONE_ALL;
@@ -367,7 +366,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "BASE", "GAME", "VSC",  "RGB",  "PROMT"},
+    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "----", "GAME", "VSC",  "RGB",  "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -381,7 +380,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to base", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
+    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Unused", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -812,7 +811,6 @@ static void apply_palette_entry(uint8_t index) {
 
 static void apply_via_runtime_config(void) {
     oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
-    rgb_minimal_mode = via_user_config.fx_mode != 0;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) apply_palette_entry(i);
 }
 
@@ -871,7 +869,6 @@ static void via_config_set_value(uint8_t *data) {
             break;
         case id_via_fx_mode:
             via_user_config.fx_mode = value_data[0] ? 1 : 0;
-            rgb_minimal_mode = via_user_config.fx_mode != 0;
             break;
         case id_via_rgb_effect:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -1266,25 +1263,6 @@ static void clear_all_keys(void) {
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         set_led_hsv(i, 0, 0, 0);
     }
-}
-
-static void render_minimal_profile(uint8_t layer) {
-    clear_all_keys();
-
-    if (layer == _SELECT) {
-        uint8_t target_slot = slot_for_layer(selector_target);
-        const select_slot_t *slot = &select_slots[target_slot];
-        uint8_t val = pulse_val(timer_read32(), 2200, 0, 14, 96);
-        set_key_hsv(target_slot, slot->hue, slot->sat, val);
-        flush_led_frame();
-        return;
-    }
-
-    uint8_t slot = slot_for_layer(layer);
-    const select_slot_t *info = &select_slots[slot];
-    uint8_t val = pulse_val(timer_read32(), 2400, 0, 12, 90);
-    set_key_hsv(slot, info->hue, info->sat, val);
-    flush_led_frame();
 }
 
 static void render_base_wild(void) {
@@ -1758,11 +1736,6 @@ static void render_rgb_layer_visuals(void) {
         return;
     }
 
-    if (rgb_minimal_mode) {
-        render_minimal_profile(layer);
-        return;
-    }
-
     switch (effect) {
         case RGB_EFFECT_BREATHING: render_effect_breathing(layer); return;
         case RGB_EFFECT_RUNNING:   render_effect_running(layer);   return;
@@ -1847,7 +1820,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         MO(_SELECT), SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA,   SEL_BASE,   SEL_DEV,
+        SEL_MEDIA,   KC_NO,      SEL_DEV,
         SEL_VSC,     SEL_RGB,    SEL_PROMPT
     ),
 };
@@ -2114,9 +2087,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) trigger_vsc_target((uint8_t)(keycode - VSC_1));
             return false;
 
-        case RGB_PROFILE:
-            if (record->event.pressed) rgb_minimal_mode = !rgb_minimal_mode;
-            return false;
     }
 
     return true;
@@ -2346,21 +2316,21 @@ static void render_header(uint8_t layer) {
     char line[22];
 
     if (layer == _SELECT) {
-        snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s", layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "SEL->%-10.10s", layer_name_short(selector_target));
     } else if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
     } else if (layer == _DEV) {
-        snprintf(line, sizeof(line), "GME %-4s FX:%s", game_mode_name(game_mode), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "GME %-4s", game_mode_name(game_mode));
     } else if (layer == _WINDOW && window_browser_held) {
-        snprintf(line, sizeof(line), "%-7s FX:%s", "WIN BRO", rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _TEXT && text_action_held) {
-        snprintf(line, sizeof(line), "%-7s FX:%s", "TXT ACT", rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "%-10.10s", "TXT ACT");
     } else if (layer == _TEXT && text_edit_held) {
-        snprintf(line, sizeof(line), "%-7s FX:%s", "TXT EDT", rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "%-10.10s", "TXT EDT");
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "VSC %-4s FX:%s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR", rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "VSC %-4s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR");
     } else {
-        snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
     }
 
     write_line(0, line);
@@ -2467,9 +2437,9 @@ static void render_header(uint8_t layer) {
     char line[22];
 
     if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
     } else {
-        snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
+        snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
     }
 
     write_line(0, line);
