@@ -80,7 +80,9 @@ enum custom_keycodes {
     WIN_4,
     WIN_5,
     WIN_6,
-    TXT_ACT,
+    // QMK reserves only 32 keyboard-level custom slots (QK_KB_0..QK_KB_31).
+    // Start the remaining local-only keycodes at SAFE_RANGE to keep introspection builds valid.
+    TXT_ACT = SAFE_RANGE,
     TXT_EDT,
     TXT_1,
     TXT_2,
@@ -316,28 +318,34 @@ static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt
 static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
 static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
 static const char *const prompt_pics_macros[6] = {
-    "Create a clean black-and-white vector-style image of four separate gears "
-    "arranged in a 2x2 grid on a pure white background. "
-    "Each gear should be the same size, symmetrical, and visually distinct, "
-    "with a clean industrial machine aesthetic. "
-    "Front-facing flat design, no gray, no gradient, no shadow, no blur, "
-    "no 3D, no texture, no steampunk, no cartoon, no playful style, "
-    "no background elements, no text, no logo, pure black and white only.",
-    "Transform to lowercase ",
+    "Create a clean black-and-white vector-style silhouette image of four separate gears arranged in a 2x2 grid on a pure white background. Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic. The gears must be separate from each other and not interlocking. Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings. Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale.
+    front-facing flat design, pure black and white only.",
+
+    "Transform to lowercase.",
+
     "Extract the background and fill whole image with it.",
+
     "Let the clock hang on a white suble structured concrete wall. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the clock or its perspective",
+
     "Remove the disturbing objects in the background. take the dark background and replace the whole background with it. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the object in the front or its perspective",
+
     "Create an Etsy mockup image for this product. Show the product in an appealing setting with good lighting and a complementary background. Include a styled text overlay with the product name and a catchy tagline. Make it look polished and professional, suitable for an online store listing. Do not include any logos, watermarks, or branding elements."
 };
 
 static const char *const prompt_etsy_labels[6] = {"TAGS", "TITLE", "DESC", "BULL", "LIST", "SEO"};
 static const char *const prompt_etsy_functions[6] = {"Tag list", "Listing title", "Listing description", "Bullet highlights", "Listing creation", "Etsy SEO pass"};
 static const char *const prompt_etsy_macros[6] = {
-    "Generate Etsy tag ideas for this product. Create high-intent tags, avoid duplicates, vary phrase length, and explain which tags are strongest. Dont overuse broad tags, and dont use competitor or brand names. Focus on descriptive, specific, and relevant keywords that a buyer would search for.",
+    "Generate Etsy tag ideas for this product. Create high-intent tags, avoid duplicates, vary phrase length, and explain which tags are strongest. Dont overuse broad tags, and dont use competitor or brand names. Focus on descriptive, specific, and relevant keywords that a buyer would search for. list them in one rows seperated by commas.",
+
     "Write multiple Etsy listing title options for this product. Optimize for clarity, search intent, and readability instead of stuffing every keyword.",
-    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care.",
+
+    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care.
+    Keep in mind Etsy's SEO best practices, character limits, and formatting. Use clear language.",
+
     "Write concise highlights for this Etsy product listing. Focus on benefits, materials, sizing, personalization, and gift appeal. Use subtraction signs instead of bullet points.",
+
     "Create a complete Etsy listing draft for this product, including title, description, tags, image plan, and quick notes on pricing or variation structure.",
+
     "Perform an Etsy SEO pass on this listing draft. Improve titles, tags, wording, scannability, and conversion clarity without making it sound spammy."
 };
 
