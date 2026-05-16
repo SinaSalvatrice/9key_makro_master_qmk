@@ -318,8 +318,7 @@ static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt
 static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
 static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
 static const char *const prompt_pics_macros[6] = {
-    "Create a clean black-and-white vector-style silhouette image of four separate gears arranged in a 2x2 grid on a pure white background. Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic. The gears must be separate from each other and not interlocking. Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings. Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale.
-    front-facing flat design, pure black and white only.",
+    "Create a clean black-and-white vector-style silhouette image of four separate gears arranged in a 2x2 grid on a pure white background. Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic. The gears must be separate from each other and not interlocking. Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings. Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale. Front-facing flat design, pure black and white only.",
 
     "Transform to lowercase.",
 
@@ -339,8 +338,7 @@ static const char *const prompt_etsy_macros[6] = {
 
     "Write multiple Etsy listing title options for this product. Optimize for clarity, search intent, and readability instead of stuffing every keyword.",
 
-    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care.
-    Keep in mind Etsy's SEO best practices, character limits, and formatting. Use clear language.",
+    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care. Keep in mind Etsy's SEO best practices, character limits, and formatting. Use clear language.",
 
     "Write concise highlights for this Etsy product listing. Focus on benefits, materials, sizing, personalization, and gift appeal. Use subtraction signs instead of bullet points.",
 
