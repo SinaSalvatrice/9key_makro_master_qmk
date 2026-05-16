@@ -313,8 +313,8 @@ static const char *const vsc_chat_macros[6] = {
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"};
 
-static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK};
-static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Svg conversion", "Mockup creation"};
+static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
+static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
 static const char *const prompt_pics_macros[6] = {
     "Create a clean black-and-white vector-style image of four separate gears arranged in a 2x2 grid on a pure white background.
 Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic.
@@ -326,7 +326,7 @@ front-facing flat design, no gray, no gradient, no shadow, no blur, no 3D, no te
     "Transform to lowercase ",
     "Extract the background and fill whole image with it.",
     "Let the clock hang on a white suble structured concrete wall. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the clock or its perspective",
-    "Convert to svg",
+    "Remove the disturbing objects in the background. take the dark background and replace the whole background with it. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the object in the front or its perspective",
     "Create an Etsy mockup image for this product. Show the product in an appealing setting with good lighting and a complementary background. Include a styled text overlay with the product name and a catchy tagline. Make it look polished and professional, suitable for an online store listing. Do not include any logos, watermarks, or branding elements."
 };
 
