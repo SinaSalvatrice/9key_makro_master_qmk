@@ -3,11 +3,13 @@
 ## Current Truth
 
 ### Overall status
+
 - `keymaps/reworked` is the real source of truth and currently the **best version so far**.
 - The core workflow already feels very good: selector, OLED, RGB, encoder behavior, and the `VSC` layer all work together cleanly.
 - Right now there are **no blocking issues being tracked** in this notes file — only polish ideas and future suggestions.
 
 ### Hardware / setup
+
 - RP2040 / QMK macropad
 - 3x3 key matrix
 - 9 RGB LEDs (`RGBLIGHT_LED_COUNT 9`)
@@ -22,6 +24,7 @@
 ## Current behavior
 
 ### GAME layer
+
 - `GAME` is now a keyboard-style gaming layer with two modes.
 - Top row is `SEL / NAV / WASD`.
 - `NAV` mode uses `ESC / UP / ENT`, `LEFT / DOWN / RGHT` for menus and in-game navigation.
@@ -29,6 +32,7 @@
 - The encoder stays on scroll so it can act like weapon or inventory cycling in games that support mouse-wheel switching.
 
 ### Layers in use
+
 - `BASE`
 - `WINDOW`
 - `TEXT` (`TXT`)
@@ -40,6 +44,7 @@
 - `SELECT`
 
 ### Selector flow
+
 - Key 1 on the main layers is `MO(_SELECT)` and acts as the main selector button.
 - The `SELECT` layer now keeps `SEL` on `r0c0` as well, so top-left stays the selector button on every layer.
 - Holding `SEL` opens the `SELECT` grid.
@@ -51,6 +56,7 @@
 - The last selector slot selects the `PROMPT` layer.
 
 ### Encoder behavior by layer
+
 - `BASE` → mouse wheel up/down
 - `WINDOW` → previous / next window by default; when browser mode is active, previous / next page
 - `TXT` → cursor left / right by default; with encoder button held, select left / right, and a follow-up button tap copies the selection
@@ -62,6 +68,7 @@
 - `SELECT` → move through layer targets, but only while the encoder button is held
 
 ### OLED
+
 - Main OLED view shows a 3x3 legend for the active layer.
 - Last-key view shows layer, key label, keycode, function, and matrix position.
 - While `SELECT` is active, the OLED intentionally forces the selector legend/grid view.
@@ -71,6 +78,7 @@
 - `GP11` toggles between legend view and last-key view.
 
 ### RGB
+
 - RGB is handled explicitly per key rather than relying only on stock global effects.
 - Layer visuals and selector visuals are timer-driven.
 - The `RGB` slot now occupies the selector-grid center key.
@@ -78,12 +86,14 @@
 - Overall feel is already strong; this is now mostly a polish/taste area.
 
 ### VSC layer
+
 - `VSC` is an extra working layer, not a replacement for `GAME`.
 - Top row remains `SEL`, `BAR`, `CHAT`.
 - Lower six keys (`VSC_1` … `VSC_6`) trigger shared actions depending on the active `BAR` or `CHAT` mode.
 - `BAR` strings and `CHAT` texts are already centralized in one editable block in the keymap, which is good and should stay that way.
 
 ### PROMPT layer
+
 - `PROMPT` is a dedicated prompt launcher layer.
 - Top row is `SEL`, `PICS`, `ETSY`.
 - `SEL_PROMPT` enters `PROMPT` in base prompt mode.
@@ -96,12 +106,14 @@
 ## Suggestions only
 
 ### TXT layer encoder idea
+
 - Add an enhanced text-selection behavior for `TXT`:
   - **hold button + encoder twist** should select text instead of only moving the cursor.
   - Easiest first version: **character selection** via `Shift+Left` / `Shift+Right`.
   - Nice later option: **word selection** via `Ctrl+Shift+Left` / `Ctrl+Shift+Right`, if that feels reliable on the target host.
 
 ### Nice-to-have polish
+
 1. Tune RGB colors / animation intensity only by feel, not because of any current problem.
 2. Personalize the default `CHAT` prompts if wanted.
 3. Adjust any `BAR` command names only if a specific host/extension setup needs it.
@@ -110,19 +122,20 @@
 ---
 
 ## Assumptions / direction
+
 - Keep `keymaps/reworked` as the canonical implementation target.
 - Keep behavior lightweight, direct, and non-blocking.
 - Prefer clear per-layer behavior over clever but hidden complexity.
 - Treat future work as refinement, not rescue.
 
 ## Shortforms
+
 - layer legend for active layer (`btn`) = `LL`
 - last keycode pressed (`btn`, toggle) = `LK`
 - selector legend (momentary selector) = `SL`
 
-
-
 ## to do
+
 - verify RGB pixel position under the keys in layer mod.
 
 - base - 0/0
@@ -147,94 +160,94 @@
 - the first (BRO) activates browser control, whatever that may include, surprise me.
 - the second one comes later
 
-
 ## Layer outlines
- *
- * Physical grid:
- * [ 1 ][ 2 ][ 3 ]
- * [ 4 ][ 5 ][ 6 ]
- * [ 7 ][ 8 ][ 9 ]
- *
- * BASE
- * [ SEL ][ HOME ][ BSPC ]
- * [ LEFT][ ENT  ][ RGHT ]
- * [ REDO][ RGB  ][ UNDO ]
- *
- * WINDOW
- * Default:
- * [ SEL ][ BRO  ][ AUX  ]
- * [DESK<][ TASK ][DESK> ]
- * [ WIN<][ SHOW ][ WIN> ]
- * Browser hold on key 2:
- * [ SEL ][ BRO  ][ AUX  ]
- * [ BACK][ REFR ][ FWD  ]
- * [ TAB<][ NEW  ][ TAB> ]
- *
- * TEXT
- * Default:
- * [ SEL ][ ACT  ][ ENT  ]
- * [ HOME][ UP   ][ END  ]
- * [ LEFT][ DOWN ][ RGHT ]
- * Action hold on key 2:
- * [ SEL ][ ACT  ][ ENT  ]
- * [ ALL ][ COPY ][ PASTE]
- * [ CUT ][ UNDO ][ REDO ]
- * Edit hold on TXT_EDT:
- * [ SEL ][ ACT  ][ ENT  ]
- * [ ENT ][ BSPC ][ SPC  ]
- * [ TAB ][ SHIFT][ BTN1 ]
- *
- * MEDIA
- * [ SEL ][ MPRV ][ MNXT ]
- * [ MRWD][ MPLY ][ MFFD ]
- * [VOLD ][ MUTE ][ VOLU ]
- *
- * RGB
- * Default:
- * [ SEL ][ MODE ][ TOGG ]
- * [HUE+ ][ HUE- ][ VAL+ ]
- * [SAT+ ][ SAT- ][ VAL- ]
- * Mode hold on key 2:
- * [ SEL ][ MODE ][ ALL  ]
- * [FRAME][ KEY  ][ GAP  ]
- * [ ----][ ---- ][ ---- ]
- *
- * GAME
- * NAV mode:
- * [ SEL ][ NAV  ][ WASD ]
- * [ ESC ][ UP   ][ ENT  ]
- * [ LEFT][ DOWN ][ RGHT ]
- * WASD mode:
- * [ SEL ][ NAV  ][ WASD ]
- * [SHFT ][ W    ][ SPC  ]
- * [ A   ][ S    ][ D    ]
- *
- * VSC
- * BAR mode:
- * [ SEL ][ BAR  ][ CHAT ]
- * [EXPL ][ SRC  ][ GH-A ]
- * [GHUB ][ GPT  ][ FREE ]
- * CHAT mode:
- * [ SEL ][ BAR  ][ CHAT ]
- * [ SUM ][ REVW ][ FIX  ]
- * [TEST ][ EXPL ][COMMIT]
- *
- * PROMPT
- * BASE mode:
- * [ SEL ][ PICS ][ ETSY ]
- * [ SUM ][ REVW ][ FIX  ]
- * [TEST ][ EXPL ][COMMIT]
- * PICS mode:
- * [ SEL ][ PICS ][ ETSY ]
- * [ TAB ][ SHOT ][ ALT  ]
- * [ SEO ][ MOCK ][ CHK  ]
- * ETSY mode:
- * [ SEL ][ PICS ][ ETSY ]
- * [TAGS ][TITLE ][ DESC ]
- * [BULL ][ LIST ][ SEO  ]
- *
- * SELECT
- * [ SEL ][ WINDOW ][ TEXT  ]
- * [MEDIA][  ---   ][ GAME  ]
- * [ VSC ][  RGB   ][PROMPT ]
- */
+
+```text
+Physical grid:
+[ 1 ][ 2 ][ 3 ]
+[ 4 ][ 5 ][ 6 ]
+[ 7 ][ 8 ][ 9 ]
+
+BASE
+[ SEL ][ HOME ][ BSPC ]
+[ LEFT][ ENT  ][ RGHT ]
+[ REDO][ RGB  ][ UNDO ]
+
+WINDOW
+Default:
+[ SEL ][ BRO  ][ AUX  ]
+[DESK<][ TASK ][DESK> ]
+[ WIN<][ SHOW ][ WIN> ]
+Browser hold on key 2:
+[ SEL ][ BRO  ][ AUX  ]
+[ BACK][ REFR ][ FWD  ]
+[ TAB<][ NEW  ][ TAB> ]
+
+TEXT
+Default:
+[ SEL ][ ACT  ][ ENT  ]
+[ HOME][ UP   ][ END  ]
+[ LEFT][ DOWN ][ RGHT ]
+Action hold on key 2:
+[ SEL ][ ACT  ][ ENT  ]
+[ ALL ][ COPY ][ PASTE]
+[ CUT ][ UNDO ][ REDO ]
+Edit hold on TXT_EDT:
+[ SEL ][ ACT  ][ ENT  ]
+[ ENT ][ BSPC ][ SPC  ]
+[ TAB ][ SHIFT][ BTN1 ]
+
+MEDIA
+[ SEL ][ MPRV ][ MNXT ]
+[ MRWD][ MPLY ][ MFFD ]
+[VOLD ][ MUTE ][ VOLU ]
+
+RGB
+Default:
+[ SEL ][ MODE ][ TOGG ]
+[HUE+ ][ HUE- ][ VAL+ ]
+[SAT+ ][ SAT- ][ VAL- ]
+Mode hold on key 2:
+[ SEL ][ MODE ][ ALL  ]
+[FRAME][ KEY  ][ GAP  ]
+[ ----][ ---- ][ ---- ]
+
+GAME
+NAV mode:
+[ SEL ][ NAV  ][ WASD ]
+[ ESC ][ UP   ][ ENT  ]
+[ LEFT][ DOWN ][ RGHT ]
+WASD mode:
+[ SEL ][ NAV  ][ WASD ]
+[SHFT ][ W    ][ SPC  ]
+[ A   ][ S    ][ D    ]
+
+VSC
+BAR mode:
+[ SEL ][ BAR  ][ CHAT ]
+[EXPL ][ SRC  ][ GH-A ]
+[GHUB ][ GPT  ][ FREE ]
+CHAT mode:
+[ SEL ][ BAR  ][ CHAT ]
+[ SUM ][ REVW ][ FIX  ]
+[TEST ][ EXPL ][COMMIT]
+
+PROMPT
+BASE mode:
+[ SEL ][ PICS ][ ETSY ]
+[ SUM ][ REVW ][ FIX  ]
+[TEST ][ EXPL ][COMMIT]
+PICS mode:
+[ SEL ][ PICS ][ ETSY ]
+[ TAB ][ SHOT ][ ALT  ]
+[ SEO ][ MOCK ][ CHK  ]
+ETSY mode:
+[ SEL ][ PICS ][ ETSY ]
+[TAGS ][TITLE ][ DESC ]
+[BULL ][ LIST ][ SEO  ]
+
+SELECT
+[ SEL ][ WINDOW ][ TEXT  ]
+[MEDIA][  ---   ][ GAME  ]
+[ VSC ][  RGB   ][PROMPT ]
+```
