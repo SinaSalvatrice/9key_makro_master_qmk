@@ -313,15 +313,21 @@ static const char *const vsc_chat_macros[6] = {
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"};
 
-static const char *const prompt_pics_labels[6] = {"TAB", "SHOT", "ALT", "SEO", "MOCK", "CHK"};
-static const char *const prompt_pics_functions[6] = {"Picture tab", "Shot list", "Alt text", "SEO image text", "Mockup ideas", "Image QA checklist"};
+static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK};
+static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Svg conversion", "Mockup creation"};
 static const char *const prompt_pics_macros[6] = {
-    "Create a picture-tab plan for this Etsy listing. Propose the ideal image order for the tabs, what each image should show, and the customer goal of each tab.",
-    "Create a concise Etsy product photography shot list for this item. Include hero image, scale shot, detail shots, lifestyle shots, packaging, and any trust-building images.",
-    "Write Etsy-ready alt text for product listing images. Keep each line descriptive, concrete, and accessible, with no keyword stuffing.",
-    "Write image overlay text and SEO-friendly captions for Etsy listing pictures. Keep them short, readable, and conversion-focused.",
-    "Suggest mockup and staging ideas for Etsy listing photos. Focus on believable scenes, useful props, scale clarity, and conversion impact.",
-    "Create an image QA checklist for this Etsy listing. Check clarity, cropping, lighting, consistency, branding, scale communication, and policy-safe content."
+    "Create a clean black-and-white vector-style image of four separate gears arranged in a 2x2 grid on a pure white background.
+Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic.
+Use only pure black and pure white. No gray, no shading, no gradients, no shadows, and no texture.
+The gears must be separate from each other and not interlocking.
+Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings.
+Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale. technical drawing,
+front-facing flat design, no gray, no gradient, no shadow, no blur, no 3D, no texture, no steampunk, no cartoon, no playful style, no background elements, no text, no logo, pure black and white only.",
+    "Transform to lowercase ",
+    "Extract the background and fill whole image with it.",
+    "Let the clock hang on a white suble structured concrete wall. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the clock or its perspective",
+    "Convert to svg",
+    "Create an Etsy mockup image for this product. Show the product in an appealing setting with good lighting and a complementary background. Include a styled text overlay with the product name and a catchy tagline. Make it look polished and professional, suitable for an online store listing. Do not include any logos, watermarks, or branding elements."
 };
 
 static const char *const prompt_etsy_labels[6] = {"TAGS", "TITLE", "DESC", "BULL", "LIST", "SEO"};
