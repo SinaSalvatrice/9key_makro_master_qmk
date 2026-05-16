@@ -146,3 +146,95 @@
 - the first two availale keys are modifiers
 - the first (BRO) activates browser control, whatever that may include, surprise me.
 - the second one comes later
+
+
+## Layer outlines
+ *
+ * Physical grid:
+ * [ 1 ][ 2 ][ 3 ]
+ * [ 4 ][ 5 ][ 6 ]
+ * [ 7 ][ 8 ][ 9 ]
+ *
+ * BASE
+ * [ SEL ][ HOME ][ BSPC ]
+ * [ LEFT][ ENT  ][ RGHT ]
+ * [ REDO][ RGB  ][ UNDO ]
+ *
+ * WINDOW
+ * Default:
+ * [ SEL ][ BRO  ][ AUX  ]
+ * [DESK<][ TASK ][DESK> ]
+ * [ WIN<][ SHOW ][ WIN> ]
+ * Browser hold on key 2:
+ * [ SEL ][ BRO  ][ AUX  ]
+ * [ BACK][ REFR ][ FWD  ]
+ * [ TAB<][ NEW  ][ TAB> ]
+ *
+ * TEXT
+ * Default:
+ * [ SEL ][ ACT  ][ ENT  ]
+ * [ HOME][ UP   ][ END  ]
+ * [ LEFT][ DOWN ][ RGHT ]
+ * Action hold on key 2:
+ * [ SEL ][ ACT  ][ ENT  ]
+ * [ ALL ][ COPY ][ PASTE]
+ * [ CUT ][ UNDO ][ REDO ]
+ * Edit hold on TXT_EDT:
+ * [ SEL ][ ACT  ][ ENT  ]
+ * [ ENT ][ BSPC ][ SPC  ]
+ * [ TAB ][ SHIFT][ BTN1 ]
+ *
+ * MEDIA
+ * [ SEL ][ MPRV ][ MNXT ]
+ * [ MRWD][ MPLY ][ MFFD ]
+ * [VOLD ][ MUTE ][ VOLU ]
+ *
+ * RGB
+ * Default:
+ * [ SEL ][ MODE ][ TOGG ]
+ * [HUE+ ][ HUE- ][ VAL+ ]
+ * [SAT+ ][ SAT- ][ VAL- ]
+ * Mode hold on key 2:
+ * [ SEL ][ MODE ][ ALL  ]
+ * [FRAME][ KEY  ][ GAP  ]
+ * [ ----][ ---- ][ ---- ]
+ *
+ * GAME
+ * NAV mode:
+ * [ SEL ][ NAV  ][ WASD ]
+ * [ ESC ][ UP   ][ ENT  ]
+ * [ LEFT][ DOWN ][ RGHT ]
+ * WASD mode:
+ * [ SEL ][ NAV  ][ WASD ]
+ * [SHFT ][ W    ][ SPC  ]
+ * [ A   ][ S    ][ D    ]
+ *
+ * VSC
+ * BAR mode:
+ * [ SEL ][ BAR  ][ CHAT ]
+ * [EXPL ][ SRC  ][ GH-A ]
+ * [GHUB ][ GPT  ][ FREE ]
+ * CHAT mode:
+ * [ SEL ][ BAR  ][ CHAT ]
+ * [ SUM ][ REVW ][ FIX  ]
+ * [TEST ][ EXPL ][COMMIT]
+ *
+ * PROMPT
+ * BASE mode:
+ * [ SEL ][ PICS ][ ETSY ]
+ * [ SUM ][ REVW ][ FIX  ]
+ * [TEST ][ EXPL ][COMMIT]
+ * PICS mode:
+ * [ SEL ][ PICS ][ ETSY ]
+ * [ TAB ][ SHOT ][ ALT  ]
+ * [ SEO ][ MOCK ][ CHK  ]
+ * ETSY mode:
+ * [ SEL ][ PICS ][ ETSY ]
+ * [TAGS ][TITLE ][ DESC ]
+ * [BULL ][ LIST ][ SEO  ]
+ *
+ * SELECT
+ * [ SEL ][ WINDOW ][ TEXT  ]
+ * [MEDIA][  ---   ][ GAME  ]
+ * [ VSC ][  RGB   ][PROMPT ]
+ */
