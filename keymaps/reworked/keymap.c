@@ -316,13 +316,13 @@ static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt
 static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
 static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
 static const char *const prompt_pics_macros[6] = {
-    "Create a clean black-and-white vector-style image of four separate gears arranged in a 2x2 grid on a pure white background.
-    Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic.
-    Use only pure black and pure white. No gray, no shading, no gradients, no shadows, and no texture.
-    The gears must be separate from each other and not interlocking.
-    Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings.
-    Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale. technical drawing,
-    front-facing flat design, no gray, no gradient, no shadow, no blur, no 3D, no texture, no steampunk, no cartoon, no playful style, no background elements, no text, no logo, pure black and white only.",
+    "Create a clean black-and-white vector-style image of four separate gears "
+    "arranged in a 2x2 grid on a pure white background. "
+    "Each gear should be the same size, symmetrical, and visually distinct, "
+    "with a clean industrial machine aesthetic. "
+    "Front-facing flat design, no gray, no gradient, no shadow, no blur, "
+    "no 3D, no texture, no steampunk, no cartoon, no playful style, "
+    "no background elements, no text, no logo, pure black and white only.",
     "Transform to lowercase ",
     "Extract the background and fill whole image with it.",
     "Let the clock hang on a white suble structured concrete wall. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the clock or its perspective",
