@@ -32,7 +32,7 @@
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS   3000
 #define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 4
+#define REWORKED_LAYOUT_VERSION 5
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 
@@ -144,6 +144,13 @@ typedef enum {
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_STACK,
     RGB_EFFECT_OFF,
+    RGB_EFFECT_NAV_BLINK,
+    RGB_EFFECT_TYPEWRITER,
+    RGB_EFFECT_VISUALIZER,
+    RGB_EFFECT_PONG,
+    RGB_EFFECT_PACKET,
+    RGB_EFFECT_BLOOM,
+    RGB_EFFECT_SWEEP,
     RGB_EFFECT_COUNT
 } rgb_effect_mode_t;
 
@@ -241,6 +248,10 @@ enum via_custom_value {
     id_via_layer_brightness   = 4,
     id_via_rgb_effect         = 5,
     id_via_layer_effect_speed = 6,
+    id_via_frame_color        = 7,
+    id_via_frame_brightness   = 8,
+    id_via_frame_effect       = 9,
+    id_via_frame_effect_speed = 10,
 };
 
 typedef struct {
@@ -251,6 +262,9 @@ typedef struct {
     uint8_t      layer_effect[VIA_LAYER_SLOT_COUNT];
     uint8_t      layer_speed[VIA_LAYER_SLOT_COUNT];
     hsv_config_t layer_palette[VIA_LAYER_SLOT_COUNT];
+    uint8_t      frame_effect[VIA_LAYER_SLOT_COUNT];
+    uint8_t      frame_speed[VIA_LAYER_SLOT_COUNT];
+    hsv_config_t frame_palette[VIA_LAYER_SLOT_COUNT];
 } via_user_config_t;
 
 static via_user_config_t via_user_config;
@@ -723,7 +737,47 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
     return 128;
 }
 
+static hsv_config_t frame_palette_for_layer(uint8_t layer) {
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT) {
+        return via_user_config.frame_palette[index];
+    }
+#endif
+    return palette_for_layer(layer);
+}
+
+static rgb_effect_mode_t frame_effect_for_layer(uint8_t layer) {
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_effect[index] < RGB_EFFECT_COUNT) {
+        return (rgb_effect_mode_t)via_user_config.frame_effect[index];
+    }
+#endif
+    return RGB_EFFECT_BREATHING;
+}
+
+static uint8_t frame_speed_for_layer(uint8_t layer) {
+#ifdef VIA_ENABLE
+    uint8_t index = via_palette_index_for_layer(layer);
+    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_speed[index] >= 1) {
+        return via_user_config.frame_speed[index];
+    }
+#endif
+    return effect_speed_for_layer(layer);
+}
+
+static uint16_t frame_effect_period_for_layer(uint8_t layer, uint16_t base_period) {
+    uint8_t speed = frame_speed_for_layer(layer);
+    if (speed < 1) speed = 1;
+    uint32_t period = ((uint32_t)base_period * 128UL) / speed;
+    if (period < 40) period = 40;
+    if (period > 20000) period = 20000;
+    return (uint16_t)period;
+}
+
 #ifdef RGBLIGHT_ENABLE
+
 static void render_rgb_layer_visuals(void);
 #endif
 
@@ -836,6 +890,9 @@ static void set_via_config_defaults(void) {
         via_user_config.layer_effect[i] = RGB_EFFECT_WILD;
         via_user_config.layer_speed[i] = 128;
         via_user_config.layer_palette[i] = via_default_palette[i];
+        via_user_config.frame_effect[i] = RGB_EFFECT_BREATHING;
+        via_user_config.frame_speed[i] = 128;
+        via_user_config.frame_palette[i] = via_default_palette[i];
     }
 
     apply_via_runtime_config();
@@ -858,6 +915,8 @@ static void load_via_config(void) {
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
         if (via_user_config.layer_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
         if (via_user_config.layer_speed[i] < 1) invalid_config = true;
+        if (via_user_config.frame_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
+        if (via_user_config.frame_speed[i] < 1) invalid_config = true;
     }
 
     if (invalid_config) {
@@ -890,6 +949,27 @@ static void via_config_set_value(uint8_t *data) {
         case id_via_layer_effect_speed:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
                 via_user_config.layer_speed[value_data[0]] = value_data[1] < 1 ? 1 : value_data[1];
+            }
+            break;
+        case id_via_frame_effect:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.frame_effect[value_data[0]] = value_data[1] < RGB_EFFECT_COUNT ? value_data[1] : RGB_EFFECT_BREATHING;
+            }
+            break;
+        case id_via_frame_effect_speed:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.frame_speed[value_data[0]] = value_data[1] < 1 ? 1 : value_data[1];
+            }
+            break;
+        case id_via_frame_color:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.frame_palette[value_data[0]].hue = value_data[1];
+                via_user_config.frame_palette[value_data[0]].sat = value_data[2];
+            }
+            break;
+        case id_via_frame_brightness:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                via_user_config.frame_palette[value_data[0]].val = value_data[1];
             }
             break;
         case id_via_layer_color:
@@ -927,6 +1007,28 @@ static void via_config_get_value(uint8_t *data) {
         case id_via_layer_effect_speed:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
                 value_data[1] = via_user_config.layer_speed[value_data[0]];
+            }
+            break;
+        case id_via_frame_effect:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                value_data[1] = via_user_config.frame_effect[value_data[0]];
+            }
+            break;
+        case id_via_frame_effect_speed:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                value_data[1] = via_user_config.frame_speed[value_data[0]];
+            }
+            break;
+        case id_via_frame_color:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                uint8_t index = value_data[0];
+                value_data[1] = via_user_config.frame_palette[index].hue;
+                value_data[2] = via_user_config.frame_palette[index].sat;
+            }
+            break;
+        case id_via_frame_brightness:
+            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
+                value_data[1] = via_user_config.frame_palette[value_data[0]].val;
             }
             break;
         case id_via_layer_color:
@@ -1246,19 +1348,143 @@ static void toggle_rgb_output_state(void) {
 }
 
 #ifdef RGBLIGHT_ENABLE
-static void flush_led_frame(void) {
-    rgblight_driver.flush();
-}
+static bool rgb_rendering_frame = false;
 
 static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
     if (led_index >= RGBLIGHT_LED_COUNT) return;
+
+    bool is_frame = led_is_frame(led_index);
+    if (is_frame && !rgb_rendering_frame) return;
+    if (!is_frame && rgb_rendering_frame) return;
+
     if (!rgb_zone_enabled_for_led(led_index)) {
         rgblight_driver.set_color(led_index, 0, 0, 0);
         return;
     }
+
     if (v > RGBLIGHT_LIMIT_VAL) v = RGBLIGHT_LIMIT_VAL;
     rgb_t rgb = hsv_to_rgb((hsv_t){h, s, v});
     rgblight_driver.set_color(led_index, rgb.r, rgb.g, rgb.b);
+}
+
+static void clear_frame_light(void) {
+    rgb_rendering_frame = true;
+    for (uint8_t i = 0; i < RGB_FRAME_LED_COUNT; i++) {
+        set_led_hsv(RGB_FRAME_LED_FIRST + i, 0, 0, 0);
+    }
+    rgb_rendering_frame = false;
+}
+
+static void render_frame_light_group(void) {
+    uint8_t layer = canonical_rgb_layer(active_layer_raw());
+    rgb_effect_mode_t effect = frame_effect_for_layer(layer);
+    hsv_config_t p = frame_palette_for_layer(layer);
+    uint32_t now = timer_read32();
+
+    if (RGB_FRAME_LED_COUNT == 0) return;
+
+    if (!rgb_output_enabled || !(rgb_zone_mask & RGB_ZONE_FRAME) || effect == RGB_EFFECT_OFF) {
+        clear_frame_light();
+        return;
+    }
+
+    uint16_t slow = frame_effect_period_for_layer(layer, 2400);
+    uint16_t fast = frame_effect_period_for_layer(layer, 900);
+    uint8_t head = (now / (fast / RGB_FRAME_LED_COUNT + 1)) % RGB_FRAME_LED_COUNT;
+    uint8_t scan = ping_pong_index(now, slow, RGB_FRAME_LED_COUNT, 0);
+
+    rgb_rendering_frame = true;
+
+    for (uint8_t i = 0; i < RGB_FRAME_LED_COUNT; i++) {
+        uint8_t hue = p.hue;
+        uint8_t sat = p.sat;
+        uint8_t val = palette_floor(p.val / 18, 4);
+        uint8_t d;
+
+        switch (effect) {
+            case RGB_EFFECT_SOLID:
+                val = p.val;
+                break;
+
+            case RGB_EFFECT_BREATHING:
+                val = pulse_val(now, slow, i * 3, palette_floor(p.val / 10, 6), p.val);
+                break;
+
+            case RGB_EFFECT_RUNNING:
+            case RGB_EFFECT_PACKET:
+            case RGB_EFFECT_COMET:
+                d = wrap_distance(i, head, RGB_FRAME_LED_COUNT);
+                if (d == 0) val = p.val;
+                else if (d == 1) val = palette_floor((p.val * 3) / 4, 24);
+                else if (d == 2) val = palette_floor(p.val / 2, 16);
+                else if (d == 3) val = palette_floor(p.val / 4, 8);
+                else val = palette_floor(p.val / 24, 3);
+                break;
+
+            case RGB_EFFECT_TWINKLE:
+                val = palette_floor(p.val / 20, 4);
+                val = clamp_add_u8(val, triwave8_period(now, 1100 + i * 37, i * 19) / 7);
+                if ((((now / 170) + i * 11) % 29) == 0) val = p.val;
+                break;
+
+            case RGB_EFFECT_PULSE:
+            case RGB_EFFECT_BLOOM:
+            case RGB_EFFECT_VISUALIZER:
+                val = pulse_val(now, slow, i * 7, palette_floor(p.val / 14, 5), p.val);
+                val = clamp_add_u8(val, triwave8_period(now, fast + i * 13, i * 17) / 9);
+                break;
+
+            case RGB_EFFECT_SCAN:
+            case RGB_EFFECT_NAV_BLINK:
+            case RGB_EFFECT_SWEEP:
+                d = distance_u8(i, scan);
+                if (d == 0) val = p.val;
+                else if (d == 1) val = palette_floor((p.val * 2) / 3, 18);
+                else if (d == 2) val = palette_floor(p.val / 3, 10);
+                else val = palette_floor(p.val / 24, 3);
+                break;
+
+            case RGB_EFFECT_RAINBOW:
+                hue = (uint8_t)((now * 255UL) / frame_effect_period_for_layer(layer, 3400)) + i * 3;
+                sat = 255;
+                val = pulse_val(now, slow, i * 5, palette_floor(p.val / 5, 16), p.val);
+                break;
+
+            case RGB_EFFECT_STACK:
+            case RGB_EFFECT_TYPEWRITER:
+                {
+                    uint16_t period = frame_effect_period_for_layer(layer, 1900);
+                    uint8_t filled = ((now % period) * (RGB_FRAME_LED_COUNT + 1)) / period;
+                    bool reverse = ((now / period) % 2) != 0;
+                    uint8_t pos = reverse ? (RGB_FRAME_LED_COUNT - 1 - i) : i;
+                    val = pos < filled ? palette_floor((p.val * 3) / 4, 20) : palette_floor(p.val / 24, 3);
+                    if (pos == filled && filled < RGB_FRAME_LED_COUNT) val = p.val;
+                }
+                break;
+
+            case RGB_EFFECT_PONG:
+                d = distance_u8(i, scan);
+                if (d == 0) val = p.val;
+                else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
+                else val = palette_floor(p.val / 26, 3);
+                break;
+
+            case RGB_EFFECT_WILD:
+            default:
+                val = pulse_val(now, slow, i * 9, palette_floor(p.val / 12, 6), palette_floor((p.val * 5) / 6, 32));
+                val = clamp_add_u8(val, triwave8_period(now, fast + i * 23, i * 31) / 10);
+                break;
+        }
+
+        set_led_hsv(RGB_FRAME_LED_FIRST + i, hue, sat, val);
+    }
+
+    rgb_rendering_frame = false;
+}
+
+static void flush_led_frame(void) {
+    render_frame_light_group();
+    rgblight_driver.flush();
 }
 
 static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v) {
@@ -1738,6 +1964,149 @@ static void render_effect_stack(uint8_t layer) {
     flush_led_frame();
 }
 
+static void render_effect_nav_blink(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    static const uint8_t seq[] = {1, 6, 3, 8, 11, 13, 6, 1};
+    uint16_t period = effect_period_for_layer(layer, 1350);
+    uint8_t step = (now / (period / sizeof(seq) + 1)) % sizeof(seq);
+    uint8_t active = seq[step];
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t val = led_is_gap(i) ? palette_floor(p.val / 20, 4) : palette_floor(p.val / 36, 2);
+        if (i == active) {
+            val = pulse_val(now, 300, 0, palette_floor((p.val * 2) / 3, 28), p.val);
+        } else if (led_is_gap(i) && distance_u8(led_row_index(i), led_row_index(active)) <= 1) {
+            val = palette_floor(p.val / 5, 12);
+        }
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_typewriter(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint16_t period = effect_period_for_layer(layer, 2100);
+    uint16_t t = now % period;
+    uint8_t typed = 0;
+    uint16_t cursor = 0;
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint16_t beat = 80 + ((i * 37) % 45);
+        if (i == 5 || i == 10) beat += 170;
+        if (t >= cursor + beat) typed = i + 1;
+        cursor += beat;
+    }
+
+    if (t > cursor) typed = RGB_KEYFIELD_LED_COUNT;
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t val = 0;
+        if (i < typed) val = led_is_gap(i) ? palette_floor(p.val / 5, 10) : palette_floor((p.val * 2) / 5, 18);
+        if (i == typed && typed < RGB_KEYFIELD_LED_COUNT) val = pulse_val(now, 260, i * 13, palette_floor((p.val * 2) / 3, 26), p.val);
+        if (typed >= RGB_KEYFIELD_LED_COUNT && t > cursor + 300) val = scale_val(val, 100);
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_visualizer(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+
+    for (uint8_t row = 0; row < 3; row++) {
+        uint8_t wave_a = triwave8_period(now, effect_period_for_layer(layer, 620 + row * 170), row * 41);
+        uint8_t wave_b = triwave8_period(now, effect_period_for_layer(layer, 1030 + row * 210), 170 - row * 37);
+        uint8_t meter = (uint8_t)(((uint16_t)((wave_a + wave_b) / 2) * 5) / 255);
+        bool kick = ((now / (240 + row * 43)) % 7) == 0;
+
+        for (uint8_t col = 0; col < 5; col++) {
+            uint8_t led = row * 5 + col;
+            uint8_t val = palette_floor(p.val / 22, 4);
+            if (col <= meter) val = palette_floor(scale_val(p.val, 220 - col * 26), 18);
+            if (kick && col == 2) val = p.val;
+            if (led_is_gap(led)) val = scale_val(val, 150);
+            set_led_hsv(led, p.hue, p.sat, val);
+        }
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_pong(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t x = ping_pong_index(now, effect_period_for_layer(layer, 1450), 5, 0);
+    uint8_t y = ping_pong_index(now, effect_period_for_layer(layer, 1050), 3, 96);
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t d = distance_u8(led_col_index(i), x) + distance_u8(led_row_index(i), y);
+        uint8_t val = palette_floor(p.val / 28, 3);
+        if (d == 0) val = p.val;
+        else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
+        else if (d == 2) val = palette_floor(p.val / 4, 8);
+        if (led_is_gap(i)) val = scale_val(val, 150);
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_packet(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint16_t period = effect_period_for_layer(layer, 1250);
+    uint8_t packet = (now / (period / RGB_KEYFIELD_LED_COUNT + 1)) % RGB_KEYFIELD_LED_COUNT;
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t d = wrap_distance(i, packet, RGB_KEYFIELD_LED_COUNT);
+        uint8_t val = palette_floor(p.val / 24, 4);
+        if (d == 0) val = p.val;
+        else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
+        else if (d == 2) val = palette_floor(p.val / 4, 8);
+        if (led_is_gap(i)) val = scale_val(val, 165);
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_bloom(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t bloom = triwave8_period(now, effect_period_for_layer(layer, 1800), 0);
+    uint8_t dot = (now / (effect_period_for_layer(layer, 420) / 3 + 1)) % 3;
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t dist = distance_u8(led_row_index(i), 1) + distance_u8(led_col_index(i), 2);
+        int16_t energy = (int16_t)bloom - (int16_t)(dist * 42);
+        uint8_t val = energy > 0 ? palette_floor((uint8_t)energy, 8) : palette_floor(p.val / 28, 3);
+        if ((i == 5 + dot * 2) || (i == 6 + dot * 2)) val = clamp_add_u8(val, p.val / 3);
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
+static void render_effect_sweep(uint8_t layer) {
+    uint32_t now = timer_read32();
+    hsv_config_t p = palette_for_layer(layer);
+    uint8_t row_head = ping_pong_index(now, effect_period_for_layer(layer, 2200), 3, 0);
+
+    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
+        uint8_t d = distance_u8(led_row_index(i), row_head);
+        uint8_t val = pulse_val(now, effect_period_for_layer(layer, 2600), led_row_index(i) * 72, palette_floor(p.val / 18, 4), p.val);
+        if (d > 0) val = scale_val(val, d == 1 ? 130 : 70);
+        val = clamp_add_u8(val, triwave8_period(now, 1600 + i * 43, i * 29) / 11);
+        set_led_hsv(i, p.hue, p.sat, val);
+    }
+
+    flush_led_frame();
+}
+
 static void render_rgb_layer_visuals(void) {
     uint8_t layer = canonical_rgb_layer(active_layer_raw());
     rgb_effect_mode_t effect = effect_for_layer(layer);
@@ -1756,8 +2125,15 @@ static void render_rgb_layer_visuals(void) {
         case RGB_EFFECT_SOLID:     render_effect_solid(layer);     return;
         case RGB_EFFECT_COMET:     render_effect_comet(layer);     return;
         case RGB_EFFECT_SCAN:      render_effect_scan(layer);      return;
-        case RGB_EFFECT_RAINBOW:   render_effect_rainbow(layer);   return;
-        case RGB_EFFECT_STACK:     render_effect_stack(layer);     return;
+        case RGB_EFFECT_RAINBOW:    render_effect_rainbow(layer);    return;
+        case RGB_EFFECT_STACK:      render_effect_stack(layer);      return;
+        case RGB_EFFECT_NAV_BLINK:  render_effect_nav_blink(layer);  return;
+        case RGB_EFFECT_TYPEWRITER: render_effect_typewriter(layer); return;
+        case RGB_EFFECT_VISUALIZER: render_effect_visualizer(layer); return;
+        case RGB_EFFECT_PONG:       render_effect_pong(layer);       return;
+        case RGB_EFFECT_PACKET:     render_effect_packet(layer);     return;
+        case RGB_EFFECT_BLOOM:      render_effect_bloom(layer);      return;
+        case RGB_EFFECT_SWEEP:      render_effect_sweep(layer);      return;
         case RGB_EFFECT_WILD:
         default:
             break;
