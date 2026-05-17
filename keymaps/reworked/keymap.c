@@ -7,7 +7,7 @@
 
 // ============================================================
 // RGB / OLED selector build
-// - GP11 toggles OLED Legend <-> Last Key view
+// - GP12 cycles OLED legend pages
 // - Long encoder-button hold shows temporary Encoder Help view
 // - GAME reuses the old DEV layer slot; MEDIA keeps its swapped palette slot
 // ============================================================
@@ -33,7 +33,7 @@
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS   3000
 #define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 6
+#define REWORKED_LAYOUT_VERSION 7
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 #define RGB_FRAME_WANDER_SHOW_MS 900
@@ -49,6 +49,9 @@ enum layers {
     _RGB,
     _RGBMOD,
     _RGBADJ,
+    _MARK,
+    _WORK,
+    _SYS,
     _PROMPT,
     _SELECT,
     _LAYER_COUNT
@@ -111,6 +114,12 @@ enum custom_keycodes {
     RGB_SATD
 };
 
+enum tap_dance_ids {
+    TD_SEL_WIN_MARK,
+    TD_SEL_TXT_WORK,
+    TD_SEL_VSC_SYS,
+};
+
 enum rgb_zone_bits {
     RGB_ZONE_FRAME = 1 << 0,
     RGB_ZONE_KEY   = 1 << 1,
@@ -143,8 +152,11 @@ typedef enum {
 
 typedef enum {
     OLED_VIEW_LEGEND,
-    OLED_VIEW_LAST_KEY,
+    OLED_VIEW_TAP,
+    OLED_VIEW_RGB_PAGE,
+    OLED_VIEW_HELP,
     OLED_VIEW_ENCODER,
+    OLED_VIEW_COUNT
 } oled_view_t;
 
 typedef enum {
@@ -426,10 +438,13 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"SEL",  "ZONE", "ANIM",  "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
+    [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
+    [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
+    [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "RGB",  "GAME", "VSC",  "BASE", "PROMT"},
+    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME", "VSC+", "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -440,10 +455,13 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"Select layer", "Hold RGB zone controls", "Cycle RGB animation mode", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
+    [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
+    [_WORK]   = {"Select layer", "Planning", "Writing", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
+    [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to RGB", "Go to game", "Go to VSC", "Go to base", "Go to prompt"},
+    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Go to RGB", "Go to game", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -455,6 +473,9 @@ static const char *layer_name_short(uint8_t l) {
         case _RGB:    return "RGB";
         case _RGBMOD: return "MOD";
         case _RGBADJ: return "ADJ";
+        case _MARK:   return "MARK";
+        case _WORK:   return "WORK";
+        case _SYS:    return "SYS";
         case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PRM";
@@ -472,6 +493,9 @@ static const char *layer_name_long(uint8_t l) {
         case _RGB:    return "RGB";
         case _RGBMOD: return "RGB MOD";
         case _RGBADJ: return "ADJST";
+        case _MARK:   return "BOOKMARK";
+        case _WORK:   return "WORK";
+        case _SYS:    return "SYSTEM";
         case _DEV:    return "GAME";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
@@ -752,6 +776,10 @@ static void update_select_layer_state(void) {
 static uint8_t slot_for_layer(uint8_t layer) {
     layer = canonical_rgb_layer(layer);
 
+    if (layer == _MARK) layer = _WINDOW;
+    if (layer == _WORK) layer = _TEXT;
+    if (layer == _SYS) layer = _VSC;
+
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         if (select_slots[i].selectable && select_slots[i].layer == layer) {
             return i;
@@ -1019,7 +1047,7 @@ static void apply_palette_entry(uint8_t index) {
 }
 
 static void apply_via_runtime_config(void) {
-    oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
+    oled_view = via_user_config.oled_view <= OLED_VIEW_HELP ? (oled_view_t)via_user_config.oled_view : OLED_VIEW_LEGEND;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) apply_palette_entry(i);
 }
 
@@ -1055,7 +1083,7 @@ static void load_via_config(void) {
 
     if (via_user_config.signature != 0x94) invalid_config = true;
     if (via_user_config.layout_version != REWORKED_LAYOUT_VERSION) invalid_config = true;
-    if (via_user_config.oled_view > OLED_VIEW_LAST_KEY) invalid_config = true;
+    if (via_user_config.oled_view > OLED_VIEW_HELP) invalid_config = true;
     if (via_user_config.fx_mode > 1) invalid_config = true;
 
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
@@ -1083,8 +1111,8 @@ static void via_config_set_value(uint8_t *data) {
 
     switch (*value_id) {
         case id_via_oled_view:
-            via_user_config.oled_view = value_data[0] == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
-            oled_view = via_user_config.oled_view;
+            via_user_config.oled_view = value_data[0] <= OLED_VIEW_HELP ? value_data[0] : OLED_VIEW_LEGEND;
+            oled_view = (oled_view_t)via_user_config.oled_view;
             break;
         case id_via_fx_mode:
             via_user_config.fx_mode = value_data[0] ? 1 : 0;
@@ -1570,6 +1598,9 @@ static bool layer_mode_key_for_layer(uint8_t layer, uint8_t key_index) {
             return key_index == 0;
         case _WINDOW:
         case _TEXT:
+        case _MARK:
+        case _WORK:
+        case _SYS:
         case _DEV:
         case _VSC:
         case _RGB:
@@ -2579,6 +2610,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+    [_MARK] = LAYOUT(
+        MO(_SELECT), KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO
+    ),
+    [_WORK] = LAYOUT(
+        MO(_SELECT), KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO
+    ),
+    [_SYS] = LAYOUT(
+        MO(_SELECT), KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO,
+        KC_NO,       KC_NO,   KC_NO
+    ),
     [_DEV] = LAYOUT(
         MO(_SELECT), GM_NAV,  GM_WASD,
         GM_1,        GM_2,    GM_3,
@@ -2595,9 +2641,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         VSC_4,       VSC_5,   VSC_6
     ),
     [_SELECT] = LAYOUT(
-        MO(_SELECT), SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA,   KC_NO,    SEL_DEV,
-        SEL_VSC,     SEL_RGB,   SEL_PROMPT
+        MO(_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
+        SEL_MEDIA,   KC_NO,              SEL_DEV,
+        TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
 
@@ -2628,6 +2674,29 @@ static void select_target_layer(uint8_t layer) {
     // when the physical SEL/MO(_SELECT) key is released. This prevents
     // accidental layer jumps if a SEL_* keycode is triggered without SEL held.
 }
+
+#ifdef TAP_DANCE_ENABLE
+static void td_select_win_mark_finished(qk_tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
+}
+
+static void td_select_txt_work_finished(qk_tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _WORK : _TEXT);
+}
+
+static void td_select_vsc_sys_finished(qk_tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _SYS : _VSC);
+}
+
+qk_tap_dance_action_t tap_dance_actions[] = {
+    [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
+    [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
+    [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
+};
+#endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (keycode == MO(_SELECT)) {
@@ -2885,6 +2954,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
 
+        case _MARK:
+            tap_code(clockwise ? KC_VOLU : KC_VOLD);
+            break;
+
         case _WINDOW:
             if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
                 tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
@@ -2895,6 +2968,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             } else {
                 tap_code16(S(A(KC_TAB)));
             }
+            break;
+
+        case _WORK:
+            tap_code(clockwise ? KC_RGHT : KC_LEFT);
             break;
 
         case _TEXT:
@@ -2931,6 +3008,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _VSC:
+        case _SYS:
         case _PROMPT:
             tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
             break;
@@ -3021,7 +3099,7 @@ void matrix_scan_user(void) {
 
     if (!oled_toggle_pressed && oled_toggle_was_pressed) {
         if (!oled_toggle_combo_used && timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
-            oled_view = (oled_view == OLED_VIEW_LEGEND) ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
+            oled_view = (oled_view_t)((oled_view + 1) % OLED_VIEW_ENCODER);
 
 #    ifdef VIA_ENABLE
             via_user_config.oled_view = oled_view;
@@ -3164,6 +3242,69 @@ static void render_last_key_view(void) {
     write_line(3, buf);
 }
 
+
+static void render_tap_view(uint8_t layer) {
+    char line[22];
+
+    if (layer == _SELECT) {
+        write_line(0, "SELECT TAP");
+        write_line(1, "WIN+  TXT+");
+        write_line(2, "VSC+ -> hidden");
+        write_line(3, "2x = MARK/WORK/SYS");
+        return;
+    }
+
+    if (layer == _MARK) {
+        write_line(0, "MARK TAP");
+        write_line(1, "WEB APP SHOP");
+        write_line(2, "AI  DEV MAIL");
+        write_line(3, "FILE SYS");
+        return;
+    }
+
+    if (layer == _WORK) {
+        write_line(0, "WORK TAP");
+        write_line(1, "PLAN WRITE SHOP");
+        write_line(2, "CODE BUILD IMG");
+        write_line(3, "LIST CHECK");
+        return;
+    }
+
+    if (layer == _SYS) {
+        write_line(0, "SYS TAP");
+        write_line(1, "TERM TASK QMK");
+        write_line(2, "GIT USB CONF");
+        write_line(3, "LOG LOCK");
+        return;
+    }
+
+    snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
+    write_line(0, line);
+    write_line(1, "SEL: hold selector");
+    write_line(2, "WIN/TXT/VSC +");
+    write_line(3, "2x hidden layer");
+}
+
+static void render_rgb_help_view(void) {
+    char line[22];
+
+    write_line(0, "RGB HELP");
+    snprintf(line, sizeof(line), "ANIM:%-5.5s", rgb_animation_label());
+    write_line(1, line);
+    write_line(2, "ZONE+ALL/FRME/KEY");
+    write_line(3, "ENC:VAL or WALK");
+}
+
+static void render_help_view(uint8_t layer) {
+    char line[22];
+
+    snprintf(line, sizeof(line), "HELP %-6.6s", layer_name_short(layer));
+    write_line(0, line);
+    write_line(1, "GP12: next legend");
+    write_line(2, "ENC hold: help");
+    write_line(3, "SEL hold: choose");
+}
+
 static void render_encoder_view(void) {
     char buf[22];
     uint8_t layer = active_layer_raw();
@@ -3196,9 +3337,21 @@ bool oled_task_user(void) {
     uint8_t layer = active_layer_raw();
 
     if (layer == _SELECT) {
-        render_legend_view(_SELECT);
-    } else if (oled_view == OLED_VIEW_LAST_KEY) {
-        render_last_key_view();
+        if (oled_view == OLED_VIEW_TAP) {
+            render_tap_view(_SELECT);
+        } else if (oled_view == OLED_VIEW_RGB_PAGE) {
+            render_rgb_help_view();
+        } else if (oled_view == OLED_VIEW_HELP) {
+            render_help_view(_SELECT);
+        } else {
+            render_legend_view(_SELECT);
+        }
+    } else if (oled_view == OLED_VIEW_TAP) {
+        render_tap_view(layer);
+    } else if (oled_view == OLED_VIEW_RGB_PAGE) {
+        render_rgb_help_view();
+    } else if (oled_view == OLED_VIEW_HELP) {
+        render_help_view(layer);
     } else {
         render_legend_view(layer);
     }
@@ -3273,7 +3426,7 @@ static void render_legend_view(uint8_t layer) {
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
-        snprintf(line, sizeof(line), "GP11: Lay <-> Last");
+        snprintf(line, sizeof(line), "GP12: legend page");
 #else
         snprintf(line, sizeof(line), "Hold SEL for grid");
 #endif
@@ -3304,10 +3457,101 @@ static void render_last_key_view(void) {
     write_line(6, buf);
 
 #ifdef OLED_TOGGLE_BTN_PIN
-    write_line(7, "GP11: back to Lay");
+    write_line(7, "GP12: legend page");
 #else
-    write_line(7, "Last-key details");
+    write_line(7, "Legend details");
 #endif
+}
+
+
+static void render_tap_view(uint8_t layer) {
+    char line[22];
+
+    if (layer == _SELECT) {
+        write_line(0, "SELECT TAP");
+        write_line(1, "Single / Double");
+        write_line(2, "WIN  -> MARK");
+        write_line(3, "TXT  -> WORK");
+        write_line(4, "VSC  -> SYS");
+        write_line(5, "Release SEL to go");
+        write_line(6, "");
+        write_line(7, "GP12: next page");
+        return;
+    }
+
+    if (layer == _MARK) {
+        write_line(0, "MARK / BOOKMARKS");
+        write_line(1, "SEL  WEB  APP");
+        write_line(2, "SHOP AI   DEV");
+        write_line(3, "MAIL FILE SYS");
+        write_line(4, "Tap actions TBD");
+        write_line(5, "1x / 2x / Hold");
+        write_line(6, "");
+        write_line(7, "SEL: selector");
+        return;
+    }
+
+    if (layer == _WORK) {
+        write_line(0, "WORK / FLOWS");
+        write_line(1, "SEL  PLAN WRITE");
+        write_line(2, "SHOP CODE BUILD");
+        write_line(3, "IMG  LIST CHECK");
+        write_line(4, "Tap actions TBD");
+        write_line(5, "");
+        write_line(6, "");
+        write_line(7, "SEL: selector");
+        return;
+    }
+
+    if (layer == _SYS) {
+        write_line(0, "SYS / TOOLS");
+        write_line(1, "SEL  TERM TASK");
+        write_line(2, "QMK  GIT  USB");
+        write_line(3, "CONF LOG  LOCK");
+        write_line(4, "Danger keys later");
+        write_line(5, "");
+        write_line(6, "");
+        write_line(7, "SEL: selector");
+        return;
+    }
+
+    snprintf(line, sizeof(line), "%s TAP HELP", layer_name_long(layer));
+    write_line(0, line);
+    write_line(1, "SELECT hidden:");
+    write_line(2, "WIN 2x = MARK");
+    write_line(3, "TXT 2x = WORK");
+    write_line(4, "VSC 2x = SYS");
+    write_line(5, "");
+    write_line(6, "1x normal layer");
+    write_line(7, "GP12: next page");
+}
+
+static void render_rgb_help_view(void) {
+    char line[22];
+
+    write_line(0, "RGB HELP");
+    snprintf(line, sizeof(line), "ANIM: %s", rgb_animation_label());
+    write_line(1, line);
+    write_line(2, "ZONE held:");
+    write_line(3, "ALL FRME KEY GAP");
+    write_line(4, "Normal:");
+    write_line(5, "HUE SAT VAL");
+    write_line(6, "ENC: VAL or WALK");
+    write_line(7, "GP12: next page");
+}
+
+static void render_help_view(uint8_t layer) {
+    char line[22];
+
+    snprintf(line, sizeof(line), "HELP %s", layer_name_long(layer));
+    write_line(0, line);
+    write_line(1, "GP12: legend page");
+    write_line(2, "SEL hold: selector");
+    write_line(3, "SELECT + 2x:");
+    write_line(4, "WIN=MARK TXT=WORK");
+    write_line(5, "VSC=SYS");
+    write_line(6, "ENC hold: encoder");
+    write_line(7, "Combo: clear EEPROM");
 }
 
 static void render_encoder_view(void) {
@@ -3347,9 +3591,21 @@ bool oled_task_user(void) {
     uint8_t layer = active_layer_raw();
 
     if (layer == _SELECT) {
-        render_legend_view(_SELECT);
-    } else if (oled_view == OLED_VIEW_LAST_KEY) {
-        render_last_key_view();
+        if (oled_view == OLED_VIEW_TAP) {
+            render_tap_view(_SELECT);
+        } else if (oled_view == OLED_VIEW_RGB_PAGE) {
+            render_rgb_help_view();
+        } else if (oled_view == OLED_VIEW_HELP) {
+            render_help_view(_SELECT);
+        } else {
+            render_legend_view(_SELECT);
+        }
+    } else if (oled_view == OLED_VIEW_TAP) {
+        render_tap_view(layer);
+    } else if (oled_view == OLED_VIEW_RGB_PAGE) {
+        render_rgb_help_view();
+    } else if (oled_view == OLED_VIEW_HELP) {
+        render_help_view(layer);
     } else {
         render_legend_view(layer);
     }

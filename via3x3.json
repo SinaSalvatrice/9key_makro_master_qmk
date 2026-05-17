@@ -2,7 +2,7 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "firmwareVersion": 10,
+  "firmwareVersion": 11,
   "menus": [
     "qmk_rgblight",
     {
@@ -12,16 +12,24 @@
           "label": "OLED",
           "content": [
             {
-              "label": "Default View",
+              "label": "Default Legend Page",
               "type": "dropdown",
               "options": [
                 [
-                  "Legend",
+                  "Keys",
                   0
                 ],
                 [
-                  "Last Key",
+                  "Tap Dance",
                   1
+                ],
+                [
+                  "RGB Help",
+                  2
+                ],
+                [
+                  "System Help",
+                  3
                 ]
               ],
               "content": [
