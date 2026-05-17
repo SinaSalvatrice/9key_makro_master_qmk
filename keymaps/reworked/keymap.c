@@ -2545,9 +2545,9 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT), KC_UP,       KC_BSPC,
+        MO(_SELECT), KC_HOME,       KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
-        LCTL(KC_Z),  KC_DOWN,     LCTL(KC_Y)
+        LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
     [_WINDOW] = LAYOUT(
         MO(_SELECT), WIN_BRO, WIN_AUX,
@@ -2596,8 +2596,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         MO(_SELECT), SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA,   SEL_RGB,    SEL_DEV,
-        SEL_VSC,     SEL_BASE,   SEL_PROMPT
+        SEL_MEDIA,   KC_NO,    SEL_DEV,
+        SEL_VSC,     SEL_RGB,   SEL_PROMPT
     ),
 };
 
