@@ -2,7 +2,7 @@
   "name": "9key_makro_master",
   "vendorId": "FEED",
   "productId": "9B01",
-  "firmwareVersion": 9,
+  "firmwareVersion": 10,
   "menus": [
     "qmk_rgblight",
     {
@@ -35,7 +35,7 @@
       ]
     },
     {
-      "label": "Palette",
+      "label": "Key LEDs",
       "content": [
         {
           "label": "Layers",
@@ -1017,12 +1017,1003 @@
               ]
             }
           ]
-        },
+        }
+      ]
+    },
+    {
+      "label": "Gap LEDs",
+      "content": [
         {
-          "label": "Frame LEDs",
+          "label": "Layers",
           "content": [
             {
-              "label": "BASE Frame Color",
+              "label": "BASE Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[0]",
+                0,
+                11,
+                0
+              ]
+            },
+            {
+              "label": "BASE Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[0]",
+                0,
+                12,
+                0
+              ]
+            },
+            {
+              "label": "BASE Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[0]",
+                0,
+                13,
+                0
+              ]
+            },
+            {
+              "label": "BASE Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[0]",
+                0,
+                14,
+                0
+              ]
+            },
+            {
+              "label": "WINDOW Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[1]",
+                0,
+                11,
+                1
+              ]
+            },
+            {
+              "label": "WINDOW Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[1]",
+                0,
+                12,
+                1
+              ]
+            },
+            {
+              "label": "WINDOW Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[1]",
+                0,
+                13,
+                1
+              ]
+            },
+            {
+              "label": "WINDOW Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[1]",
+                0,
+                14,
+                1
+              ]
+            },
+            {
+              "label": "TXT Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[2]",
+                0,
+                11,
+                2
+              ]
+            },
+            {
+              "label": "TXT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[2]",
+                0,
+                12,
+                2
+              ]
+            },
+            {
+              "label": "TXT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[2]",
+                0,
+                13,
+                2
+              ]
+            },
+            {
+              "label": "TXT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[2]",
+                0,
+                14,
+                2
+              ]
+            },
+            {
+              "label": "MEDIA Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[3]",
+                0,
+                11,
+                3
+              ]
+            },
+            {
+              "label": "MEDIA Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[3]",
+                0,
+                12,
+                3
+              ]
+            },
+            {
+              "label": "MEDIA Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[3]",
+                0,
+                13,
+                3
+              ]
+            },
+            {
+              "label": "MEDIA Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[3]",
+                0,
+                14,
+                3
+              ]
+            },
+            {
+              "label": "GAME Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[4]",
+                0,
+                11,
+                4
+              ]
+            },
+            {
+              "label": "GAME Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[4]",
+                0,
+                12,
+                4
+              ]
+            },
+            {
+              "label": "GAME Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[4]",
+                0,
+                13,
+                4
+              ]
+            },
+            {
+              "label": "GAME Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[4]",
+                0,
+                14,
+                4
+              ]
+            },
+            {
+              "label": "VSC Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[5]",
+                0,
+                11,
+                5
+              ]
+            },
+            {
+              "label": "VSC Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[5]",
+                0,
+                12,
+                5
+              ]
+            },
+            {
+              "label": "VSC Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[5]",
+                0,
+                13,
+                5
+              ]
+            },
+            {
+              "label": "VSC Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[5]",
+                0,
+                14,
+                5
+              ]
+            },
+            {
+              "label": "RGB Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[6]",
+                0,
+                11,
+                6
+              ]
+            },
+            {
+              "label": "RGB Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[6]",
+                0,
+                12,
+                6
+              ]
+            },
+            {
+              "label": "RGB Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[6]",
+                0,
+                13,
+                6
+              ]
+            },
+            {
+              "label": "RGB Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[6]",
+                0,
+                14,
+                6
+              ]
+            },
+            {
+              "label": "PROMPT Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[7]",
+                0,
+                11,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[7]",
+                0,
+                12,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[7]",
+                0,
+                13,
+                7
+              ]
+            },
+            {
+              "label": "PROMPT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[7]",
+                0,
+                14,
+                7
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Frame LEDs",
+      "content": [
+        {
+          "label": "Layers",
+          "content": [
+            {
+              "label": "BASE Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[0]",
@@ -1032,7 +2023,7 @@
               ]
             },
             {
-              "label": "BASE Frame Brightness",
+              "label": "BASE Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1046,7 +2037,7 @@
               ]
             },
             {
-              "label": "BASE Frame Effect",
+              "label": "BASE Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1130,7 +2121,7 @@
               ]
             },
             {
-              "label": "BASE Frame Effect Speed",
+              "label": "BASE Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1144,7 +2135,7 @@
               ]
             },
             {
-              "label": "WINDOW Frame Color",
+              "label": "WINDOW Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[1]",
@@ -1154,7 +2145,7 @@
               ]
             },
             {
-              "label": "WINDOW Frame Brightness",
+              "label": "WINDOW Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1168,7 +2159,7 @@
               ]
             },
             {
-              "label": "WINDOW Frame Effect",
+              "label": "WINDOW Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1252,7 +2243,7 @@
               ]
             },
             {
-              "label": "WINDOW Frame Effect Speed",
+              "label": "WINDOW Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1266,7 +2257,7 @@
               ]
             },
             {
-              "label": "TXT Frame Color",
+              "label": "TXT Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[2]",
@@ -1276,7 +2267,7 @@
               ]
             },
             {
-              "label": "TXT Frame Brightness",
+              "label": "TXT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1290,7 +2281,7 @@
               ]
             },
             {
-              "label": "TXT Frame Effect",
+              "label": "TXT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1374,7 +2365,7 @@
               ]
             },
             {
-              "label": "TXT Frame Effect Speed",
+              "label": "TXT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1388,7 +2379,7 @@
               ]
             },
             {
-              "label": "MEDIA Frame Color",
+              "label": "MEDIA Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[3]",
@@ -1398,7 +2389,7 @@
               ]
             },
             {
-              "label": "MEDIA Frame Brightness",
+              "label": "MEDIA Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1412,7 +2403,7 @@
               ]
             },
             {
-              "label": "MEDIA Frame Effect",
+              "label": "MEDIA Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1496,7 +2487,7 @@
               ]
             },
             {
-              "label": "MEDIA Frame Effect Speed",
+              "label": "MEDIA Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1510,7 +2501,7 @@
               ]
             },
             {
-              "label": "GAME Frame Color",
+              "label": "GAME Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[4]",
@@ -1520,7 +2511,7 @@
               ]
             },
             {
-              "label": "GAME Frame Brightness",
+              "label": "GAME Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1534,7 +2525,7 @@
               ]
             },
             {
-              "label": "GAME Frame Effect",
+              "label": "GAME Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1618,7 +2609,7 @@
               ]
             },
             {
-              "label": "GAME Frame Effect Speed",
+              "label": "GAME Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1632,7 +2623,7 @@
               ]
             },
             {
-              "label": "VSC Frame Color",
+              "label": "VSC Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[5]",
@@ -1642,7 +2633,7 @@
               ]
             },
             {
-              "label": "VSC Frame Brightness",
+              "label": "VSC Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1656,7 +2647,7 @@
               ]
             },
             {
-              "label": "VSC Frame Effect",
+              "label": "VSC Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1740,7 +2731,7 @@
               ]
             },
             {
-              "label": "VSC Frame Effect Speed",
+              "label": "VSC Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1754,7 +2745,7 @@
               ]
             },
             {
-              "label": "RGB Frame Color",
+              "label": "RGB Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[6]",
@@ -1764,7 +2755,7 @@
               ]
             },
             {
-              "label": "RGB Frame Brightness",
+              "label": "RGB Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1778,7 +2769,7 @@
               ]
             },
             {
-              "label": "RGB Frame Effect",
+              "label": "RGB Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1862,7 +2853,7 @@
               ]
             },
             {
-              "label": "RGB Frame Effect Speed",
+              "label": "RGB Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1876,7 +2867,7 @@
               ]
             },
             {
-              "label": "PROMPT Frame Color",
+              "label": "PROMPT Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[7]",
@@ -1886,7 +2877,7 @@
               ]
             },
             {
-              "label": "PROMPT Frame Brightness",
+              "label": "PROMPT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1900,7 +2891,7 @@
               ]
             },
             {
-              "label": "PROMPT Frame Effect",
+              "label": "PROMPT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1984,7 +2975,7 @@
               ]
             },
             {
-              "label": "PROMPT Frame Effect Speed",
+              "label": "PROMPT Effect Speed",
               "type": "range",
               "options": [
                 1,
