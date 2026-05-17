@@ -65,6 +65,12 @@ enum custom_keycodes {
     SEL_PROMPT,
     PRM_PICS,
     PRM_ETSY,
+    PRMT_1,
+    PRMT_2,
+    PRMT_3,
+    PRMT_4,
+    PRMT_5,
+    PRMT_6,
     GM_NAV,
     GM_WASD,
     GM_1,
@@ -342,6 +348,19 @@ static const char *const vsc_chat_macros[6] = {
 
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"};
+static const char *const prompt_base_macros[6] = {
+    "Summarize the selected text or current context into a short, useful prompt-ready brief. Preserve important constraints, inputs, outputs, and open questions.",
+
+    "Review this prompt or prompt draft for clarity, ambiguity, missing constraints, and likely failure modes. Suggest a tighter improved version and explain the main fixes briefly.",
+
+    "Improve this prompt so it is more specific, reliable, and easier for an AI system to follow. Keep the original intent, but remove ambiguity and add the minimum necessary constraints.",
+
+    "Write test cases for this prompt. Include normal cases, edge cases, failure cases, and one adversarial case. Keep them concise and practical.",
+
+    "Explain what this prompt is asking for, what assumptions it makes, what could go wrong, and how to rewrite it for better results.",
+
+    "Turn this rough idea into a clean reusable prompt template with placeholders, short instructions, and an explicit output format."
+};
 
 static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
 static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
@@ -1243,20 +1262,6 @@ static void send_vsc_command(const char *command) {
 static void trigger_vsc_target(uint8_t slot) {
     if (slot >= 6) return;
 
-    if (active_layer_raw() == _PROMPT) {
-        send_vsc_command("GitHub Copilot Chat: Focus on Chat View");
-        wait_ms(30);
-
-        switch (prompt_mode) {
-            case PROMPT_MODE_PICS: send_string(prompt_pics_macros[slot]); break;
-            case PROMPT_MODE_ETSY: send_string(prompt_etsy_macros[slot]); break;
-            case PROMPT_MODE_BASE:
-            default:               send_string(vsc_chat_macros[slot]); break;
-        }
-
-        return;
-    }
-
     vsc_mode_t mode = current_vsc_preview_mode();
     if (mode == VSC_MODE_NONE) return;
 
@@ -1264,6 +1269,20 @@ static void trigger_vsc_target(uint8_t slot) {
         send_vsc_command(vsc_bar_commands[slot]);
     } else if (mode == VSC_MODE_CHAT) {
         send_string(vsc_chat_macros[slot]);
+    }
+}
+
+static void trigger_prompt_target(uint8_t slot) {
+    if (slot >= 6) return;
+
+    send_vsc_command("GitHub Copilot Chat: Focus on Chat View");
+    wait_ms(30);
+
+    switch (prompt_mode) {
+        case PROMPT_MODE_PICS: send_string(prompt_pics_macros[slot]); break;
+        case PROMPT_MODE_ETSY: send_string(prompt_etsy_macros[slot]); break;
+        case PROMPT_MODE_BASE:
+        default:               send_string(prompt_base_macros[slot]); break;
     }
 }
 
@@ -2410,8 +2429,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_PROMPT] = LAYOUT(
         MO(_SELECT), PRM_PICS, PRM_ETSY,
-        VSC_1,       VSC_2,   VSC_3,
-        VSC_4,       VSC_5,   VSC_6
+        PRMT_1,      PRMT_2,  PRMT_3,
+        PRMT_4,      PRMT_5,  PRMT_6
     ),
     [_SELECT] = LAYOUT(
         MO(_SELECT), SEL_WINDOW, SEL_TEXT,
@@ -2601,6 +2620,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 select_cursor = slot_for_layer(selector_target);
                 layer_move(_PROMPT);
             }
+            return false;
+
+        case PRMT_1:
+        case PRMT_2:
+        case PRMT_3:
+        case PRMT_4:
+        case PRMT_5:
+        case PRMT_6:
+            if (record->event.pressed) trigger_prompt_target((uint8_t)(keycode - PRMT_1));
             return false;
 
         case GM_NAV:
