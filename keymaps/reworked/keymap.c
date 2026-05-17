@@ -5,13 +5,6 @@
 #endif
 #include <stdio.h>
 
-
-static uint8_t scale_val(uint8_t value, uint8_t scale);
-static bool layer_mode_key_for_layer(uint8_t layer, uint8_t key_index);
-static void flush_led_frame(void);
-static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v);
-static void clear_all_keys(void);
-
 // ============================================================
 // RGB / OLED selector build
 // - GP11 toggles OLED Legend <-> Last Key view
@@ -2547,9 +2540,9 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT), KC_HOME,       KC_BSPC,
+        MO(_SELECT), KC_UP,       KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
-        LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
+        LCTL(KC_Z),  KC_DOWN,     LCTL(KC_Y)
     ),
     [_WINDOW] = LAYOUT(
         MO(_SELECT), WIN_BRO, WIN_AUX,
@@ -2806,11 +2799,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case WIN_BRO:
-            window_browser_held = record->event.pressed;
+            if (record->event.pressed) {
+                window_browser_held = !window_browser_held;
+                if (window_browser_held) window_snap_held = false;
+            }
             return false;
 
         case WIN_AUX:
-            window_snap_held = record->event.pressed;
+            if (record->event.pressed) {
+                window_snap_held = !window_snap_held;
+                if (window_snap_held) window_browser_held = false;
+            }
             return false;
 
         case WIN_1:
@@ -3114,6 +3113,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "GME %-4s", game_mode_name(game_mode));
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
+    } else if (layer == _WINDOW && window_snap_held) {
+        snprintf(line, sizeof(line), "%-10.10s", "WIN SNAP");
     } else if (layer == _TEXT && text_action_held) {
         snprintf(line, sizeof(line), "%-10.10s", "TXT ACT");
     } else if (layer == _TEXT && text_edit_held) {
@@ -3264,7 +3265,7 @@ static void render_legend_view(uint8_t layer) {
         snprintf(line, sizeof(line), "TXT %s%s", mode, (text_action_held || text_edit_held) ? " [HELD]" : "");
     } else if (layer == _WINDOW) {
         const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "WIN");
-        snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [HELD]" : "");
+        snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP11: Lay <-> Last");

@@ -3086,7 +3086,7 @@
     },
     {
       "name": "WIN_BRO",
-      "title": "Window browser mode",
+      "title": "Toggle WINDOW browser mode",
       "shortName": "BRO"
     },
     {
