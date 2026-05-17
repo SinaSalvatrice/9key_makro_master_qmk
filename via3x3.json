@@ -3206,13 +3206,13 @@
     },
     {
       "name": "RGB_MODE",
-      "title": "Hold/select RGB zone controls",
+      "title": "Hold RGB zone controls",
       "shortName": "ZONE"
     },
     {
       "name": "RGB_TOG",
-      "title": "Toggle RGB output or all zones",
-      "shortName": "TOG"
+      "title": "Cycle RGB animation mode or toggle all zones while ZONE is held",
+      "shortName": "ANIM"
     },
     {
       "name": "RGB_HUEU",
