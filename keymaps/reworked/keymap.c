@@ -2676,22 +2676,22 @@ static void select_target_layer(uint8_t layer) {
 }
 
 #ifdef TAP_DANCE_ENABLE
-static void td_select_win_mark_finished(qk_tap_dance_state_t *state, void *user_data) {
+static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
 }
 
-static void td_select_txt_work_finished(qk_tap_dance_state_t *state, void *user_data) {
+static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _WORK : _TEXT);
 }
 
-static void td_select_vsc_sys_finished(qk_tap_dance_state_t *state, void *user_data) {
+static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _SYS : _VSC);
 }
 
-qk_tap_dance_action_t tap_dance_actions[] = {
+tap_dance_action_t tap_dance_actions[] = {
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
