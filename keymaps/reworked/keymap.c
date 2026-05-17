@@ -410,7 +410,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "----", "GAME", "VSC",  "RGB",  "PROMT"},
+    [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "RGB",  "GAME", "VSC",  "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -424,7 +424,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Unused", "Go to game", "Go to VSC", "Go to RGB", "Go to prompt"},
+    [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to RGB", "Go to game", "Go to VSC", "Go to base", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -2437,8 +2437,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         MO(_SELECT), SEL_WINDOW, SEL_TEXT,
-        SEL_MEDIA,   KC_NO,      SEL_DEV,
-        SEL_VSC,     SEL_RGB,    SEL_PROMPT
+        SEL_MEDIA,   SEL_RGB,    SEL_DEV,
+        SEL_VSC,     SEL_BASE,   SEL_PROMPT
     ),
 };
 
