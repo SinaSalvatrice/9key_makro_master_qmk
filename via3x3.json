@@ -3091,8 +3091,8 @@
     },
     {
       "name": "WIN_AUX",
-      "title": "Window aux key",
-      "shortName": "AUX"
+      "title": "Window snap mode",
+      "shortName": "SNAP"
     },
     {
       "name": "WIN_1",
@@ -3166,13 +3166,13 @@
     },
     {
       "name": "VSC_BAR",
-      "title": "Toggle VSC bar mode",
-      "shortName": "BAR"
+      "title": "Hold VSC navigation mode",
+      "shortName": "NAV"
     },
     {
       "name": "VSC_CHAT",
-      "title": "Toggle VSC chat mode",
-      "shortName": "CHAT"
+      "title": "Hold VSC AI prompts",
+      "shortName": "AI"
     },
     {
       "name": "VSC_1",
@@ -3206,8 +3206,8 @@
     },
     {
       "name": "RGB_MODE",
-      "title": "Hold RGB zone controls",
-      "shortName": "MODE"
+      "title": "Hold/select RGB zone controls",
+      "shortName": "ZONE"
     },
     {
       "name": "RGB_TOG",
