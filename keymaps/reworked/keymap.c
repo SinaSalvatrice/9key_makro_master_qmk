@@ -16,11 +16,11 @@
 #define RGBLIGHT_LED_COUNT 65
 #endif
 
-#define RGB_KEYFIELD_LED_COUNT 15
-#define RGB_FRAME_LED_FIRST    RGB_KEYFIELD_LED_COUNT
-#define RGB_FRAME_LED_COUNT    (RGBLIGHT_LED_COUNT - RGB_FRAME_LED_FIRST)
-#define RGB_CORE_LED_COUNT     RGB_KEYFIELD_LED_COUNT
-#define RGB_GAP_LED_COUNT      6
+#define RGB_CORE_LED_COUNT 15
+#define RGB_GROUP_KEYS     0x01
+#define RGB_GROUP_GAPS     0x02
+#define RGB_GROUP_FRAME    0x04
+#define RGB_GROUP_ALL      (RGB_GROUP_KEYS | RGB_GROUP_GAPS | RGB_GROUP_FRAME)
 
 #ifndef SELECTOR_BTN_PIN
 #    define SELECTOR_BTN_PIN GP12
@@ -33,7 +33,7 @@
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS   3000
 #define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 6
+#define REWORKED_LAYOUT_VERSION 4
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 
@@ -81,9 +81,7 @@ enum custom_keycodes {
     WIN_4,
     WIN_5,
     WIN_6,
-    // QMK reserves only 32 keyboard-level custom slots (QK_KB_0..QK_KB_31).
-    // Start the remaining local-only keycodes at SAFE_RANGE to keep introspection builds valid.
-    TXT_ACT = SAFE_RANGE,
+    TXT_ACT,
     TXT_EDT,
     TXT_1,
     TXT_2,
@@ -100,26 +98,14 @@ enum custom_keycodes {
     VSC_5,
     VSC_6,
     RGB_PROFILE,
-    RGB_MODE,
-    RGB_TOG,
-    RGB_HUEU,
-    RGB_HUED,
-    RGB_VALU,
-    RGB_VALD,
-    RGB_SATU,
-    RGB_SATD
+    RGB_MOD_ALL,
+    RGB_MOD_FRAME,
+    RGB_MOD_KEYS,
+    RGB_MOD_GAPS
 };
 
-enum rgb_zone_bits {
-    RGB_ZONE_FRAME = 1 << 0,
-    RGB_ZONE_KEY   = 1 << 1,
-    RGB_ZONE_GAP   = 1 << 2,
-    RGB_ZONE_ALL   = RGB_ZONE_FRAME | RGB_ZONE_KEY | RGB_ZONE_GAP,
-};
-
-static bool rgb_output_enabled = true;
-static bool rgb_mode_held = false;
-static uint8_t rgb_zone_mask = RGB_ZONE_ALL;
+static bool rgb_minimal_mode = false;
+static uint8_t rgb_visible_groups = RGB_GROUP_ALL;
 
 typedef enum {
     VSC_MODE_NONE,
@@ -145,13 +131,6 @@ typedef enum {
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_STACK,
     RGB_EFFECT_OFF,
-    RGB_EFFECT_NAV_BLINK,
-    RGB_EFFECT_TYPEWRITER,
-    RGB_EFFECT_VISUALIZER,
-    RGB_EFFECT_PONG,
-    RGB_EFFECT_PACKET,
-    RGB_EFFECT_BLOOM,
-    RGB_EFFECT_SWEEP,
     RGB_EFFECT_COUNT
 } rgb_effect_mode_t;
 
@@ -164,7 +143,6 @@ typedef enum {
 typedef enum {
     WINDOW_MODE_WIN,
     WINDOW_MODE_BROWSER,
-    WINDOW_MODE_SNAP,
 } window_mode_t;
 
 typedef enum {
@@ -202,14 +180,12 @@ static bool text_action_held              = false;
 static bool text_edit_held                = false;
 static text_mode_t last_key_text_mode     = TEXT_MODE_WIN;
 static bool window_browser_held           = false;
-static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static game_mode_t game_mode              = GAME_MODE_WASD;
 static game_mode_t last_key_game_mode     = GAME_MODE_WASD;
 static vsc_mode_t last_key_vsc_mode       = VSC_MODE_BAR;
 static prompt_mode_t prompt_mode          = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
-static bool last_key_rgb_mode             = false;
 static uint32_t encoder_help_started      = 0;
 static uint32_t encoder_help_until        = 0;
 static bool encoder_help_fired            = false;
@@ -226,12 +202,6 @@ static const uint8_t key_led_map[PAD_KEY_COUNT] = {
     0, 2, 4,
     5, 7, 9,
     10, 12, 14
-};
-
-static const uint8_t gap_led_map[RGB_GAP_LED_COUNT] = {
-    1, 3,
-    6, 8,
-    11, 13
 };
 
 typedef struct {
@@ -257,14 +227,6 @@ enum via_custom_value {
     id_via_layer_brightness   = 4,
     id_via_rgb_effect         = 5,
     id_via_layer_effect_speed = 6,
-    id_via_frame_color        = 7,
-    id_via_frame_brightness   = 8,
-    id_via_frame_effect       = 9,
-    id_via_frame_effect_speed = 10,
-    id_via_gap_color          = 11,
-    id_via_gap_brightness     = 12,
-    id_via_gap_effect         = 13,
-    id_via_gap_effect_speed   = 14,
 };
 
 typedef struct {
@@ -275,12 +237,6 @@ typedef struct {
     uint8_t      layer_effect[VIA_LAYER_SLOT_COUNT];
     uint8_t      layer_speed[VIA_LAYER_SLOT_COUNT];
     hsv_config_t layer_palette[VIA_LAYER_SLOT_COUNT];
-    uint8_t      gap_effect[VIA_LAYER_SLOT_COUNT];
-    uint8_t      gap_speed[VIA_LAYER_SLOT_COUNT];
-    hsv_config_t gap_palette[VIA_LAYER_SLOT_COUNT];
-    uint8_t      frame_effect[VIA_LAYER_SLOT_COUNT];
-    uint8_t      frame_speed[VIA_LAYER_SLOT_COUNT];
-    hsv_config_t frame_palette[VIA_LAYER_SLOT_COUNT];
 } via_user_config_t;
 
 static via_user_config_t via_user_config;
@@ -292,15 +248,15 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _WINDOW, 176, 240, 120, "WINDOW", true  },
     { _TEXT,    96, 220, 110, "TXT",    true  },
     { _MEDIA,   18, 255, 130, "MEDIA",  true  },
-    { _BASE,   160, 220, 120, "BASE",   true  },
+    { _RGB,    215, 240, 130, "RGB",    true  },
     { _DEV,     32, 255, 130, "GAME",   true  },
     { _VSC,    200, 255, 130, "VSC",    true  },
-    { _RGB,    215, 240, 130, "RGB",    true  },
+    { _BASE,   160, 220, 120, "BASE",   true  },
     { _PROMPT,   8, 255, 140, "PROMT",  true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    4, 1, 2, 3, 5, 6, 7, 8
+    7, 1, 2, 3, 5, 6, 4, 8
 };
 
 // Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
@@ -315,15 +271,15 @@ static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {  8, 255, 140}, // PROMPT
 };
 
-static const char *const vsc_bar_labels[6] = {"EXPL", "SRC", "TERM", "GIT", "GPT", "RUN"};
-static const char *const vsc_bar_functions[6] = {"Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"};
+static const char *const vsc_bar_labels[6] = {"EXPL", "SRC", "GH-A", "GHUB", "GPT", "FREE"};
+static const char *const vsc_bar_functions[6] = {"Explorer", "Source control", "GitHub Actions", "GitHub", "ChatGPT", "Unused"};
 static const char *const vsc_bar_commands[6] = {
     "View: Show Explorer",
     "View: Show Source Control",
-    "Terminal: Focus Terminal",
+    "GitHub Actions: Focus on Workflows View",
     "GitHub Pull Requests: Focus on GitHub Pull Requests View",
     "GitHub Copilot Chat: Focus on Chat View",
-    "Tasks: Run Task"
+    ""
 };
 
 static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
@@ -345,53 +301,41 @@ static const char *const vsc_chat_macros[6] = {
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
 static const char *const prompt_base_functions[6] = {"Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"};
 
-static const char *const prompt_pics_labels[6] = {"GEAR", "LETT", "BGEXT", "WALL", "SVG", "MOCK"};
-static const char *const prompt_pics_functions[6] = {"AI Gear", "letter tranform", "background extraction", "Clock on wall", "Clean background", "Mockup creation"};
+static const char *const prompt_pics_labels[6] = {"TAB", "SHOT", "ALT", "SEO", "MOCK", "CHK"};
+static const char *const prompt_pics_functions[6] = {"Picture tab", "Shot list", "Alt text", "SEO image text", "Mockup ideas", "Image QA checklist"};
 static const char *const prompt_pics_macros[6] = {
-    "Create a clean black-and-white vector-style silhouette image of four separate gears arranged in a 2x2 grid on a pure white background. Each gear should be the same size, symmetrical, and visually distinct, with a clean industrial machine aesthetic. The gears must be separate from each other and not interlocking. Design them as filled out black silhouettes with inner cutouts, chambers, and mechanical openings. Keep the overall look orderly, precise, technical, and suitable for SVG conversion and commercial sale. Front-facing flat design, pure black and white only.",
-
-    "Transform to lowercase.",
-
-    "Extract the background and fill whole image with it.",
-
-    "Let the clock hang on a white suble structured concrete wall. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the clock or its perspective",
-
-    "Remove the disturbing objects in the background. take the dark background and replace the whole background with it. Keep lighting, dont add shadows. Make it look as real as possible. Dont change the object in the front or its perspective",
-
-    "Create an Etsy mockup image for this product. Show the product in an appealing setting with good lighting and a complementary background. Include a styled text overlay with the product name and a catchy tagline. Make it look polished and professional, suitable for an online store listing. Do not include any logos, watermarks, or branding elements."
+    "Create a picture-tab plan for this Etsy listing. Propose the ideal image order for the tabs, what each image should show, and the customer goal of each tab.",
+    "Create a concise Etsy product photography shot list for this item. Include hero image, scale shot, detail shots, lifestyle shots, packaging, and any trust-building images.",
+    "Write Etsy-ready alt text for product listing images. Keep each line descriptive, concrete, and accessible, with no keyword stuffing.",
+    "Write image overlay text and SEO-friendly captions for Etsy listing pictures. Keep them short, readable, and conversion-focused.",
+    "Suggest mockup and staging ideas for Etsy listing photos. Focus on believable scenes, useful props, scale clarity, and conversion impact.",
+    "Create an image QA checklist for this Etsy listing. Check clarity, cropping, lighting, consistency, branding, scale communication, and policy-safe content."
 };
 
 static const char *const prompt_etsy_labels[6] = {"TAGS", "TITLE", "DESC", "BULL", "LIST", "SEO"};
 static const char *const prompt_etsy_functions[6] = {"Tag list", "Listing title", "Listing description", "Bullet highlights", "Listing creation", "Etsy SEO pass"};
 static const char *const prompt_etsy_macros[6] = {
-    "Generate Etsy tag ideas for this product. Create high-intent tags, avoid duplicates, vary phrase length, and explain which tags are strongest. Dont overuse broad tags, and dont use competitor or brand names. Focus on descriptive, specific, and relevant keywords that a buyer would search for. list them in one rows seperated by commas.",
-
+    "Generate Etsy tag ideas for this product. Create high-intent tags, avoid duplicates, vary phrase length, and explain which tags are strongest.",
     "Write multiple Etsy listing title options for this product. Optimize for clarity, search intent, and readability instead of stuffing every keyword.",
-
-    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care. Keep in mind Etsy's SEO best practices, character limits, and formatting. Use clear language.",
-
-    "Write concise highlights for this Etsy product listing. Focus on benefits, materials, sizing, personalization, and gift appeal. Use subtraction signs instead of bullet points.",
-
+    "Write an Etsy listing description for this product. Start with a strong buyer-focused opening, then cover features, materials, size, usage, and care.",
+    "Write concise bullet-style highlights for this Etsy product listing. Focus on benefits, materials, sizing, personalization, and gift appeal.",
     "Create a complete Etsy listing draft for this product, including title, description, tags, image plan, and quick notes on pricing or variation structure.",
-
     "Perform an Etsy SEO pass on this listing draft. Improve titles, tags, wording, scannability, and conversion clarity without making it sound spammy."
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
 static const char *const text_action_labels[6] = {"ALL", "COPY", "PASTE", "CUT", "UNDO", "REDO"};
-static const char *const text_edit_labels[6]   = {"ENT", "BSPC", "DEL", "TAB", "SPC", "SHIFT"};
+static const char *const text_edit_labels[6]   = {"ENT", "BSPC", "SPC", "TAB", "SHIFT", "BTN1"};
 
 static const char *const text_win_functions[6]    = {"Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"};
 static const char *const text_action_functions[6] = {"Select all", "Copy", "Paste", "Cut", "Undo", "Redo"};
-static const char *const text_edit_functions[6]   = {"Enter", "Backspace", "Delete", "Tab", "Space", "One-shot Shift"};
+static const char *const text_edit_functions[6]   = {"Enter", "Backspace", "Space", "Tab", "One-shot Shift", "Mouse button 1"};
 
 static const char *const window_win_labels[6]     = {"DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"};
 static const char *const window_browser_labels[6] = {"BACK", "REFR", "FWD", "TAB<", "NEW", "TAB>"};
-static const char *const window_snap_labels[6]    = {"MAX", "UP", "CLOSE", "LEFT", "DOWN", "RGHT"};
 
 static const char *const window_win_functions[6]     = {"Previous desktop", "Task view", "Next desktop", "Previous window", "Show desktop", "Next window"};
 static const char *const window_browser_functions[6] = {"Browser back", "Refresh page", "Browser forward", "Previous tab", "New tab", "Next tab"};
-static const char *const window_snap_functions[6]    = {"Maximize window", "Snap or maximize up", "Close window", "Snap left", "Snap or restore down", "Snap right"};
 
 static const char *const game_nav_labels[6]  = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
 static const char *const game_wasd_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
@@ -401,28 +345,28 @@ static const char *const game_wasd_functions[6] = {"One-shot sprint or crouch", 
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
-    [_WINDOW] = {"SEL",  "BRO",  "SNAP", "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
-    [_TEXT]   = {"SEL",  "ACT",  "EDIT", "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
-    [_MEDIA]  = {"SEL",  "PREV", "NEXT", "VOL-", "PLAY", "VOL+", "RWND", "MUTE", "FFWD"},
-    [_RGB]    = {"SEL",  "MODE", "TOG",   "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
+    [_WINDOW] = {"SEL",  "BRO",  "AUX",  "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
+    [_TEXT]   = {"SEL",  "ACT",  "ENT",  "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
+    [_MEDIA]  = {"SEL",  "PREV", "NEXT", "RWND", "PLAY", "FFWD", "VOL-", "MUTE", "VOL+"},
+    [_RGB]    = {"SEL",  "MOD",  "ADJST", "FREE1", "FREE2", "FREE3", "FREE4", "FX",    "FREE6"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
+    [_VSC]    = {"SEL",  "BAR",  "CHAT", "EXPL", "SRC",  "GH-A", "GHUB", "GPT",  "FREE"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"SEL",  "WIN",  "TXT",  "MED",  "RGB",  "GAME", "VSC",  "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Undo", "Arrow down", "Redo"},
-    [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
-    [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
-    [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
-    [_RGB]    = {"Select layer", "Hold RGB zone controls", "Toggle RGB output", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
+    [_WINDOW] = {"Select layer", "Browser combo", "Reserved", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
+    [_TEXT]   = {"Select layer", "Hold text actions", "Enter", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
+    [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Rewind", "Play/Pause", "Fast forward", "Volume down", "Mute", "Volume up"},
+    [_RGB]    = {"Select layer", "Hold RGB mod layer", "Hold RGB adjust layer", "Free slot", "Free slot", "Free slot", "Free slot", "Toggle FX mode", "Free slot"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
+    [_VSC]    = {"Select layer", "BAR mode", "CHAT mode", "Combo target 1", "Combo target 2", "Combo target 3", "Combo target 4", "Combo target 5", "Combo target 6"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     [_SELECT] = {"Select layer", "Go to window", "Go to text", "Go to media", "Go to RGB", "Go to game", "Go to VSC", "Go to base", "Go to prompt"},
 };
@@ -481,9 +425,7 @@ static text_mode_t current_text_preview_mode(void) {
 }
 
 static window_mode_t current_window_preview_mode(void) {
-    if (window_browser_held) return WINDOW_MODE_BROWSER;
-    if (window_snap_held) return WINDOW_MODE_SNAP;
-    return WINDOW_MODE_WIN;
+    return window_browser_held ? WINDOW_MODE_BROWSER : WINDOW_MODE_WIN;
 }
 
 static game_mode_t current_game_preview_mode(void) {
@@ -493,7 +435,7 @@ static game_mode_t current_game_preview_mode(void) {
 static const char *encoder_function_for_layer(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "Wheel scroll up/down";
-        case _WINDOW: return window_browser_held ? "Browser page prev/next" : (window_snap_held ? "Snap left/right" : "Alt-Tab window switch");
+        case _WINDOW: return window_browser_held ? "Browser page prev/next" : "Alt-Tab window switch";
         case _TEXT:   return encoder_btn_pressed ? "Select text left/right" : "Move cursor left/right";
         case _MEDIA:  return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
@@ -510,7 +452,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
 static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "ACT";
-    if (index == 2) return "EDIT";
+    if (index == 2) return "ENT";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         switch (mode) {
@@ -526,7 +468,7 @@ static const char *text_label_for_mode(text_mode_t mode, uint8_t index) {
 static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Hold text actions";
-    if (index == 2) return "Hold edit tools";
+    if (index == 2) return "Enter";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         switch (mode) {
@@ -542,12 +484,10 @@ static const char *text_function_for_mode(text_mode_t mode, uint8_t index) {
 static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "BRO";
-    if (index == 2) return "SNAP";
+    if (index == 2) return "AUX";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        if (mode == WINDOW_MODE_BROWSER) return window_browser_labels[slot];
-        if (mode == WINDOW_MODE_SNAP) return window_snap_labels[slot];
-        return window_win_labels[slot];
+        return mode == WINDOW_MODE_BROWSER ? window_browser_labels[slot] : window_win_labels[slot];
     }
     return "----";
 }
@@ -555,12 +495,10 @@ static const char *window_label_for_mode(window_mode_t mode, uint8_t index) {
 static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Hold browser controls";
-    if (index == 2) return "Hold snap controls";
+    if (index == 2) return "Reserved for later";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        if (mode == WINDOW_MODE_BROWSER) return window_browser_functions[slot];
-        if (mode == WINDOW_MODE_SNAP) return window_snap_functions[slot];
-        return window_win_functions[slot];
+        return mode == WINDOW_MODE_BROWSER ? window_browser_functions[slot] : window_win_functions[slot];
     }
     return "Unknown";
 }
@@ -569,41 +507,6 @@ static const char *text_label_for(uint8_t index) { return text_label_for_mode(cu
 static const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
 static const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
 static const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
-
-static const char *rgb_label_for_mode(bool mode_held, uint8_t index) {
-    static const char *const normal_labels[PAD_KEY_COUNT] = {
-        "SEL", "ZONE", "TOG",
-        "HUE+", "HUE-", "VAL+",
-        "SAT+", "SAT-", "VAL-"
-    };
-    static const char *const mode_labels[PAD_KEY_COUNT] = {
-        "SEL", "ZONE", "ALL",
-        "FRME", "KEY",  "GAP",
-        "----", "----", "----"
-    };
-
-    if (index >= PAD_KEY_COUNT) return "----";
-    return mode_held ? mode_labels[index] : normal_labels[index];
-}
-
-static const char *rgb_function_for_mode(bool mode_held, uint8_t index) {
-    static const char *const normal_functions[PAD_KEY_COUNT] = {
-        "Select layer", "Hold RGB zone controls", "Toggle RGB output",
-        "Hue up", "Hue down", "Brightness up",
-        "Saturation up", "Saturation down", "Brightness down"
-    };
-    static const char *const mode_functions[PAD_KEY_COUNT] = {
-        "Select layer", "Hold RGB zone controls", "Toggle all LED zones",
-        "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs",
-        "Unused", "Unused", "Unused"
-    };
-
-    if (index >= PAD_KEY_COUNT) return "Unknown";
-    return mode_held ? mode_functions[index] : normal_functions[index];
-}
-
-static const char *rgb_label_for(uint8_t index) { return rgb_label_for_mode(rgb_mode_held, index); }
-static const char *rgb_function_for(uint8_t index) { return rgb_function_for_mode(rgb_mode_held, index); }
 
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
@@ -680,8 +583,8 @@ static const char *prompt_mode_name(prompt_mode_t mode) {
 
 static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
-    if (index == 1) return "NAV";
-    if (index == 2) return "AI";
+    if (index == 1) return "BAR";
+    if (index == 2) return "CHAT";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == VSC_MODE_CHAT ? vsc_chat_labels[slot] : vsc_bar_labels[slot];
@@ -691,8 +594,8 @@ static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
 
 static const char *vsc_function_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Hold VSC navigation";
-    if (index == 2) return "Hold AI prompts";
+    if (index == 1) return "Hold BAR mode";
+    if (index == 2) return "Hold CHAT mode";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == VSC_MODE_CHAT ? vsc_chat_functions[slot] : vsc_bar_functions[slot];
@@ -761,86 +664,7 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
     return 128;
 }
 
-static hsv_config_t gap_palette_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT) {
-        return via_user_config.gap_palette[index];
-    }
-#endif
-    return palette_for_layer(layer);
-}
-
-static rgb_effect_mode_t gap_effect_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.gap_effect[index] < RGB_EFFECT_COUNT) {
-        return (rgb_effect_mode_t)via_user_config.gap_effect[index];
-    }
-#endif
-    return effect_for_layer(layer);
-}
-
-static uint8_t gap_speed_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.gap_speed[index] >= 1) {
-        return via_user_config.gap_speed[index];
-    }
-#endif
-    return effect_speed_for_layer(layer);
-}
-
-static uint16_t gap_effect_period_for_layer(uint8_t layer, uint16_t base_period) {
-    uint8_t speed = gap_speed_for_layer(layer);
-    if (speed < 1) speed = 1;
-    uint32_t period = ((uint32_t)base_period * 128UL) / speed;
-    if (period < 40) period = 40;
-    if (period > 20000) period = 20000;
-    return (uint16_t)period;
-}
-
-static hsv_config_t frame_palette_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT) {
-        return via_user_config.frame_palette[index];
-    }
-#endif
-    return palette_for_layer(layer);
-}
-
-static rgb_effect_mode_t frame_effect_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_effect[index] < RGB_EFFECT_COUNT) {
-        return (rgb_effect_mode_t)via_user_config.frame_effect[index];
-    }
-#endif
-    return RGB_EFFECT_BREATHING;
-}
-
-static uint8_t frame_speed_for_layer(uint8_t layer) {
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_speed[index] >= 1) {
-        return via_user_config.frame_speed[index];
-    }
-#endif
-    return effect_speed_for_layer(layer);
-}
-
-static uint16_t frame_effect_period_for_layer(uint8_t layer, uint16_t base_period) {
-    uint8_t speed = frame_speed_for_layer(layer);
-    if (speed < 1) speed = 1;
-    uint32_t period = ((uint32_t)base_period * 128UL) / speed;
-    if (period < 40) period = 40;
-    if (period > 20000) period = 20000;
-    return (uint16_t)period;
-}
-
 #ifdef RGBLIGHT_ENABLE
-
 static void render_rgb_layer_visuals(void);
 #endif
 
@@ -875,55 +699,7 @@ static void adjust_layer_brightness(uint8_t layer, int16_t delta) {
 #endif
 
 #ifdef RGBLIGHT_ENABLE
-    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
-        render_rgb_layer_visuals();
-    }
-#endif
-}
-
-static void adjust_layer_hue(uint8_t layer, int16_t delta) {
-    uint8_t slot = slot_for_layer(layer);
-    uint8_t value = (uint8_t)(select_slots[slot].hue + delta);
-
-    select_slots[slot].hue = value;
-
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT) {
-        via_user_config.layer_palette[index].hue = value;
-    }
-#endif
-
-#ifdef RGBLIGHT_ENABLE
-    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
-        render_rgb_layer_visuals();
-    }
-#endif
-}
-
-static void adjust_layer_saturation(uint8_t layer, int16_t delta) {
-    uint8_t slot = slot_for_layer(layer);
-    uint16_t value = select_slots[slot].sat;
-
-    if (delta < 0) {
-        uint16_t step = (uint16_t)(-delta);
-        value = value > step ? (value - step) : 0;
-    } else {
-        value += (uint16_t)delta;
-        if (value > UINT8_MAX) value = UINT8_MAX;
-    }
-
-    select_slots[slot].sat = (uint8_t)value;
-
-#ifdef VIA_ENABLE
-    uint8_t index = via_palette_index_for_layer(layer);
-    if (index < VIA_LAYER_SLOT_COUNT) {
-        via_user_config.layer_palette[index].sat = (uint8_t)value;
-    }
-#endif
-
-#ifdef RGBLIGHT_ENABLE
-    if (canonical_rgb_layer(active_layer_raw()) == canonical_rgb_layer(layer)) {
+    if (active_layer_raw() == layer) {
         render_rgb_layer_visuals();
     }
 #endif
@@ -940,6 +716,7 @@ static void apply_palette_entry(uint8_t index) {
 
 static void apply_via_runtime_config(void) {
     oled_view = via_user_config.oled_view == OLED_VIEW_LAST_KEY ? OLED_VIEW_LAST_KEY : OLED_VIEW_LEGEND;
+    rgb_minimal_mode = via_user_config.fx_mode != 0;
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) apply_palette_entry(i);
 }
 
@@ -953,12 +730,6 @@ static void set_via_config_defaults(void) {
         via_user_config.layer_effect[i] = RGB_EFFECT_WILD;
         via_user_config.layer_speed[i] = 128;
         via_user_config.layer_palette[i] = via_default_palette[i];
-        via_user_config.gap_effect[i] = RGB_EFFECT_WILD;
-        via_user_config.gap_speed[i] = 128;
-        via_user_config.gap_palette[i] = via_default_palette[i];
-        via_user_config.frame_effect[i] = RGB_EFFECT_BREATHING;
-        via_user_config.frame_speed[i] = 128;
-        via_user_config.frame_palette[i] = via_default_palette[i];
     }
 
     apply_via_runtime_config();
@@ -981,10 +752,6 @@ static void load_via_config(void) {
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
         if (via_user_config.layer_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
         if (via_user_config.layer_speed[i] < 1) invalid_config = true;
-        if (via_user_config.gap_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
-        if (via_user_config.gap_speed[i] < 1) invalid_config = true;
-        if (via_user_config.frame_effect[i] >= RGB_EFFECT_COUNT) invalid_config = true;
-        if (via_user_config.frame_speed[i] < 1) invalid_config = true;
     }
 
     if (invalid_config) {
@@ -1008,6 +775,7 @@ static void via_config_set_value(uint8_t *data) {
             break;
         case id_via_fx_mode:
             via_user_config.fx_mode = value_data[0] ? 1 : 0;
+            rgb_minimal_mode = via_user_config.fx_mode != 0;
             break;
         case id_via_rgb_effect:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
@@ -1017,48 +785,6 @@ static void via_config_set_value(uint8_t *data) {
         case id_via_layer_effect_speed:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
                 via_user_config.layer_speed[value_data[0]] = value_data[1] < 1 ? 1 : value_data[1];
-            }
-            break;
-        case id_via_gap_effect:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.gap_effect[value_data[0]] = value_data[1] < RGB_EFFECT_COUNT ? value_data[1] : RGB_EFFECT_WILD;
-            }
-            break;
-        case id_via_gap_effect_speed:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.gap_speed[value_data[0]] = value_data[1] < 1 ? 1 : value_data[1];
-            }
-            break;
-        case id_via_gap_color:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.gap_palette[value_data[0]].hue = value_data[1];
-                via_user_config.gap_palette[value_data[0]].sat = value_data[2];
-            }
-            break;
-        case id_via_gap_brightness:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.gap_palette[value_data[0]].val = value_data[1];
-            }
-            break;
-        case id_via_frame_effect:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.frame_effect[value_data[0]] = value_data[1] < RGB_EFFECT_COUNT ? value_data[1] : RGB_EFFECT_BREATHING;
-            }
-            break;
-        case id_via_frame_effect_speed:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.frame_speed[value_data[0]] = value_data[1] < 1 ? 1 : value_data[1];
-            }
-            break;
-        case id_via_frame_color:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.frame_palette[value_data[0]].hue = value_data[1];
-                via_user_config.frame_palette[value_data[0]].sat = value_data[2];
-            }
-            break;
-        case id_via_frame_brightness:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                via_user_config.frame_palette[value_data[0]].val = value_data[1];
             }
             break;
         case id_via_layer_color:
@@ -1096,50 +822,6 @@ static void via_config_get_value(uint8_t *data) {
         case id_via_layer_effect_speed:
             if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
                 value_data[1] = via_user_config.layer_speed[value_data[0]];
-            }
-            break;
-        case id_via_gap_effect:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.gap_effect[value_data[0]];
-            }
-            break;
-        case id_via_gap_effect_speed:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.gap_speed[value_data[0]];
-            }
-            break;
-        case id_via_gap_color:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                uint8_t index = value_data[0];
-                value_data[1] = via_user_config.gap_palette[index].hue;
-                value_data[2] = via_user_config.gap_palette[index].sat;
-            }
-            break;
-        case id_via_gap_brightness:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.gap_palette[value_data[0]].val;
-            }
-            break;
-        case id_via_frame_effect:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.frame_effect[value_data[0]];
-            }
-            break;
-        case id_via_frame_effect_speed:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.frame_speed[value_data[0]];
-            }
-            break;
-        case id_via_frame_color:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                uint8_t index = value_data[0];
-                value_data[1] = via_user_config.frame_palette[index].hue;
-                value_data[2] = via_user_config.frame_palette[index].sat;
-            }
-            break;
-        case id_via_frame_brightness:
-            if (value_data[0] < VIA_LAYER_SLOT_COUNT) {
-                value_data[1] = via_user_config.frame_palette[value_data[0]].val;
             }
             break;
         case id_via_layer_color:
@@ -1198,7 +880,6 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (layer == _TEXT) return text_label_for(index);
     if (layer == _WINDOW) return window_label_for(index);
-    if (layer == _RGB) return rgb_label_for(index);
     if (layer == _DEV) return game_label_for(index);
     if (layer == _VSC) return vsc_label_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_label_for(index);
@@ -1210,7 +891,6 @@ static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (layer == _TEXT) return text_function_for(index);
     if (layer == _WINDOW) return window_function_for(index);
-    if (layer == _RGB) return rgb_function_for(index);
     if (layer == _DEV) return game_function_for(index);
     if (layer == _VSC) return vsc_function_for(current_vsc_preview_mode(), index);
     if (layer == _PROMPT) return prompt_function_for(index);
@@ -1222,7 +902,6 @@ static const char *last_key_label_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
     if (last_key_layer == _TEXT) return text_label_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_label_for_mode(last_key_window_mode, index);
-    if (last_key_layer == _RGB) return rgb_label_for_mode(last_key_rgb_mode, index);
     if (last_key_layer == _DEV) return game_label_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_label_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_label_for_mode(last_key_prompt_mode, index);
@@ -1234,7 +913,6 @@ static const char *last_key_function_for(void) {
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
     if (last_key_layer == _TEXT) return text_function_for_mode(last_key_text_mode, index);
     if (last_key_layer == _WINDOW) return window_function_for_mode(last_key_window_mode, index);
-    if (last_key_layer == _RGB) return rgb_function_for_mode(last_key_rgb_mode, index);
     if (last_key_layer == _DEV) return game_function_for_mode(last_key_game_mode, index);
     if (last_key_layer == _VSC) return vsc_function_for(last_key_vsc_mode, index);
     if (last_key_layer == _PROMPT) return prompt_function_for_mode(last_key_prompt_mode, index);
@@ -1296,10 +974,10 @@ static void tap_text_target(uint8_t slot) {
             switch (slot) {
                 case 0: tap_code(KC_ENT); break;
                 case 1: tap_code(KC_BSPC); break;
-                case 2: tap_code(KC_DEL); break;
+                case 2: tap_code(KC_SPC); break;
                 case 3: tap_code(KC_TAB); break;
-                case 4: tap_code(KC_SPC); break;
-                case 5: set_oneshot_mods(MOD_LSFT); break;
+                case 4: set_oneshot_mods(MOD_LSFT); break;
+                case 5: tap_code(MS_BTN1); break;
             }
             break;
 
@@ -1328,18 +1006,6 @@ static void tap_window_target(uint8_t slot) {
             case 3: tap_code16(C(S(KC_TAB))); break;
             case 4: tap_code16(C(KC_T)); break;
             case 5: tap_code16(C(KC_TAB)); break;
-        }
-        return;
-    }
-
-    if (current_window_preview_mode() == WINDOW_MODE_SNAP) {
-        switch (slot) {
-            case 0: tap_code16(G(KC_UP)); break;
-            case 1: tap_code16(G(KC_UP)); break;
-            case 2: tap_code16(A(KC_F4)); break;
-            case 3: tap_code16(G(KC_LEFT)); break;
-            case 4: tap_code16(G(KC_DOWN)); break;
-            case 5: tap_code16(G(KC_RGHT)); break;
         }
         return;
     }
@@ -1394,7 +1060,7 @@ static uint8_t pulse_val(uint32_t now, uint16_t period, uint8_t phase, uint8_t m
 
 
 static bool led_is_frame(uint8_t led_index) {
-    return led_index >= RGB_FRAME_LED_FIRST;
+    return led_index >= RGB_CORE_LED_COUNT;
 }
 
 static bool led_is_gap(uint8_t led_index) {
@@ -1403,19 +1069,11 @@ static bool led_is_gap(uint8_t led_index) {
     return col == 1 || col == 3;
 }
 
-static bool led_is_mapped_key(uint8_t led_index) {
+static bool led_is_key(uint8_t led_index) {
     if (led_is_frame(led_index)) return false;
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
         if (key_led_map[i] == led_index) return true;
     }
-    return false;
-}
-
-static bool rgb_zone_enabled_for_led(uint8_t led_index) {
-    if (!rgb_output_enabled) return false;
-    if (led_index >= RGB_FRAME_LED_FIRST) return (rgb_zone_mask & RGB_ZONE_FRAME) != 0;
-    if (led_is_gap(led_index)) return (rgb_zone_mask & RGB_ZONE_GAP) != 0;
-    if (led_is_mapped_key(led_index)) return (rgb_zone_mask & RGB_ZONE_KEY) != 0;
     return false;
 }
 
@@ -1446,274 +1104,37 @@ static uint8_t ping_pong_index(uint32_t now, uint16_t period_ms, uint8_t count, 
     return (uint8_t)(((uint16_t)triwave8_period(now, period_ms, phase) * (count - 1)) / 255);
 }
 
-static void toggle_rgb_zone_bits(uint8_t zone_bits) {
-    rgb_zone_mask ^= zone_bits;
-
-#ifdef RGBLIGHT_ENABLE
-    render_rgb_layer_visuals();
-#endif
+static uint8_t rgb_group_for_led(uint8_t led_index) {
+    if (led_is_frame(led_index)) return RGB_GROUP_FRAME;
+    return led_is_key(led_index) ? RGB_GROUP_KEYS : RGB_GROUP_GAPS;
 }
 
-static void toggle_rgb_all_zones(void) {
-    rgb_zone_mask = rgb_zone_mask == RGB_ZONE_ALL ? 0 : RGB_ZONE_ALL;
-
-#ifdef RGBLIGHT_ENABLE
-    render_rgb_layer_visuals();
-#endif
+static bool rgb_led_group_enabled(uint8_t led_index) {
+    return (rgb_visible_groups & rgb_group_for_led(led_index)) != 0;
 }
 
-static void toggle_rgb_output_state(void) {
-    rgb_output_enabled = !rgb_output_enabled;
+static void toggle_rgb_groups(uint8_t mask) {
+    rgb_visible_groups ^= mask;
+}
 
-#ifdef RGBLIGHT_ENABLE
-    render_rgb_layer_visuals();
-#endif
+static void toggle_rgb_all_groups(void) {
+    rgb_visible_groups = rgb_visible_groups == RGB_GROUP_ALL ? 0 : RGB_GROUP_ALL;
 }
 
 #ifdef RGBLIGHT_ENABLE
-static bool rgb_rendering_frame = false;
+static void flush_led_frame(void) {
+    rgblight_driver.flush();
+}
 
 static void set_led_hsv(uint8_t led_index, uint8_t h, uint8_t s, uint8_t v) {
     if (led_index >= RGBLIGHT_LED_COUNT) return;
-
-    bool is_frame = led_is_frame(led_index);
-    if (is_frame && !rgb_rendering_frame) return;
-    if (!is_frame && rgb_rendering_frame) return;
-
-    if (!rgb_zone_enabled_for_led(led_index)) {
+    if (!rgb_led_group_enabled(led_index)) {
         rgblight_driver.set_color(led_index, 0, 0, 0);
         return;
     }
-
     if (v > RGBLIGHT_LIMIT_VAL) v = RGBLIGHT_LIMIT_VAL;
     rgb_t rgb = hsv_to_rgb((hsv_t){h, s, v});
     rgblight_driver.set_color(led_index, rgb.r, rgb.g, rgb.b);
-}
-
-static void clear_frame_light(void) {
-    rgb_rendering_frame = true;
-    for (uint8_t i = 0; i < RGB_FRAME_LED_COUNT; i++) {
-        set_led_hsv(RGB_FRAME_LED_FIRST + i, 0, 0, 0);
-    }
-    rgb_rendering_frame = false;
-}
-
-static void clear_gap_light(void) {
-    for (uint8_t i = 0; i < RGB_GAP_LED_COUNT; i++) {
-        set_led_hsv(gap_led_map[i], 0, 0, 0);
-    }
-}
-
-static void render_gap_light_group(void) {
-    uint8_t layer = canonical_rgb_layer(active_layer_raw());
-    rgb_effect_mode_t effect = gap_effect_for_layer(layer);
-    hsv_config_t p = gap_palette_for_layer(layer);
-    uint32_t now = timer_read32();
-
-    if (!rgb_output_enabled || !(rgb_zone_mask & RGB_ZONE_GAP) || effect == RGB_EFFECT_OFF) {
-        clear_gap_light();
-        return;
-    }
-
-    uint16_t slow = gap_effect_period_for_layer(layer, 1800);
-    uint16_t fast = gap_effect_period_for_layer(layer, 650);
-    uint8_t head = (now / (fast / RGB_GAP_LED_COUNT + 1)) % RGB_GAP_LED_COUNT;
-    uint8_t scan = ping_pong_index(now, slow, RGB_GAP_LED_COUNT, 0);
-
-    for (uint8_t i = 0; i < RGB_GAP_LED_COUNT; i++) {
-        uint8_t led = gap_led_map[i];
-        uint8_t hue = p.hue;
-        uint8_t sat = p.sat;
-        uint8_t val = palette_floor(p.val / 18, 4);
-        uint8_t d;
-
-        switch (effect) {
-            case RGB_EFFECT_SOLID:
-                val = palette_floor((p.val * 3) / 4, 16);
-                break;
-
-            case RGB_EFFECT_BREATHING:
-                val = pulse_val(now, slow, i * 42, palette_floor(p.val / 12, 5), palette_floor((p.val * 3) / 4, 18));
-                break;
-
-            case RGB_EFFECT_RUNNING:
-            case RGB_EFFECT_PACKET:
-            case RGB_EFFECT_COMET:
-                d = wrap_distance(i, head, RGB_GAP_LED_COUNT);
-                if (d == 0) val = palette_floor((p.val * 4) / 5, 24);
-                else if (d == 1) val = palette_floor(p.val / 2, 12);
-                else val = palette_floor(p.val / 22, 3);
-                break;
-
-            case RGB_EFFECT_TWINKLE:
-                val = palette_floor(p.val / 20, 4);
-                val = clamp_add_u8(val, triwave8_period(now, 900 + i * 67, i * 37) / 6);
-                if ((((now / 190) + i * 7) % 17) == 0) val = palette_floor((p.val * 4) / 5, 24);
-                break;
-
-            case RGB_EFFECT_PULSE:
-            case RGB_EFFECT_BLOOM:
-            case RGB_EFFECT_VISUALIZER:
-                val = pulse_val(now, slow, i * 36, palette_floor(p.val / 14, 5), palette_floor((p.val * 4) / 5, 20));
-                val = clamp_add_u8(val, triwave8_period(now, fast + i * 19, i * 23) / 10);
-                break;
-
-            case RGB_EFFECT_SCAN:
-            case RGB_EFFECT_NAV_BLINK:
-            case RGB_EFFECT_SWEEP:
-                d = distance_u8(i, scan);
-                if (d == 0) val = palette_floor((p.val * 4) / 5, 24);
-                else if (d == 1) val = palette_floor(p.val / 2, 12);
-                else val = palette_floor(p.val / 24, 3);
-                break;
-
-            case RGB_EFFECT_RAINBOW:
-                hue = (uint8_t)((now * 255UL) / gap_effect_period_for_layer(layer, 2800)) + i * 31;
-                sat = 255;
-                val = pulse_val(now, slow, i * 19, palette_floor(p.val / 5, 16), palette_floor((p.val * 3) / 4, 20));
-                break;
-
-            case RGB_EFFECT_STACK:
-            case RGB_EFFECT_TYPEWRITER:
-                {
-                    uint16_t period = gap_effect_period_for_layer(layer, 1400);
-                    uint8_t filled = ((now % period) * (RGB_GAP_LED_COUNT + 1)) / period;
-                    bool reverse = ((now / period) % 2) != 0;
-                    uint8_t pos = reverse ? (RGB_GAP_LED_COUNT - 1 - i) : i;
-                    val = pos < filled ? palette_floor((p.val * 2) / 3, 18) : palette_floor(p.val / 24, 3);
-                    if (pos == filled && filled < RGB_GAP_LED_COUNT) val = palette_floor((p.val * 4) / 5, 24);
-                }
-                break;
-
-            case RGB_EFFECT_PONG:
-                d = distance_u8(i, scan);
-                if (d == 0) val = palette_floor((p.val * 4) / 5, 24);
-                else if (d == 1) val = palette_floor(p.val / 2, 12);
-                else val = palette_floor(p.val / 26, 3);
-                break;
-
-            case RGB_EFFECT_WILD:
-            default:
-                val = pulse_val(now, slow, i * 53, palette_floor(p.val / 16, 4), palette_floor((p.val * 3) / 4, 18));
-                val = clamp_add_u8(val, triwave8_period(now, fast + i * 31, i * 43) / 10);
-                break;
-        }
-
-        set_led_hsv(led, hue, sat, val);
-    }
-}
-
-static void render_frame_light_group(void) {
-    uint8_t layer = canonical_rgb_layer(active_layer_raw());
-    rgb_effect_mode_t effect = frame_effect_for_layer(layer);
-    hsv_config_t p = frame_palette_for_layer(layer);
-    uint32_t now = timer_read32();
-
-    if (RGB_FRAME_LED_COUNT == 0) return;
-
-    if (!rgb_output_enabled || !(rgb_zone_mask & RGB_ZONE_FRAME) || effect == RGB_EFFECT_OFF) {
-        clear_frame_light();
-        return;
-    }
-
-    uint16_t slow = frame_effect_period_for_layer(layer, 2400);
-    uint16_t fast = frame_effect_period_for_layer(layer, 900);
-    uint8_t head = (now / (fast / RGB_FRAME_LED_COUNT + 1)) % RGB_FRAME_LED_COUNT;
-    uint8_t scan = ping_pong_index(now, slow, RGB_FRAME_LED_COUNT, 0);
-
-    rgb_rendering_frame = true;
-
-    for (uint8_t i = 0; i < RGB_FRAME_LED_COUNT; i++) {
-        uint8_t hue = p.hue;
-        uint8_t sat = p.sat;
-        uint8_t val = palette_floor(p.val / 18, 4);
-        uint8_t d;
-
-        switch (effect) {
-            case RGB_EFFECT_SOLID:
-                val = p.val;
-                break;
-
-            case RGB_EFFECT_BREATHING:
-                val = pulse_val(now, slow, i * 3, palette_floor(p.val / 10, 6), p.val);
-                break;
-
-            case RGB_EFFECT_RUNNING:
-            case RGB_EFFECT_PACKET:
-            case RGB_EFFECT_COMET:
-                d = wrap_distance(i, head, RGB_FRAME_LED_COUNT);
-                if (d == 0) val = p.val;
-                else if (d == 1) val = palette_floor((p.val * 3) / 4, 24);
-                else if (d == 2) val = palette_floor(p.val / 2, 16);
-                else if (d == 3) val = palette_floor(p.val / 4, 8);
-                else val = palette_floor(p.val / 24, 3);
-                break;
-
-            case RGB_EFFECT_TWINKLE:
-                val = palette_floor(p.val / 20, 4);
-                val = clamp_add_u8(val, triwave8_period(now, 1100 + i * 37, i * 19) / 7);
-                if ((((now / 170) + i * 11) % 29) == 0) val = p.val;
-                break;
-
-            case RGB_EFFECT_PULSE:
-            case RGB_EFFECT_BLOOM:
-            case RGB_EFFECT_VISUALIZER:
-                val = pulse_val(now, slow, i * 7, palette_floor(p.val / 14, 5), p.val);
-                val = clamp_add_u8(val, triwave8_period(now, fast + i * 13, i * 17) / 9);
-                break;
-
-            case RGB_EFFECT_SCAN:
-            case RGB_EFFECT_NAV_BLINK:
-            case RGB_EFFECT_SWEEP:
-                d = distance_u8(i, scan);
-                if (d == 0) val = p.val;
-                else if (d == 1) val = palette_floor((p.val * 2) / 3, 18);
-                else if (d == 2) val = palette_floor(p.val / 3, 10);
-                else val = palette_floor(p.val / 24, 3);
-                break;
-
-            case RGB_EFFECT_RAINBOW:
-                hue = (uint8_t)((now * 255UL) / frame_effect_period_for_layer(layer, 3400)) + i * 3;
-                sat = 255;
-                val = pulse_val(now, slow, i * 5, palette_floor(p.val / 5, 16), p.val);
-                break;
-
-            case RGB_EFFECT_STACK:
-            case RGB_EFFECT_TYPEWRITER:
-                {
-                    uint16_t period = frame_effect_period_for_layer(layer, 1900);
-                    uint8_t filled = ((now % period) * (RGB_FRAME_LED_COUNT + 1)) / period;
-                    bool reverse = ((now / period) % 2) != 0;
-                    uint8_t pos = reverse ? (RGB_FRAME_LED_COUNT - 1 - i) : i;
-                    val = pos < filled ? palette_floor((p.val * 3) / 4, 20) : palette_floor(p.val / 24, 3);
-                    if (pos == filled && filled < RGB_FRAME_LED_COUNT) val = p.val;
-                }
-                break;
-
-            case RGB_EFFECT_PONG:
-                d = distance_u8(i, scan);
-                if (d == 0) val = p.val;
-                else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
-                else val = palette_floor(p.val / 26, 3);
-                break;
-
-            case RGB_EFFECT_WILD:
-            default:
-                val = pulse_val(now, slow, i * 9, palette_floor(p.val / 12, 6), palette_floor((p.val * 5) / 6, 32));
-                val = clamp_add_u8(val, triwave8_period(now, fast + i * 23, i * 31) / 10);
-                break;
-        }
-
-        set_led_hsv(RGB_FRAME_LED_FIRST + i, hue, sat, val);
-    }
-
-    rgb_rendering_frame = false;
-}
-
-static void flush_led_frame(void) {
-    render_gap_light_group();
-    render_frame_light_group();
-    rgblight_driver.flush();
 }
 
 static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v) {
@@ -1730,6 +1151,25 @@ static void clear_all_keys(void) {
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         set_led_hsv(i, 0, 0, 0);
     }
+}
+
+static void render_minimal_profile(uint8_t layer) {
+    clear_all_keys();
+
+    if (layer == _SELECT) {
+        uint8_t target_slot = slot_for_layer(selector_target);
+        const select_slot_t *slot = &select_slots[target_slot];
+        uint8_t val = pulse_val(timer_read32(), 2200, 0, 14, 96);
+        set_key_hsv(target_slot, slot->hue, slot->sat, val);
+        flush_led_frame();
+        return;
+    }
+
+    uint8_t slot = slot_for_layer(layer);
+    const select_slot_t *info = &select_slots[slot];
+    uint8_t val = pulse_val(timer_read32(), 2400, 0, 12, 90);
+    set_key_hsv(slot, info->hue, info->sat, val);
+    flush_led_frame();
 }
 
 static void render_base_wild(void) {
@@ -2193,149 +1633,6 @@ static void render_effect_stack(uint8_t layer) {
     flush_led_frame();
 }
 
-static void render_effect_nav_blink(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    static const uint8_t seq[] = {1, 6, 3, 8, 11, 13, 6, 1};
-    uint16_t period = effect_period_for_layer(layer, 1350);
-    uint8_t step = (now / (period / sizeof(seq) + 1)) % sizeof(seq);
-    uint8_t active = seq[step];
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t val = led_is_gap(i) ? palette_floor(p.val / 20, 4) : palette_floor(p.val / 36, 2);
-        if (i == active) {
-            val = pulse_val(now, 300, 0, palette_floor((p.val * 2) / 3, 28), p.val);
-        } else if (led_is_gap(i) && distance_u8(led_row_index(i), led_row_index(active)) <= 1) {
-            val = palette_floor(p.val / 5, 12);
-        }
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_typewriter(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    uint16_t period = effect_period_for_layer(layer, 2100);
-    uint16_t t = now % period;
-    uint8_t typed = 0;
-    uint16_t cursor = 0;
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint16_t beat = 80 + ((i * 37) % 45);
-        if (i == 5 || i == 10) beat += 170;
-        if (t >= cursor + beat) typed = i + 1;
-        cursor += beat;
-    }
-
-    if (t > cursor) typed = RGB_KEYFIELD_LED_COUNT;
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t val = 0;
-        if (i < typed) val = led_is_gap(i) ? palette_floor(p.val / 5, 10) : palette_floor((p.val * 2) / 5, 18);
-        if (i == typed && typed < RGB_KEYFIELD_LED_COUNT) val = pulse_val(now, 260, i * 13, palette_floor((p.val * 2) / 3, 26), p.val);
-        if (typed >= RGB_KEYFIELD_LED_COUNT && t > cursor + 300) val = scale_val(val, 100);
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_visualizer(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-
-    for (uint8_t row = 0; row < 3; row++) {
-        uint8_t wave_a = triwave8_period(now, effect_period_for_layer(layer, 620 + row * 170), row * 41);
-        uint8_t wave_b = triwave8_period(now, effect_period_for_layer(layer, 1030 + row * 210), 170 - row * 37);
-        uint8_t meter = (uint8_t)(((uint16_t)((wave_a + wave_b) / 2) * 5) / 255);
-        bool kick = ((now / (240 + row * 43)) % 7) == 0;
-
-        for (uint8_t col = 0; col < 5; col++) {
-            uint8_t led = row * 5 + col;
-            uint8_t val = palette_floor(p.val / 22, 4);
-            if (col <= meter) val = palette_floor(scale_val(p.val, 220 - col * 26), 18);
-            if (kick && col == 2) val = p.val;
-            if (led_is_gap(led)) val = scale_val(val, 150);
-            set_led_hsv(led, p.hue, p.sat, val);
-        }
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_pong(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    uint8_t x = ping_pong_index(now, effect_period_for_layer(layer, 1450), 5, 0);
-    uint8_t y = ping_pong_index(now, effect_period_for_layer(layer, 1050), 3, 96);
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t d = distance_u8(led_col_index(i), x) + distance_u8(led_row_index(i), y);
-        uint8_t val = palette_floor(p.val / 28, 3);
-        if (d == 0) val = p.val;
-        else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
-        else if (d == 2) val = palette_floor(p.val / 4, 8);
-        if (led_is_gap(i)) val = scale_val(val, 150);
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_packet(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    uint16_t period = effect_period_for_layer(layer, 1250);
-    uint8_t packet = (now / (period / RGB_KEYFIELD_LED_COUNT + 1)) % RGB_KEYFIELD_LED_COUNT;
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t d = wrap_distance(i, packet, RGB_KEYFIELD_LED_COUNT);
-        uint8_t val = palette_floor(p.val / 24, 4);
-        if (d == 0) val = p.val;
-        else if (d == 1) val = palette_floor((p.val * 3) / 5, 18);
-        else if (d == 2) val = palette_floor(p.val / 4, 8);
-        if (led_is_gap(i)) val = scale_val(val, 165);
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_bloom(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    uint8_t bloom = triwave8_period(now, effect_period_for_layer(layer, 1800), 0);
-    uint8_t dot = (now / (effect_period_for_layer(layer, 420) / 3 + 1)) % 3;
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t dist = distance_u8(led_row_index(i), 1) + distance_u8(led_col_index(i), 2);
-        int16_t energy = (int16_t)bloom - (int16_t)(dist * 42);
-        uint8_t val = energy > 0 ? palette_floor((uint8_t)energy, 8) : palette_floor(p.val / 28, 3);
-        if ((i == 5 + dot * 2) || (i == 6 + dot * 2)) val = clamp_add_u8(val, p.val / 3);
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
-static void render_effect_sweep(uint8_t layer) {
-    uint32_t now = timer_read32();
-    hsv_config_t p = palette_for_layer(layer);
-    uint8_t row_head = ping_pong_index(now, effect_period_for_layer(layer, 2200), 3, 0);
-
-    for (uint8_t i = 0; i < RGB_KEYFIELD_LED_COUNT; i++) {
-        uint8_t d = distance_u8(led_row_index(i), row_head);
-        uint8_t val = pulse_val(now, effect_period_for_layer(layer, 2600), led_row_index(i) * 72, palette_floor(p.val / 18, 4), p.val);
-        if (d > 0) val = scale_val(val, d == 1 ? 130 : 70);
-        val = clamp_add_u8(val, triwave8_period(now, 1600 + i * 43, i * 29) / 11);
-        set_led_hsv(i, p.hue, p.sat, val);
-    }
-
-    flush_led_frame();
-}
-
 static void render_rgb_layer_visuals(void) {
     uint8_t layer = canonical_rgb_layer(active_layer_raw());
     rgb_effect_mode_t effect = effect_for_layer(layer);
@@ -2343,6 +1640,11 @@ static void render_rgb_layer_visuals(void) {
     if (effect == RGB_EFFECT_OFF) {
         clear_all_keys();
         flush_led_frame();
+        return;
+    }
+
+    if (rgb_minimal_mode) {
+        render_minimal_profile(layer);
         return;
     }
 
@@ -2354,15 +1656,8 @@ static void render_rgb_layer_visuals(void) {
         case RGB_EFFECT_SOLID:     render_effect_solid(layer);     return;
         case RGB_EFFECT_COMET:     render_effect_comet(layer);     return;
         case RGB_EFFECT_SCAN:      render_effect_scan(layer);      return;
-        case RGB_EFFECT_RAINBOW:    render_effect_rainbow(layer);    return;
-        case RGB_EFFECT_STACK:      render_effect_stack(layer);      return;
-        case RGB_EFFECT_NAV_BLINK:  render_effect_nav_blink(layer);  return;
-        case RGB_EFFECT_TYPEWRITER: render_effect_typewriter(layer); return;
-        case RGB_EFFECT_VISUALIZER: render_effect_visualizer(layer); return;
-        case RGB_EFFECT_PONG:       render_effect_pong(layer);       return;
-        case RGB_EFFECT_PACKET:     render_effect_packet(layer);     return;
-        case RGB_EFFECT_BLOOM:      render_effect_bloom(layer);      return;
-        case RGB_EFFECT_SWEEP:      render_effect_sweep(layer);      return;
+        case RGB_EFFECT_RAINBOW:   render_effect_rainbow(layer);   return;
+        case RGB_EFFECT_STACK:     render_effect_stack(layer);     return;
         case RGB_EFFECT_WILD:
         default:
             break;
@@ -2386,9 +1681,9 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT), KC_UP,       KC_BSPC,
+        MO(_SELECT), KC_HOME,     KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
-        LCTL(KC_Z),  KC_DOWN,     LCTL(KC_Y)
+        LCTL(KC_Y),  KC_END,      LCTL(KC_Z)
     ),
     [_WINDOW] = LAYOUT(
         MO(_SELECT), WIN_BRO, WIN_AUX,
@@ -2396,29 +1691,29 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         WIN_4,       WIN_5,   WIN_6
     ),
     [_TEXT] = LAYOUT(
-        MO(_SELECT), TXT_ACT, TXT_EDT,
+        MO(_SELECT), TXT_ACT, KC_ENT,
         TXT_1,       TXT_2,   TXT_3,
         TXT_4,       TXT_5,   TXT_6
     ),
     [_MEDIA] = LAYOUT(
         MO(_SELECT), KC_MPRV, KC_MNXT,
-        KC_VOLD,     KC_MPLY, KC_VOLU,
-        KC_MRWD,     KC_MUTE, KC_MFFD
+        KC_MRWD,     KC_MPLY, KC_MFFD,
+        KC_VOLD,     KC_MUTE, KC_VOLU
     ),
     [_RGB] = LAYOUT(
-        MO(_SELECT), RGB_MODE, RGB_TOG,
-        RGB_HUEU,    RGB_HUED, RGB_VALU,
-        RGB_SATU,    RGB_SATD, RGB_VALD
+        MO(_SELECT), MO(_RGBMOD), MO(_RGBADJ),
+        KC_NO,       KC_NO,       KC_NO,
+        KC_NO,       RGB_PROFILE, KC_NO
     ),
     [_RGBMOD] = LAYOUT(
-        MO(_SELECT), KC_TRNS, KC_NO,
-        KC_NO,       KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO
+        MO(_SELECT), KC_TRNS,        RGB_MOD_ALL,
+        RGB_MOD_FRAME, RGB_MOD_KEYS, RGB_MOD_GAPS,
+        KC_NO,         KC_NO,        KC_NO
     ),
     [_RGBADJ] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_TRNS,
-        KC_NO,       KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO
+        MO(_SELECT), UG_SPDD,     KC_TRNS,
+        UG_VALD,     UG_HUEU,     UG_HUED,
+        UG_VALU,     UG_SATU,     UG_SATD
     ),
     [_DEV] = LAYOUT(
         MO(_SELECT), GM_NAV,  GM_WASD,
@@ -2465,9 +1760,9 @@ static void select_target_layer(uint8_t layer) {
     selector_target = layer;
     select_cursor = slot_for_layer(selector_target);
 
-    if (!matrix_select_held) {
-        layer_move(selector_target);
-    }
+    // SEL_* keycodes are selector targets only. The actual layer switch happens
+    // when the physical SEL/MO(_SELECT) key is released. This prevents accidental
+    // layer jumps if a SEL_* keycode is triggered without holding SEL.
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -2503,7 +1798,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_col = record->event.key.col;
         last_key_text_mode = current_text_preview_mode();
         last_key_window_mode = current_window_preview_mode();
-        last_key_rgb_mode = rgb_mode_held;
         last_key_game_mode = current_game_preview_mode();
         last_key_vsc_mode = current_vsc_preview_mode();
         last_key_prompt_mode = prompt_mode;
@@ -2514,67 +1808,53 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) select_target_layer(_BASE);
             return false;
 
-        case RGB_MODE:
-            rgb_mode_held = record->event.pressed;
-            return false;
-
-        case RGB_TOG:
+        case RGB_MOD_ALL:
             if (record->event.pressed) {
-                if (rgb_mode_held) {
-                    toggle_rgb_all_zones();
-                } else {
-                    toggle_rgb_output_state();
-                }
+                toggle_rgb_all_groups();
+#ifdef RGBLIGHT_ENABLE
+                render_rgb_layer_visuals();
+#endif
             }
             return false;
 
-        case RGB_HUEU:
+        case RGB_MOD_FRAME:
             if (record->event.pressed) {
-                if (rgb_mode_held) {
-                    toggle_rgb_zone_bits(RGB_ZONE_FRAME);
-                } else {
-                    adjust_layer_hue(_RGB, RGBLIGHT_HUE_STEP);
-                }
+                toggle_rgb_groups(RGB_GROUP_FRAME);
+#ifdef RGBLIGHT_ENABLE
+                render_rgb_layer_visuals();
+#endif
             }
             return false;
 
-        case RGB_HUED:
+        case RGB_MOD_KEYS:
             if (record->event.pressed) {
-                if (rgb_mode_held) {
-                    toggle_rgb_zone_bits(RGB_ZONE_KEY);
-                } else {
-                    adjust_layer_hue(_RGB, -RGBLIGHT_HUE_STEP);
-                }
+                toggle_rgb_groups(RGB_GROUP_KEYS);
+#ifdef RGBLIGHT_ENABLE
+                render_rgb_layer_visuals();
+#endif
             }
             return false;
 
-        case RGB_VALU:
+        case RGB_MOD_GAPS:
             if (record->event.pressed) {
-                if (rgb_mode_held) {
-                    toggle_rgb_zone_bits(RGB_ZONE_GAP);
-                } else {
-                    adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
-                }
+                toggle_rgb_groups(RGB_GROUP_GAPS);
+#ifdef RGBLIGHT_ENABLE
+                render_rgb_layer_visuals();
+#endif
             }
             return false;
 
-        case RGB_VALD:
-            if (record->event.pressed && !rgb_mode_held) {
+        case UG_VALU:
+            if (record->event.pressed && canonical_rgb_layer(active_layer_raw()) == _RGB) {
+                adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
+            }
+            return true;
+
+        case UG_VALD:
+            if (record->event.pressed && canonical_rgb_layer(active_layer_raw()) == _RGB) {
                 adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
             }
-            return false;
-
-        case RGB_SATU:
-            if (record->event.pressed && !rgb_mode_held) {
-                adjust_layer_saturation(_RGB, RGBLIGHT_SAT_STEP);
-            }
-            return false;
-
-        case RGB_SATD:
-            if (record->event.pressed && !rgb_mode_held) {
-                adjust_layer_saturation(_RGB, -RGBLIGHT_SAT_STEP);
-            }
-            return false;
+            return true;
 
         case SEL_WINDOW:
             if (record->event.pressed) select_target_layer(_WINDOW);
@@ -2647,7 +1927,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case WIN_AUX:
-            window_snap_held = record->event.pressed;
             return false;
 
         case WIN_1:
@@ -2705,6 +1984,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) trigger_vsc_target((uint8_t)(keycode - VSC_1));
             return false;
 
+        case RGB_PROFILE:
+            if (record->event.pressed) rgb_minimal_mode = !rgb_minimal_mode;
+            return false;
     }
 
     return true;
@@ -2721,8 +2003,6 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         case _WINDOW:
             if (current_window_preview_mode() == WINDOW_MODE_BROWSER) {
                 tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
-            } else if (current_window_preview_mode() == WINDOW_MODE_SNAP) {
-                tap_code16(clockwise ? G(KC_RGHT) : G(KC_LEFT));
             } else if (clockwise) {
                 tap_code16(A(KC_TAB));
             } else {
@@ -2747,7 +2027,13 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
 
         case _RGB:
         case _RGBMOD:
-        case _RGBADJ:
+#ifdef RGBLIGHT_ENABLE
+            if (clockwise) {
+                rgblight_increase_val_noeeprom();
+            } else {
+                rgblight_decrease_val_noeeprom();
+            }
+#endif
             adjust_layer_brightness(_RGB, clockwise ? RGBLIGHT_VAL_STEP : -RGBLIGHT_VAL_STEP);
             break;
 
@@ -2936,21 +2222,21 @@ static void render_header(uint8_t layer) {
     char line[22];
 
     if (layer == _SELECT) {
-        snprintf(line, sizeof(line), "SEL->%-10.10s", layer_name_short(selector_target));
+        snprintf(line, sizeof(line), "SEL->%-6.6s FX:%s", layer_name_short(selector_target), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
+        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _DEV) {
-        snprintf(line, sizeof(line), "GME %-4s", game_mode_name(game_mode));
+        snprintf(line, sizeof(line), "GME %-4s FX:%s", game_mode_name(game_mode), rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _WINDOW && window_browser_held) {
-        snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
+        snprintf(line, sizeof(line), "%-7s FX:%s", "WIN BRO", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT && text_action_held) {
-        snprintf(line, sizeof(line), "%-10.10s", "TXT ACT");
+        snprintf(line, sizeof(line), "%-7s FX:%s", "TXT ACT", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _TEXT && text_edit_held) {
-        snprintf(line, sizeof(line), "%-10.10s", "TXT EDT");
+        snprintf(line, sizeof(line), "%-7s FX:%s", "TXT EDT", rgb_minimal_mode ? "Q" : "W");
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "VSC %-4s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR");
+        snprintf(line, sizeof(line), "VSC %-4s FX:%s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR", rgb_minimal_mode ? "Q" : "W");
     } else {
-        snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
+        snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     }
 
     write_line(0, line);
@@ -3057,9 +2343,9 @@ static void render_header(uint8_t layer) {
     char line[22];
 
     if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
+        snprintf(line, sizeof(line), "PRM %-4s FX:%s", prompt_mode_name(prompt_mode), rgb_minimal_mode ? "Q" : "W");
     } else {
-        snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
+        snprintf(line, sizeof(line), "%-6s FX:%s", layer_name_short(layer), rgb_minimal_mode ? "Q" : "W");
     }
 
     write_line(0, line);
@@ -3087,13 +2373,12 @@ static void render_legend_view(uint8_t layer) {
     if (layer == _SELECT) {
         snprintf(line, sizeof(line), "Cur%u Tgt->%.10s", select_cursor + 1, layer_name_long(selector_target));
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "%s mode%s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "AI" : "NAV", vsc_mode != VSC_MODE_NONE ? " [HELD]" : "");
+        snprintf(line, sizeof(line), "%s mode%s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR", vsc_mode != VSC_MODE_NONE ? " [HELD]" : "");
     } else if (layer == _TEXT) {
         const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDT" : "WIN");
         snprintf(line, sizeof(line), "TXT %s%s", mode, (text_action_held || text_edit_held) ? " [HELD]" : "");
     } else if (layer == _WINDOW) {
-        const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "WIN");
-        snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [HELD]" : "");
+        snprintf(line, sizeof(line), "WIN %s%s", window_browser_held ? "BRO" : "WIN", window_browser_held ? " [HELD]" : "");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP11: Lay <-> Last");
