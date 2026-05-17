@@ -229,6 +229,11 @@ static uint32_t encoder_help_until        = 0;
 static bool encoder_help_fired            = false;
 static uint8_t selector_origin_layer      = _BASE;
 static uint32_t selector_last_tap         = 0;
+static uint8_t scale_val(uint8_t value, uint8_t scale);
+static bool layer_mode_key_for_layer(uint8_t layer, uint8_t key_index);
+static void flush_led_frame(void);
+static void set_key_hsv(uint8_t key_index, uint8_t h, uint8_t s, uint8_t v);
+static void clear_all_keys(void);
 
 // The first 15 LEDs are the 3x5 key area:
 //  K1 - K2 - K3
