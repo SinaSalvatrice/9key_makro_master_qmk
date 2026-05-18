@@ -2576,7 +2576,7 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT), KC_HOME,       KC_BSPC,
+        KC_HOME,     MO(_SELECT), KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
@@ -2676,7 +2676,7 @@ static void select_target_layer(uint8_t layer) {
 }
 
 #ifdef TAP_DANCE_ENABLE
-static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
+static void ghzttd_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
 }
