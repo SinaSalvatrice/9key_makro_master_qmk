@@ -1,7 +1,7 @@
 {
   "name": "9key_makro_master",
-  "vendorId": "FEED",
-  "productId": "9B01",
+  "vendorId": "0xFEED",
+  "productId": "0x9B01",
   "menus": ["qmk_rgblight"],
   "matrix": {
     "rows": 3,
