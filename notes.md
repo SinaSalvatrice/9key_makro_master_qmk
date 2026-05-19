@@ -92,6 +92,7 @@ These are intentionally hidden behind double-tap selector slots instead of being
 - `TXT` double tap = `WORK`.
 - `VSC` single tap = `VSC`.
 - `VSC` double tap = `SYS`.
+- Double-tapping the same Tap Dance key again while already on `MARK`, `WORK`, or `SYS` returns to `WINDOW`, `TEXT`, or `VSC` even without holding `SEL`.
 
 The `+` in the OLED/select legend means: this selector position has a hidden double-tap layer behind it.
 
@@ -465,6 +466,7 @@ Only selected positions in the selector grid should use Tap Dance:
 - `WIN+`: single = `WINDOW`, double = `MARK`.
 - `TXT+`: single = `TEXT`, double = `WORK`.
 - `VSC+`: single = `VSC`, double = `SYS`.
+- Repeating the double tap while already on `MARK`, `WORK`, or `SYS` toggles back to `WINDOW`, `TEXT`, or `VSC`.
 
 Important:
 

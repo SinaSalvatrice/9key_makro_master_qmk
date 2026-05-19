@@ -3665,9 +3665,9 @@ static void render_tap_view(uint8_t layer) {
     if (layer == _SELECT) {
         write_line(0, "SELECT TAP");
         write_line(1, "Single / Double");
-        write_line(2, "WIN  -> MARK");
-        write_line(3, "TXT  -> WORK");
-        write_line(4, "VSC  -> SYS");
+        write_line(2, "WIN  <-> MARK");
+        write_line(3, "TXT  <-> WORK");
+        write_line(4, "VSC  <-> SYS");
         write_line(5, "Release SEL to go");
         write_line(6, "");
         write_line(7, "GP12: next page");
@@ -3713,11 +3713,11 @@ static void render_tap_view(uint8_t layer) {
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_long(layer));
     write_line(0, line);
     write_line(1, "SELECT hidden:");
-    write_line(2, "WIN 2x = MARK");
-    write_line(3, "TXT 2x = WORK");
-    write_line(4, "VSC 2x = SYS");
+    write_line(2, "WIN <-> MARK");
+    write_line(3, "TXT <-> WORK");
+    write_line(4, "VSC <-> SYS");
     write_line(5, "");
-    write_line(6, "1x normal layer");
+    write_line(6, "1x base, 2x pair");
     write_line(7, "GP12: next page");
 }
 
