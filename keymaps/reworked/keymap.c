@@ -2692,7 +2692,7 @@ static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data
 }
 
 tap_dance_action_t tap_dance_actions[] = {
-    [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
+    [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, ghzttd_select_win_mark_finished, NULL),
     [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 };
