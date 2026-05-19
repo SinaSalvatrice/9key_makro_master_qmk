@@ -7,7 +7,7 @@
     "board": "QMK_BLOK",
     "diode_direction": "COL2ROW",
     "matrix_pins": {
-        "rows": ["GP2", "GP3", "GP4"],
+        "rows": ["GP29", "GP3", "GP4"],
         "cols": ["GP5", "GP6", "GP7"]
     },
     "encoder": {
