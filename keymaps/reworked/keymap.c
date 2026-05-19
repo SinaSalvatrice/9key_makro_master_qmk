@@ -2014,8 +2014,9 @@ static void render_frame_light_group(void) {
             case RGB_EFFECT_TILT:
 #ifdef ADXL345_ENABLE
                 if (adxl345_ready) {
-                    uint8_t tilt_head = (uint8_t)(((int16_t)RGB_FRAME_LED_COUNT / 2) + (adxl345_x / 24));
-                    if (RGB_FRAME_LED_COUNT > 0) tilt_head %= RGB_FRAME_LED_COUNT;
+                    int16_t head_i = ((int16_t)RGB_FRAME_LED_COUNT / 2) + (adxl345_x / 24);
+                    while (head_i < 0) head_i += RGB_FRAME_LED_COUNT;
+                    uint8_t tilt_head = RGB_FRAME_LED_COUNT > 0 ? (uint8_t)(head_i % RGB_FRAME_LED_COUNT) : 0;
                     d = wrap_distance(i, tilt_head, RGB_FRAME_LED_COUNT);
                     if (d == 0) val = p.val;
                     else if (d == 1) val = palette_floor((p.val * 3) / 4, 22);
