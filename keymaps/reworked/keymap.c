@@ -2840,9 +2840,10 @@ static void select_target_layer(uint8_t layer) {
     selector_target = layer;
     select_cursor = slot_for_layer(selector_target);
 
-    // SEL_* keycodes only prepare the target. The actual layer switch happens
-    // when the physical SEL/MO(_SELECT) key is released. This prevents
-    // accidental layer jumps if a SEL_* keycode is triggered without SEL held.
+    if (!matrix_select_held) {
+        layer_move(selector_target);
+        selector_last_tap = 0;
+    }
 }
 
 #ifdef TAP_DANCE_ENABLE

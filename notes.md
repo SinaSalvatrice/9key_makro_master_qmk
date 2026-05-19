@@ -98,9 +98,9 @@ The `+` in the OLED/select legend means: this selector position has a hidden dou
 ### Selector rules
 
 - Holding `SEL` opens the selector grid.
-- `SEL_*` target actions must only prepare `selector_target`.
-- Actual layer switching happens when the physical `SEL` / `MO(_SELECT)` key is released.
-- This prevents accidental jumps if a selector keycode is triggered outside the held selector state.
+- `SEL_*` target actions still prepare `selector_target` for the selector grid.
+- If `SEL` is held, the real layer switch happens when the physical `SEL` / `MO(_SELECT)` key is released.
+- If a selector target or Tap Dance target is triggered without `SEL` held, it now switches to that layer immediately.
 - Double-tapping `SEL` without changing target returns to `BASE`.
 - Encoder in `SELECT` cycles target slots only while the encoder button is held.
 
@@ -468,9 +468,9 @@ Only selected positions in the selector grid should use Tap Dance:
 
 Important:
 
-- Tap Dance selector actions must only set `selector_target`.
-- They must not call `layer_move()` directly.
-- Real layer switching still happens on selector release.
+- Tap Dance selector actions still route through `select_target_layer()`.
+- Held-selector flow still switches on selector release.
+- Triggering the same target outside the held selector flow now enters that layer immediately.
 
 ### MARK Tap Dance future plan
 
