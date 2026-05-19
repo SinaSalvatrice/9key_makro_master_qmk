@@ -5,7 +5,7 @@
     "processor": "RP2040",
     "bootloader": "rp2040",
     "board": "QMK_BLOK",
-    "diode_direction": "COL2ROW",
+    "diode_direction": "ROW2COL",
     "matrix_pins": {
         "rows": ["GP2", "GP3", "GP4"],
         "cols": ["GP5", "GP6", "GP7"]
