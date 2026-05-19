@@ -1656,11 +1656,11 @@ static uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
 
 #ifdef ADXL345_ENABLE
 static bool adxl345_read_reg(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
-    return i2c_readReg(addr, reg, data, len, ADXL345_I2C_TIMEOUT) == I2C_STATUS_SUCCESS;
+    return i2c_read_register(addr, reg, data, len, ADXL345_I2C_TIMEOUT) == I2C_STATUS_SUCCESS;
 }
 
 static bool adxl345_write_reg(uint8_t addr, uint8_t reg, uint8_t value) {
-    return i2c_writeReg(addr, reg, &value, 1, ADXL345_I2C_TIMEOUT) == I2C_STATUS_SUCCESS;
+    return i2c_write_register(addr, reg, &value, 1, ADXL345_I2C_TIMEOUT) == I2C_STATUS_SUCCESS;
 }
 
 static bool adxl345_probe(uint8_t addr) {
