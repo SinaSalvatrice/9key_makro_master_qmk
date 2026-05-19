@@ -146,7 +146,8 @@ enum rgb_zone_bits {
 };
 
 typedef enum {
-    RGB_ANIM_TILT_PLACEHOLDER = 0,
+    RGB_ANIM_FX = 0,
+    RGB_ANIM_TILT_PLACEHOLDER,
     RGB_ANIM_LAYER_KEYS,
     RGB_ANIM_REACTIVE,
     RGB_ANIM_FRAME_WANDER,
@@ -156,7 +157,7 @@ typedef enum {
 static bool rgb_output_enabled = true;
 static bool rgb_mode_held = false;
 static uint8_t rgb_zone_mask = RGB_ZONE_ALL;
-static rgb_animation_mode_t rgb_animation_mode = RGB_ANIM_TILT_PLACEHOLDER;
+static rgb_animation_mode_t rgb_animation_mode = RGB_ANIM_FX;
 static uint32_t rgb_reactive_started = 0;
 static uint8_t rgb_reactive_key_index = 0;
 static uint32_t rgb_frame_wander_started = 0;
@@ -647,21 +648,23 @@ static const char *window_function_for(uint8_t index) { return window_function_f
 
 static const char *rgb_animation_label(void) {
     switch (rgb_animation_mode) {
+        case RGB_ANIM_FX:           return "FX";
+        case RGB_ANIM_TILT_PLACEHOLDER: return "TILT";
         case RGB_ANIM_LAYER_KEYS:   return "LKEY";
         case RGB_ANIM_REACTIVE:     return "RACT";
         case RGB_ANIM_FRAME_WANDER: return "WALK";
-        case RGB_ANIM_TILT_PLACEHOLDER:
-        default:                    return "TILT";
+        default:                    return "FX";
     }
 }
 
 static const char *rgb_animation_function(void) {
     switch (rgb_animation_mode) {
+        case RGB_ANIM_FX:           return "VIA/layer effects";
+        case RGB_ANIM_TILT_PLACEHOLDER: return adxl345_ready ? "Tilt-reactive ADXL345 RGB" : "Tilt sensor not found";
         case RGB_ANIM_LAYER_KEYS:   return "Mode keys only";
         case RGB_ANIM_REACTIVE:     return "Reactive key flash";
         case RGB_ANIM_FRAME_WANDER: return "Encoder frame chase";
-        case RGB_ANIM_TILT_PLACEHOLDER:
-        default:                    return adxl345_ready ? "Tilt-reactive ADXL345 RGB" : "Tilt sensor not found";
+        default:                    return "VIA/layer effects";
     }
 }
 
