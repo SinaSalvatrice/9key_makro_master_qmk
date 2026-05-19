@@ -2850,19 +2850,29 @@ static void select_target_layer(uint8_t layer) {
 }
 
 #ifdef TAP_DANCE_ENABLE
+static void td_select_layer_pair(tap_dance_state_t *state, uint8_t base_layer, uint8_t mod_layer) {
+    uint8_t target = state->count >= 2 ? mod_layer : base_layer;
+
+    if (!matrix_select_held && state->count >= 2 && active_layer_raw() == mod_layer) {
+        target = base_layer;
+    }
+
+    select_target_layer(target);
+}
+
 static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
+    td_select_layer_pair(state, _WINDOW, _MARK);
 }
 
 static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _WORK : _TEXT);
+    td_select_layer_pair(state, _TEXT, _WORK);
 }
 
 static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _SYS : _VSC);
+    td_select_layer_pair(state, _VSC, _SYS);
 }
 
 tap_dance_action_t tap_dance_actions[] = {
