@@ -1779,10 +1779,10 @@ static void update_game_tilt_arrows(void) {
     bool press_right = false;
 
     if (nav_tilt_active) {
-        press_up = adxl345_fluid_y > 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_up_held);
-        press_down = adxl345_fluid_y < 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_down_held);
-        press_left = adxl345_fluid_x < 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_left_held);
-        press_right = adxl345_fluid_x > 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_right_held);
+        press_up    = adxl345_y > 0 && adxl345_axis_active(adxl345_y, tilt_game_up_held);
+        press_down  = adxl345_y < 0 && adxl345_axis_active(adxl345_y, tilt_game_down_held);
+        press_left  = adxl345_x < 0 && adxl345_axis_active(adxl345_x, tilt_game_left_held);
+        press_right = adxl345_x > 0 && adxl345_axis_active(adxl345_x, tilt_game_right_held);
     }
 
     update_tilt_game_arrow(KC_UP, &tilt_game_up_held, press_up);
@@ -1909,7 +1909,7 @@ static void adxl345_task(void) {
         return;
     }
 
-    x = (int16_t)(adxl345_zero_x - x);
+    x -= adxl345_zero_x;
     y -= adxl345_zero_y;
     z -= adxl345_zero_z;
 
