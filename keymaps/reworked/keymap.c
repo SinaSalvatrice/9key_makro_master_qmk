@@ -169,11 +169,19 @@ static uint8_t adxl345_addr = ADXL345_ADDR_PRIMARY;
 static int16_t adxl345_x = 0;
 static int16_t adxl345_y = 0;
 static int16_t adxl345_z = 0;
+static int16_t adxl345_zero_x = 0;
+static int16_t adxl345_zero_y = 0;
+static int16_t adxl345_zero_z = 0;
 static int16_t adxl345_last_x = 0;
 static int16_t adxl345_last_y = 0;
 static int16_t adxl345_last_z = 0;
 static uint16_t adxl345_motion = 0;
 static uint32_t adxl345_last_read = 0;
+static int32_t adxl345_cal_sum_x = 0;
+static int32_t adxl345_cal_sum_y = 0;
+static int32_t adxl345_cal_sum_z = 0;
+static uint8_t adxl345_cal_count = 0;
+static bool adxl345_calibrated = false;
 #endif
 
 typedef enum {
@@ -1678,9 +1686,29 @@ static bool adxl345_probe(uint8_t addr) {
     return adxl345_read_reg(addr, ADXL345_REG_DEVID, &devid, 1) && devid == ADXL345_DEVID;
 }
 
+static int16_t adxl345_apply_deadzone(int16_t value, uint8_t deadzone) {
+    if (value > -(int16_t)deadzone && value < (int16_t)deadzone) return 0;
+    return value;
+}
+
 static void adxl345_init(void) {
     adxl345_ready = false;
     adxl345_addr = ADXL345_ADDR_PRIMARY;
+    adxl345_x = 0;
+    adxl345_y = 0;
+    adxl345_z = 0;
+    adxl345_last_x = 0;
+    adxl345_last_y = 0;
+    adxl345_last_z = 0;
+    adxl345_motion = 0;
+    adxl345_zero_x = 0;
+    adxl345_zero_y = 0;
+    adxl345_zero_z = 0;
+    adxl345_cal_sum_x = 0;
+    adxl345_cal_sum_y = 0;
+    adxl345_cal_sum_z = 0;
+    adxl345_cal_count = 0;
+    adxl345_calibrated = false;
 
     i2c_init();
 
@@ -1718,7 +1746,43 @@ static void adxl345_task(void) {
     int16_t y = (int16_t)((uint16_t)data[2] | ((uint16_t)data[3] << 8));
     int16_t z = (int16_t)((uint16_t)data[4] | ((uint16_t)data[5] << 8));
 
+    if (!adxl345_calibrated) {
+        adxl345_cal_sum_x += x;
+        adxl345_cal_sum_y += y;
+        adxl345_cal_sum_z += z;
+        adxl345_cal_count++;
+
+        if (adxl345_cal_count >= 16) {
+            adxl345_zero_x = (int16_t)(adxl345_cal_sum_x / (int32_t)adxl345_cal_count);
+            adxl345_zero_y = (int16_t)(adxl345_cal_sum_y / (int32_t)adxl345_cal_count);
+            adxl345_zero_z = (int16_t)(adxl345_cal_sum_z / (int32_t)adxl345_cal_count);
+            adxl345_calibrated = true;
+        }
+
+        adxl345_x = 0;
+        adxl345_y = 0;
+        adxl345_z = 0;
+        adxl345_motion = 0;
+        adxl345_last_x = 0;
+        adxl345_last_y = 0;
+        adxl345_last_z = 0;
+        return;
+    }
+
+    x -= adxl345_zero_x;
+    y -= adxl345_zero_y;
+    z -= adxl345_zero_z;
+
+    x = adxl345_apply_deadzone(x, 8);
+    y = adxl345_apply_deadzone(y, 8);
+    z = adxl345_apply_deadzone(z, 8);
+
+    x = (int16_t)(((int32_t)adxl345_x * 3 + x) / 4);
+    y = (int16_t)(((int32_t)adxl345_y * 3 + y) / 4);
+    z = (int16_t)(((int32_t)adxl345_z * 3 + z) / 4);
+
     uint16_t motion = abs_i16_u16(x - adxl345_last_x) + abs_i16_u16(y - adxl345_last_y) + abs_i16_u16(z - adxl345_last_z);
+    motion = motion > 6 ? (uint16_t)(motion - 6) : 0;
     if (motion > UINT8_MAX) motion = UINT8_MAX;
 
     adxl345_x = x;
@@ -3507,13 +3571,13 @@ static void render_rgb_help_view(void) {
     char line[22];
 
     write_line(0, "RGB HELP");
-    snprintf(line, sizeof(line), "ANIM:%-5.5s %s", rgb_animation_label(), adxl345_status_label());
+    snprintf(line, sizeof(line), "AN:%-5.5s %s", rgb_animation_label(), adxl345_ready ? "OK" : "NO");
     write_line(1, line);
 #ifdef ADXL345_ENABLE
     if (rgb_tilt_visual_active() && adxl345_ready) {
-        snprintf(line, sizeof(line), "X:%5d Y:%5d", adxl345_x, adxl345_y);
+        snprintf(line, sizeof(line), "X%+5d Y%+5d", adxl345_x, adxl345_y);
         write_line(2, line);
-        snprintf(line, sizeof(line), "Z:%5d M:%3u", adxl345_z, adxl345_motion);
+        snprintf(line, sizeof(line), "Z%+5d M%3u", adxl345_z, adxl345_motion);
         write_line(3, line);
         return;
     }
