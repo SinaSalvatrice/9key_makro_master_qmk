@@ -1691,6 +1691,44 @@ static int16_t adxl345_apply_deadzone(int16_t value, uint8_t deadzone) {
     return value;
 }
 
+static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
+    const int16_t range = 220;
+
+    if (span_len <= 1) return 0;
+    if (value < -range) value = -range;
+    if (value > range) value = range;
+
+    int32_t scaled = ((int32_t)(value + range) * (span_len - 1)) / (range * 2);
+    if (scaled < 0) scaled = 0;
+    if (scaled >= span_len) scaled = span_len - 1;
+    return (uint8_t)scaled;
+}
+
+static uint8_t adxl345_frame_head(void) {
+    const uint8_t top_len = (RGB_FRAME_LED_COUNT + 2) / 4;
+    const uint8_t right_len = RGB_FRAME_LED_COUNT / 4;
+    const uint8_t bottom_len = (RGB_FRAME_LED_COUNT + 1) / 4;
+    const uint8_t left_len = RGB_FRAME_LED_COUNT - top_len - right_len - bottom_len;
+    uint16_t ax = abs_i16_u16(adxl345_x);
+    uint16_t ay = abs_i16_u16(adxl345_y);
+
+    if (RGB_FRAME_LED_COUNT == 0) return 0;
+
+    if (ay >= ax) {
+        if (adxl345_y >= 0) {
+            return adxl345_map_axis_to_span(adxl345_x, top_len);
+        }
+
+        return (uint8_t)(top_len + right_len + adxl345_map_axis_to_span(-adxl345_x, bottom_len));
+    }
+
+    if (adxl345_x >= 0) {
+        return (uint8_t)(top_len + adxl345_map_axis_to_span(-adxl345_y, right_len));
+    }
+
+    return (uint8_t)(top_len + right_len + bottom_len + adxl345_map_axis_to_span(adxl345_y, left_len));
+}
+
 static void adxl345_init(void) {
     adxl345_ready = false;
     adxl345_addr = ADXL345_ADDR_PRIMARY;
@@ -1769,20 +1807,20 @@ static void adxl345_task(void) {
         return;
     }
 
-    x -= adxl345_zero_x;
+    x = (int16_t)(adxl345_zero_x - x);
     y -= adxl345_zero_y;
     z -= adxl345_zero_z;
 
-    x = adxl345_apply_deadzone(x, 8);
-    y = adxl345_apply_deadzone(y, 8);
-    z = adxl345_apply_deadzone(z, 8);
+    x = adxl345_apply_deadzone(x, 4);
+    y = adxl345_apply_deadzone(y, 4);
+    z = adxl345_apply_deadzone(z, 4);
 
-    x = (int16_t)(((int32_t)adxl345_x * 3 + x) / 4);
-    y = (int16_t)(((int32_t)adxl345_y * 3 + y) / 4);
-    z = (int16_t)(((int32_t)adxl345_z * 3 + z) / 4);
+    x = (int16_t)(((int32_t)adxl345_x + x) / 2);
+    y = (int16_t)(((int32_t)adxl345_y + y) / 2);
+    z = (int16_t)(((int32_t)adxl345_z + z) / 2);
 
     uint16_t motion = abs_i16_u16(x - adxl345_last_x) + abs_i16_u16(y - adxl345_last_y) + abs_i16_u16(z - adxl345_last_z);
-    motion = motion > 6 ? (uint16_t)(motion - 6) : 0;
+    motion = motion > 2 ? (uint16_t)(motion - 2) : 0;
     if (motion > UINT8_MAX) motion = UINT8_MAX;
 
     adxl345_x = x;
@@ -2084,9 +2122,7 @@ static void render_frame_light_group(void) {
             case RGB_EFFECT_TILT:
 #ifdef ADXL345_ENABLE
                 if (adxl345_ready) {
-                    int16_t head_i = ((int16_t)RGB_FRAME_LED_COUNT / 2) + (adxl345_x / 24);
-                    while (head_i < 0) head_i += RGB_FRAME_LED_COUNT;
-                    uint8_t tilt_head = RGB_FRAME_LED_COUNT > 0 ? (uint8_t)(head_i % RGB_FRAME_LED_COUNT) : 0;
+                    uint8_t tilt_head = adxl345_frame_head();
                     d = wrap_distance(i, tilt_head, RGB_FRAME_LED_COUNT);
                     if (d == 0) val = p.val;
                     else if (d == 1) val = palette_floor((p.val * 3) / 4, 22);
