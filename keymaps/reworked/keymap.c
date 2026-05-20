@@ -856,6 +856,12 @@ static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
     return RGB_EFFECT_WILD;
 }
 
+static bool rgb_tilt_visual_active(void) {
+    if (rgb_animation_mode == RGB_ANIM_TILT_PLACEHOLDER) return true;
+    if (rgb_animation_mode != RGB_ANIM_FX) return false;
+    return effect_for_layer(canonical_rgb_layer(active_layer_raw())) == RGB_EFFECT_TILT;
+}
+
 static uint8_t effect_speed_for_layer(uint8_t layer) {
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
@@ -3504,7 +3510,7 @@ static void render_rgb_help_view(void) {
     snprintf(line, sizeof(line), "ANIM:%-5.5s %s", rgb_animation_label(), adxl345_status_label());
     write_line(1, line);
 #ifdef ADXL345_ENABLE
-    if (rgb_animation_mode == RGB_ANIM_TILT_PLACEHOLDER && adxl345_ready) {
+    if (rgb_tilt_visual_active() && adxl345_ready) {
         snprintf(line, sizeof(line), "X:%5d Y:%5d", adxl345_x, adxl345_y);
         write_line(2, line);
         snprintf(line, sizeof(line), "Z:%5d M:%3u", adxl345_z, adxl345_motion);
@@ -3754,7 +3760,7 @@ static void render_rgb_help_view(void) {
     write_line(1, line);
     write_line(2, adxl345_status_label());
 #ifdef ADXL345_ENABLE
-    if (rgb_animation_mode == RGB_ANIM_TILT_PLACEHOLDER && adxl345_ready) {
+    if (rgb_tilt_visual_active() && adxl345_ready) {
         snprintf(line, sizeof(line), "X:%5d Y:%5d", adxl345_x, adxl345_y);
         write_line(3, line);
         snprintf(line, sizeof(line), "Z:%5d M:%3u", adxl345_z, adxl345_motion);
