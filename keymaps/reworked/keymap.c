@@ -58,6 +58,8 @@
 #    define ADXL345_FLUID_ACCEL_DIV 5
 #    define ADXL345_FLUID_DAMP_NUM  7
 #    define ADXL345_FLUID_DAMP_DEN  8
+#    define ADXL345_GAME_TILT_ON    70
+#    define ADXL345_GAME_TILT_OFF   40
 #endif
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -284,6 +286,10 @@ static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static game_mode_t game_mode              = GAME_MODE_WASD;
 static game_mode_t last_key_game_mode     = GAME_MODE_WASD;
+static bool tilt_game_up_held             = false;
+static bool tilt_game_down_held           = false;
+static bool tilt_game_left_held           = false;
+static bool tilt_game_right_held          = false;
 static vsc_mode_t last_key_vsc_mode       = VSC_MODE_BAR;
 static prompt_mode_t prompt_mode          = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
@@ -1746,6 +1752,43 @@ static void adxl345_update_fluid_state(void) {
     velocity >>= ADXL345_FLUID_SHIFT;
     if (velocity > UINT8_MAX) velocity = UINT8_MAX;
     adxl345_fluid_motion = (uint16_t)velocity;
+}
+
+static void update_tilt_game_arrow(uint16_t keycode, bool *held, bool pressed) {
+    if (pressed == *held) return;
+
+    if (pressed) {
+        register_code(keycode);
+    } else {
+        unregister_code(keycode);
+    }
+
+    *held = pressed;
+}
+
+static bool adxl345_axis_active(int16_t value, bool held) {
+    int16_t magnitude = value < 0 ? (int16_t)-value : value;
+    return magnitude >= (held ? ADXL345_GAME_TILT_OFF : ADXL345_GAME_TILT_ON);
+}
+
+static void update_game_tilt_arrows(void) {
+    bool nav_tilt_active = adxl345_ready && active_layer_raw() == _DEV && game_mode == GAME_MODE_NAV;
+    bool press_up = false;
+    bool press_down = false;
+    bool press_left = false;
+    bool press_right = false;
+
+    if (nav_tilt_active) {
+        press_up = adxl345_fluid_y > 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_up_held);
+        press_down = adxl345_fluid_y < 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_down_held);
+        press_left = adxl345_fluid_x < 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_left_held);
+        press_right = adxl345_fluid_x > 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_right_held);
+    }
+
+    update_tilt_game_arrow(KC_UP, &tilt_game_up_held, press_up);
+    update_tilt_game_arrow(KC_DOWN, &tilt_game_down_held, press_down);
+    update_tilt_game_arrow(KC_LEFT, &tilt_game_left_held, press_left);
+    update_tilt_game_arrow(KC_RGHT, &tilt_game_right_held, press_right);
 }
 
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
@@ -3411,6 +3454,7 @@ void matrix_scan_user(void) {
 #endif
 
     adxl345_task();
+    update_game_tilt_arrows();
 
 #ifdef ENCODER_BTN_PIN
     encoder_btn_pressed = (gpio_read_pin(ENCODER_BTN_PIN) == 0);
