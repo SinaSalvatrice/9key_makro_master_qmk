@@ -1707,6 +1707,12 @@ static uint16_t abs_i32_u16(int32_t value) {
     return value > UINT16_MAX ? UINT16_MAX : (uint16_t)value;
 }
 
+static int32_t div_min_step_i32(int32_t value, int32_t divisor) {
+    int32_t quotient = value / divisor;
+    if (quotient == 0 && value != 0) return value > 0 ? 1 : -1;
+    return quotient;
+}
+
 static void adxl345_reset_fluid_state(void) {
     adxl345_fluid_x = 0;
     adxl345_fluid_y = 0;
@@ -1724,8 +1730,8 @@ static void adxl345_update_fluid_state(void) {
     int32_t dy_fp = target_y_fp - adxl345_fluid_y_fp;
     uint32_t velocity = 0;
 
-    adxl345_fluid_vx_fp += dx_fp / ADXL345_FLUID_ACCEL_DIV;
-    adxl345_fluid_vy_fp += dy_fp / ADXL345_FLUID_ACCEL_DIV;
+    adxl345_fluid_vx_fp += div_min_step_i32(dx_fp, ADXL345_FLUID_ACCEL_DIV);
+    adxl345_fluid_vy_fp += div_min_step_i32(dy_fp, ADXL345_FLUID_ACCEL_DIV);
 
     adxl345_fluid_vx_fp = (adxl345_fluid_vx_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
     adxl345_fluid_vy_fp = (adxl345_fluid_vy_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
@@ -3665,9 +3671,9 @@ static void render_rgb_help_view(void) {
     write_line(1, line);
 #ifdef ADXL345_ENABLE
     if (rgb_tilt_visual_active() && adxl345_ready) {
-        snprintf(line, sizeof(line), "X%+5d Y%+5d", adxl345_x, adxl345_y);
+        snprintf(line, sizeof(line), "X%+5d Y%+5d", adxl345_fluid_x, adxl345_fluid_y);
         write_line(2, line);
-        snprintf(line, sizeof(line), "Z%+5d M%3u", adxl345_z, adxl345_motion);
+        snprintf(line, sizeof(line), "Z%+5d M%3u", adxl345_z, adxl345_fluid_motion);
         write_line(3, line);
         return;
     }
@@ -3915,9 +3921,9 @@ static void render_rgb_help_view(void) {
     write_line(2, adxl345_status_label());
 #ifdef ADXL345_ENABLE
     if (rgb_tilt_visual_active() && adxl345_ready) {
-        snprintf(line, sizeof(line), "X:%5d Y:%5d", adxl345_x, adxl345_y);
+        snprintf(line, sizeof(line), "X:%5d Y:%5d", adxl345_fluid_x, adxl345_fluid_y);
         write_line(3, line);
-        snprintf(line, sizeof(line), "Z:%5d M:%3u", adxl345_z, adxl345_motion);
+        snprintf(line, sizeof(line), "Z:%5d M:%3u", adxl345_z, adxl345_fluid_motion);
         write_line(4, line);
         write_line(5, "Tilt drives RGB");
         write_line(6, "ZONE still works");
