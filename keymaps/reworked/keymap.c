@@ -54,6 +54,10 @@
 #    define ADXL345_DEVID           0xE5
 #    define ADXL345_I2C_TIMEOUT     100
 #    define ADXL345_READ_MS         20
+#    define ADXL345_FLUID_SHIFT     4
+#    define ADXL345_FLUID_ACCEL_DIV 5
+#    define ADXL345_FLUID_DAMP_NUM  7
+#    define ADXL345_FLUID_DAMP_DEN  8
 #endif
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -176,12 +180,19 @@ static int16_t adxl345_last_x = 0;
 static int16_t adxl345_last_y = 0;
 static int16_t adxl345_last_z = 0;
 static uint16_t adxl345_motion = 0;
+static int16_t adxl345_fluid_x = 0;
+static int16_t adxl345_fluid_y = 0;
+static uint16_t adxl345_fluid_motion = 0;
 static uint32_t adxl345_last_read = 0;
 static int32_t adxl345_cal_sum_x = 0;
 static int32_t adxl345_cal_sum_y = 0;
 static int32_t adxl345_cal_sum_z = 0;
 static uint8_t adxl345_cal_count = 0;
 static bool adxl345_calibrated = false;
+static int32_t adxl345_fluid_x_fp = 0;
+static int32_t adxl345_fluid_y_fp = 0;
+static int32_t adxl345_fluid_vx_fp = 0;
+static int32_t adxl345_fluid_vy_fp = 0;
 #endif
 
 typedef enum {
@@ -1691,6 +1702,46 @@ static int16_t adxl345_apply_deadzone(int16_t value, uint8_t deadzone) {
     return value;
 }
 
+static uint16_t abs_i32_u16(int32_t value) {
+    if (value < 0) value = -value;
+    return value > UINT16_MAX ? UINT16_MAX : (uint16_t)value;
+}
+
+static void adxl345_reset_fluid_state(void) {
+    adxl345_fluid_x = 0;
+    adxl345_fluid_y = 0;
+    adxl345_fluid_motion = 0;
+    adxl345_fluid_x_fp = 0;
+    adxl345_fluid_y_fp = 0;
+    adxl345_fluid_vx_fp = 0;
+    adxl345_fluid_vy_fp = 0;
+}
+
+static void adxl345_update_fluid_state(void) {
+    int32_t target_x_fp = (int32_t)adxl345_x << ADXL345_FLUID_SHIFT;
+    int32_t target_y_fp = (int32_t)adxl345_y << ADXL345_FLUID_SHIFT;
+    int32_t dx_fp = target_x_fp - adxl345_fluid_x_fp;
+    int32_t dy_fp = target_y_fp - adxl345_fluid_y_fp;
+    uint32_t velocity = 0;
+
+    adxl345_fluid_vx_fp += dx_fp / ADXL345_FLUID_ACCEL_DIV;
+    adxl345_fluid_vy_fp += dy_fp / ADXL345_FLUID_ACCEL_DIV;
+
+    adxl345_fluid_vx_fp = (adxl345_fluid_vx_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
+    adxl345_fluid_vy_fp = (adxl345_fluid_vy_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
+
+    adxl345_fluid_x_fp += adxl345_fluid_vx_fp;
+    adxl345_fluid_y_fp += adxl345_fluid_vy_fp;
+
+    adxl345_fluid_x = (int16_t)(adxl345_fluid_x_fp >> ADXL345_FLUID_SHIFT);
+    adxl345_fluid_y = (int16_t)(adxl345_fluid_y_fp >> ADXL345_FLUID_SHIFT);
+
+    velocity = (uint32_t)abs_i32_u16(adxl345_fluid_vx_fp) + (uint32_t)abs_i32_u16(adxl345_fluid_vy_fp);
+    velocity >>= ADXL345_FLUID_SHIFT;
+    if (velocity > UINT8_MAX) velocity = UINT8_MAX;
+    adxl345_fluid_motion = (uint16_t)velocity;
+}
+
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
     const int16_t range = 220;
 
@@ -1709,24 +1760,24 @@ static uint8_t adxl345_frame_head(void) {
     const uint8_t right_len = RGB_FRAME_LED_COUNT / 4;
     const uint8_t bottom_len = (RGB_FRAME_LED_COUNT + 1) / 4;
     const uint8_t left_len = RGB_FRAME_LED_COUNT - top_len - right_len - bottom_len;
-    uint16_t ax = abs_i16_u16(adxl345_x);
-    uint16_t ay = abs_i16_u16(adxl345_y);
+    uint16_t ax = abs_i16_u16(adxl345_fluid_x);
+    uint16_t ay = abs_i16_u16(adxl345_fluid_y);
 
     if (RGB_FRAME_LED_COUNT == 0) return 0;
 
     if (ay >= ax) {
-        if (adxl345_y >= 0) {
-            return adxl345_map_axis_to_span(adxl345_x, top_len);
+        if (adxl345_fluid_y >= 0) {
+            return adxl345_map_axis_to_span(adxl345_fluid_x, top_len);
         }
 
-        return (uint8_t)(top_len + right_len + adxl345_map_axis_to_span(-adxl345_x, bottom_len));
+        return (uint8_t)(top_len + right_len + adxl345_map_axis_to_span(-adxl345_fluid_x, bottom_len));
     }
 
-    if (adxl345_x >= 0) {
-        return (uint8_t)(top_len + adxl345_map_axis_to_span(-adxl345_y, right_len));
+    if (adxl345_fluid_x >= 0) {
+        return (uint8_t)(top_len + adxl345_map_axis_to_span(-adxl345_fluid_y, right_len));
     }
 
-    return (uint8_t)(top_len + right_len + bottom_len + adxl345_map_axis_to_span(adxl345_y, left_len));
+    return (uint8_t)(top_len + right_len + bottom_len + adxl345_map_axis_to_span(adxl345_fluid_y, left_len));
 }
 
 static void adxl345_init(void) {
@@ -1747,6 +1798,7 @@ static void adxl345_init(void) {
     adxl345_cal_sum_z = 0;
     adxl345_cal_count = 0;
     adxl345_calibrated = false;
+    adxl345_reset_fluid_state();
 
     i2c_init();
 
@@ -1804,6 +1856,7 @@ static void adxl345_task(void) {
         adxl345_last_x = 0;
         adxl345_last_y = 0;
         adxl345_last_z = 0;
+        adxl345_reset_fluid_state();
         return;
     }
 
@@ -1830,6 +1883,7 @@ static void adxl345_task(void) {
     adxl345_last_x = x;
     adxl345_last_y = y;
     adxl345_last_z = z;
+    adxl345_update_fluid_state();
 }
 
 static const char *adxl345_status_label(void) {
@@ -1966,10 +2020,10 @@ static void render_gap_light_group(void) {
             case RGB_EFFECT_TILT:
 #ifdef ADXL345_ENABLE
                 if (adxl345_ready) {
-                    int16_t bias = (i < 3) ? adxl345_x : -adxl345_x;
+                    int16_t bias = (i < 3) ? adxl345_fluid_x : -adxl345_fluid_x;
                     if (bias < 0) bias = -bias;
                     val = palette_floor(scale_val(p.val, 60 + (uint8_t)(bias > 180 ? 120 : (bias * 2) / 3)), 8);
-                    val = clamp_add_u8(val, adxl345_motion > 120 ? 40 : (uint8_t)(adxl345_motion / 4));
+                    val = clamp_add_u8(val, adxl345_fluid_motion > 120 ? 40 : (uint8_t)(adxl345_fluid_motion / 4));
                 } else
 #endif
                 {
@@ -2128,7 +2182,7 @@ static void render_frame_light_group(void) {
                     else if (d == 1) val = palette_floor((p.val * 3) / 4, 22);
                     else if (d == 2) val = palette_floor(p.val / 2, 14);
                     else val = palette_floor(p.val / 28, 3);
-                    val = clamp_add_u8(val, adxl345_motion > 120 ? 28 : (uint8_t)(adxl345_motion / 6));
+                    val = clamp_add_u8(val, adxl345_fluid_motion > 120 ? 28 : (uint8_t)(adxl345_fluid_motion / 6));
                 } else
 #endif
                 {
@@ -2796,11 +2850,11 @@ static void render_rgb_tilt_mode(void) {
     }
 
     // ADXL345 gives roughly 256 counts per g in full resolution. Map tilt to the 3x5 keyfield.
-    int16_t center_x_i = 2 + (adxl345_x / 110);
-    int16_t center_y_i = 1 - (adxl345_y / 130);
+    int16_t center_x_i = 2 + (adxl345_fluid_x / 110);
+    int16_t center_y_i = 1 - (adxl345_fluid_y / 130);
     uint8_t center_x = clamp_u8_i16(center_x_i, 0, 4);
     uint8_t center_y = clamp_u8_i16(center_y_i, 0, 2);
-    uint8_t motion_boost = adxl345_motion > 120 ? 70 : (uint8_t)(adxl345_motion / 2);
+    uint8_t motion_boost = adxl345_fluid_motion > 120 ? 70 : (uint8_t)(adxl345_fluid_motion / 2);
 
     for (uint8_t led = 0; led < RGB_KEYFIELD_LED_COUNT; led++) {
         uint8_t row = led_row_index(led);
