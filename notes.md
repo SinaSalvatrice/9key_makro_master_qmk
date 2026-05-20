@@ -311,7 +311,7 @@ Planned Tap Dance idea:
 Workflow shell:
 
 ```text
-[ SEL  ][ PLAN ][ WRITE]
+[ SEL  ][ PLAN ][ NOTES]
 [ SHOP ][ CODE ][ BUILD]
 [ IMG  ][ LIST ][ CHECK]
 ```

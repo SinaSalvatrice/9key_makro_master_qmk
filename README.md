@@ -359,7 +359,7 @@ Suggested tap-dance model:
 Workflow-oriented layer.
 
 ```text
-SEL   PLAN  WRITE
+SEL   PLAN  NOTES
 SHOP  CODE  BUILD
 IMG   LIST  CHECK
 ```

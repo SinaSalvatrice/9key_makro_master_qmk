@@ -498,7 +498,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
-    [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
+    [_WORK]   = {"SEL",  "PLAN", "NOTES", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
     [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
@@ -515,7 +515,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
-    [_WORK]   = {"Select layer", "Planning", "Writing", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
+    [_WORK]   = {"Select layer", "Planning", "Notes", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
     [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
@@ -3686,7 +3686,7 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _WORK) {
         write_line(0, "WORK TAP");
-        write_line(1, "PLAN WRITE SHOP");
+        write_line(1, "PLAN NOTES SHOP");
         write_line(2, "CODE BUILD IMG");
         write_line(3, "LIST CHECK");
         return;
@@ -3923,7 +3923,7 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _WORK) {
         write_line(0, "WORK / FLOWS");
-        write_line(1, "SEL  PLAN WRITE");
+        write_line(1, "SEL  PLAN NOTES");
         write_line(2, "SHOP CODE BUILD");
         write_line(3, "IMG  LIST CHECK");
         write_line(4, "Tap actions TBD");
