@@ -73,10 +73,10 @@
 #        define ADXL345_GAME_SWAP_XY 0
 #    endif
 #    ifndef ADXL345_GAME_INVERT_X
-#        define ADXL345_GAME_INVERT_Y 1
+#        define ADXL345_GAME_INVERT_X 0
 #    endif
 #    ifndef ADXL345_GAME_INVERT_Y
-#        define ADXL345_GAME_INVERT_Y 0
+#        define ADXL345_GAME_INVERT_Y 1
 #    endif
 #endif
 
