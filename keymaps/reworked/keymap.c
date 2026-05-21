@@ -1843,11 +1843,6 @@ static void update_game_tilt_arrows(void) {
     bool press_left = false;
     bool press_right = false;
 
-    if (nav_tilt_active) {
-        press_up    = adxl345_y > 0 && adxl345_axis_active(adxl345_y, tilt_game_up_held);
-        press_down  = adxl345_y < 0 && adxl345_axis_active(adxl345_y, tilt_game_down_held);
-        press_left  = adxl345_x < 0 && adxl345_axis_active(adxl345_x, tilt_game_left_held);
-        press_right = adxl345_x > 0 && adxl345_axis_active(adxl345_x, tilt_game_right_held);
     if (!nav_tilt_active) {
         tilt_game_x_state = 0;
         tilt_game_y_state = 0;
