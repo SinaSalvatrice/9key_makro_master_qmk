@@ -209,6 +209,8 @@ ESC   UP    ENT
 LEFT  DOWN  RGHT
 ```
 
+If an ADXL345 accelerometer is connected via I2C (see `config.h`), NAV mode can also drive the arrow keys via tilt input. The firmware calibrates a neutral “zero” position on boot and applies debouncing/hysteresis to avoid jitter.
+
 WASD mode:
 
 ```text
@@ -294,7 +296,7 @@ Animation selector modes:
 
 | Mode | Meaning |
 |---|---|
-| TILT | Placeholder for future tilt sensor |
+| TILT | Tilt-reactive animation (ADXL345 if detected; otherwise fallback pulse) |
 | LKEY | Only layer/mode keys light |
 | RACT | Reactive key flash |
 | WALK | Encoder frame wander mode |
