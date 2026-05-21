@@ -73,7 +73,7 @@
 #        define ADXL345_GAME_SWAP_XY 0
 #    endif
 #    ifndef ADXL345_GAME_INVERT_X
-#        define ADXL345_GAME_INVERT_X 0
+#        define ADXL345_GAME_INVERT_Y 1
 #    endif
 #    ifndef ADXL345_GAME_INVERT_Y
 #        define ADXL345_GAME_INVERT_Y 0
@@ -3002,22 +3002,32 @@ static void render_rgb_tilt_mode(void) {
         return;
     }
 
-    // ADXL345 gives roughly 256 counts per g in full resolution. Map tilt to the 3x5 keyfield.
-    int16_t center_x_i = 2 + (adxl345_fluid_x / 110);
-    int16_t center_y_i = 1 - (adxl345_fluid_y / 130);
-    uint8_t center_x = clamp_u8_i16(center_x_i, 0, 4);
-    uint8_t center_y = clamp_u8_i16(center_y_i, 0, 2);
+    // Use a sub-cell center so the highlight glides between keys instead of snapping.
+    int16_t center_x_fp = (int16_t)(2 * 64 + ((int32_t)adxl345_fluid_x * 64) / 110);
+    int16_t center_y_fp = (int16_t)(1 * 64 - ((int32_t)adxl345_fluid_y * 64) / 130);
     uint8_t motion_boost = adxl345_fluid_motion > 120 ? 70 : (uint8_t)(adxl345_fluid_motion / 2);
 
     for (uint8_t led = 0; led < RGB_KEYFIELD_LED_COUNT; led++) {
         uint8_t row = led_row_index(led);
         uint8_t col = led_col_index(led);
-        uint8_t d = distance_u8(col, center_x) + distance_u8(row, center_y);
-        uint8_t val = palette_floor(p.val / 24, 3);
+        int16_t led_x_fp = (int16_t)col * 64;
+        int16_t led_y_fp = (int16_t)row * 64;
+        uint16_t dx = abs_i16_u16(led_x_fp - center_x_fp);
+        uint16_t dy = abs_i16_u16(led_y_fp - center_y_fp);
+        uint16_t distance_fp = dx + dy;
+        uint8_t fade = distance_fp >= 192 ? 0 : (uint8_t)(255 - ((distance_fp * 255) / 192));
+        uint8_t peak = clamp_add_u8(p.val, motion_boost);
+        uint8_t val = palette_floor(scale_val(peak, fade), 3);
 
-        if (d == 0) val = palette_floor(p.val + motion_boost, p.val);
-        else if (d == 1) val = palette_floor((p.val * 2) / 3, 18);
-        else if (d == 2) val = palette_floor(p.val / 3, 9);
+        if (fade < 24) {
+            val = palette_floor(p.val / 24, 3);
+        } else if (fade < 96) {
+            val = palette_floor(val, 9);
+        } else if (fade < 170) {
+            val = palette_floor(val, 18);
+        } else {
+            val = palette_floor(val, p.val / 2);
+        }
 
         if (led_is_gap(led)) {
             val = scale_val(val, 150);
