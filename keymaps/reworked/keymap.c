@@ -1766,24 +1766,21 @@ static void adxl345_update_fluid_state(void) {
     int32_t target_y_fp = (int32_t)adxl345_y << ADXL345_FLUID_SHIFT;
     int32_t dx_fp = target_x_fp - adxl345_fluid_x_fp;
     int32_t dy_fp = target_y_fp - adxl345_fluid_y_fp;
-    int32_t step_x_fp = dx_fp / 8;
-    int32_t step_y_fp = dy_fp / 8;
     uint32_t velocity = 0;
 
-    // Direct low-pass smoothing is intentionally boring here:
-    // no spring overshoot, no LED skipping, just a smooth glide toward the tilt target.
-    if (step_x_fp == 0 && dx_fp != 0) step_x_fp = dx_fp > 0 ? 1 : -1;
-    if (step_y_fp == 0 && dy_fp != 0) step_y_fp = dy_fp > 0 ? 1 : -1;
+    adxl345_fluid_vx_fp += div_min_step_i32(dx_fp, ADXL345_FLUID_ACCEL_DIV);
+    adxl345_fluid_vy_fp += div_min_step_i32(dy_fp, ADXL345_FLUID_ACCEL_DIV);
 
-    adxl345_fluid_vx_fp = step_x_fp;
-    adxl345_fluid_vy_fp = step_y_fp;
-    adxl345_fluid_x_fp += step_x_fp;
-    adxl345_fluid_y_fp += step_y_fp;
+    adxl345_fluid_vx_fp = (adxl345_fluid_vx_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
+    adxl345_fluid_vy_fp = (adxl345_fluid_vy_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
+
+    adxl345_fluid_x_fp += adxl345_fluid_vx_fp;
+    adxl345_fluid_y_fp += adxl345_fluid_vy_fp;
 
     adxl345_fluid_x = (int16_t)(adxl345_fluid_x_fp >> ADXL345_FLUID_SHIFT);
     adxl345_fluid_y = (int16_t)(adxl345_fluid_y_fp >> ADXL345_FLUID_SHIFT);
 
-    velocity = (uint32_t)abs_i32_u16(step_x_fp) + (uint32_t)abs_i32_u16(step_y_fp);
+    velocity = (uint32_t)abs_i32_u16(adxl345_fluid_vx_fp) + (uint32_t)abs_i32_u16(adxl345_fluid_vy_fp);
     velocity >>= ADXL345_FLUID_SHIFT;
     if (velocity > UINT8_MAX) velocity = UINT8_MAX;
     adxl345_fluid_motion = (uint16_t)velocity;
@@ -1887,13 +1884,14 @@ static uint8_t adxl345_frame_head(void) {
     const uint8_t right_len = RGB_FRAME_LED_COUNT / 4;
     const uint8_t bottom_len = (RGB_FRAME_LED_COUNT + 1) / 4;
     const uint8_t left_len = RGB_FRAME_LED_COUNT - top_len - right_len - bottom_len;
+    int16_t visual_y = -adxl345_fluid_y;
     uint16_t ax = abs_i16_u16(adxl345_fluid_x);
-    uint16_t ay = abs_i16_u16(adxl345_fluid_y);
+    uint16_t ay = abs_i16_u16(visual_y);
 
     if (RGB_FRAME_LED_COUNT == 0) return 0;
 
     if (ay >= ax) {
-        if (adxl345_fluid_y >= 0) {
+        if (visual_y >= 0) {
             return adxl345_map_axis_to_span(adxl345_fluid_x, top_len);
         }
 
@@ -1901,10 +1899,10 @@ static uint8_t adxl345_frame_head(void) {
     }
 
     if (adxl345_fluid_x >= 0) {
-        return (uint8_t)(top_len + adxl345_map_axis_to_span(-adxl345_fluid_y, right_len));
+        return (uint8_t)(top_len + adxl345_map_axis_to_span(-visual_y, right_len));
     }
 
-    return (uint8_t)(top_len + right_len + bottom_len + adxl345_map_axis_to_span(adxl345_fluid_y, left_len));
+    return (uint8_t)(top_len + right_len + bottom_len + adxl345_map_axis_to_span(visual_y, left_len));
 }
 
 static void adxl345_init(void) {
