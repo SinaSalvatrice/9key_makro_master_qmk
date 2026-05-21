@@ -3002,32 +3002,31 @@ static void render_rgb_tilt_mode(void) {
         return;
     }
 
-    // Use a sub-cell center so the highlight glides between keys instead of snapping.
-    int16_t center_x_fp = (int16_t)(2 * 64 + ((int32_t)adxl345_fluid_x * 64) / 110);
-    int16_t center_y_fp = (int16_t)(1 * 64 - ((int32_t)adxl345_fluid_y * 64) / 130);
+    // Render from the higher-resolution fluid state so tilt glides continuously.
+    int16_t center_x_fp = (int16_t)(2 * 256 + ((int32_t)adxl345_fluid_x_fp * 256) / (110 << ADXL345_FLUID_SHIFT));
+    int16_t center_y_fp = (int16_t)(1 * 256 - ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
     uint8_t motion_boost = adxl345_fluid_motion > 120 ? 70 : (uint8_t)(adxl345_fluid_motion / 2);
+
+    if (center_x_fp < 0) center_x_fp = 0;
+    if (center_x_fp > 4 * 256) center_x_fp = 4 * 256;
+    if (center_y_fp < 0) center_y_fp = 0;
+    if (center_y_fp > 2 * 256) center_y_fp = 2 * 256;
 
     for (uint8_t led = 0; led < RGB_KEYFIELD_LED_COUNT; led++) {
         uint8_t row = led_row_index(led);
         uint8_t col = led_col_index(led);
-        int16_t led_x_fp = (int16_t)col * 64;
-        int16_t led_y_fp = (int16_t)row * 64;
+        int16_t led_x_fp = (int16_t)col * 256;
+        int16_t led_y_fp = (int16_t)row * 256;
         uint16_t dx = abs_i16_u16(led_x_fp - center_x_fp);
         uint16_t dy = abs_i16_u16(led_y_fp - center_y_fp);
-        uint16_t distance_fp = dx + dy;
-        uint8_t fade = distance_fp >= 192 ? 0 : (uint8_t)(255 - ((distance_fp * 255) / 192));
+        uint16_t major = dx > dy ? dx : dy;
+        uint16_t minor = dx > dy ? dy : dx;
+        uint16_t distance_fp = major + minor / 2;
+        uint8_t fade = distance_fp >= 768 ? 0 : (uint8_t)(255 - ((distance_fp * 255) / 768));
+        uint8_t base = palette_floor(p.val / 24, 3);
         uint8_t peak = clamp_add_u8(p.val, motion_boost);
-        uint8_t val = palette_floor(scale_val(peak, fade), 3);
-
-        if (fade < 24) {
-            val = palette_floor(p.val / 24, 3);
-        } else if (fade < 96) {
-            val = palette_floor(val, 9);
-        } else if (fade < 170) {
-            val = palette_floor(val, 18);
-        } else {
-            val = palette_floor(val, p.val / 2);
-        }
+        uint8_t span = peak > base ? (uint8_t)(peak - base) : 0;
+        uint8_t val = clamp_add_u8(base, scale_val(span, fade));
 
         if (led_is_gap(led)) {
             val = scale_val(val, 150);
