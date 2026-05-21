@@ -1766,21 +1766,24 @@ static void adxl345_update_fluid_state(void) {
     int32_t target_y_fp = (int32_t)adxl345_y << ADXL345_FLUID_SHIFT;
     int32_t dx_fp = target_x_fp - adxl345_fluid_x_fp;
     int32_t dy_fp = target_y_fp - adxl345_fluid_y_fp;
+    int32_t step_x_fp = dx_fp / 8;
+    int32_t step_y_fp = dy_fp / 8;
     uint32_t velocity = 0;
 
-    adxl345_fluid_vx_fp += div_min_step_i32(dx_fp, ADXL345_FLUID_ACCEL_DIV);
-    adxl345_fluid_vy_fp += div_min_step_i32(dy_fp, ADXL345_FLUID_ACCEL_DIV);
+    // Direct low-pass smoothing is intentionally boring here:
+    // no spring overshoot, no LED skipping, just a smooth glide toward the tilt target.
+    if (step_x_fp == 0 && dx_fp != 0) step_x_fp = dx_fp > 0 ? 1 : -1;
+    if (step_y_fp == 0 && dy_fp != 0) step_y_fp = dy_fp > 0 ? 1 : -1;
 
-    adxl345_fluid_vx_fp = (adxl345_fluid_vx_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
-    adxl345_fluid_vy_fp = (adxl345_fluid_vy_fp * ADXL345_FLUID_DAMP_NUM) / ADXL345_FLUID_DAMP_DEN;
-
-    adxl345_fluid_x_fp += adxl345_fluid_vx_fp;
-    adxl345_fluid_y_fp += adxl345_fluid_vy_fp;
+    adxl345_fluid_vx_fp = step_x_fp;
+    adxl345_fluid_vy_fp = step_y_fp;
+    adxl345_fluid_x_fp += step_x_fp;
+    adxl345_fluid_y_fp += step_y_fp;
 
     adxl345_fluid_x = (int16_t)(adxl345_fluid_x_fp >> ADXL345_FLUID_SHIFT);
     adxl345_fluid_y = (int16_t)(adxl345_fluid_y_fp >> ADXL345_FLUID_SHIFT);
 
-    velocity = (uint32_t)abs_i32_u16(adxl345_fluid_vx_fp) + (uint32_t)abs_i32_u16(adxl345_fluid_vy_fp);
+    velocity = (uint32_t)abs_i32_u16(step_x_fp) + (uint32_t)abs_i32_u16(step_y_fp);
     velocity >>= ADXL345_FLUID_SHIFT;
     if (velocity > UINT8_MAX) velocity = UINT8_MAX;
     adxl345_fluid_motion = (uint16_t)velocity;
@@ -3004,7 +3007,7 @@ static void render_rgb_tilt_mode(void) {
 
     // Render from the higher-resolution fluid state so tilt glides continuously.
     int16_t center_x_fp = (int16_t)(2 * 256 + ((int32_t)adxl345_fluid_x_fp * 256) / (110 << ADXL345_FLUID_SHIFT));
-    int16_t center_y_fp = (int16_t)(1 * 256 - ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
+    int16_t center_y_fp = (int16_t)(1 * 256 + ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
     uint8_t motion_boost = adxl345_fluid_motion > 120 ? 70 : (uint8_t)(adxl345_fluid_motion / 2);
 
     if (center_x_fp < 0) center_x_fp = 0;
