@@ -1988,7 +1988,7 @@ static void adxl345_task(void) {
         return;
     }
 
-    x = (int16_t)(adxl345_zero_x - x);
+    x -= adxl345_zero_x;
     y -= adxl345_zero_y;
     z -= adxl345_zero_z;
 
