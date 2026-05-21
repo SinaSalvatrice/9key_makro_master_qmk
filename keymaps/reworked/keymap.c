@@ -60,6 +60,24 @@
 #    define ADXL345_FLUID_DAMP_DEN  8
 #    define ADXL345_GAME_TILT_ON    70
 #    define ADXL345_GAME_TILT_OFF   40
+#    ifndef ADXL345_GAME_AXIS_DEBOUNCE_MS
+#        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
+#    endif
+#    ifndef ADXL345_GAME_DEADZONE
+#        define ADXL345_GAME_DEADZONE 6
+#    endif
+#    ifndef ADXL345_GAME_FILTER_DIV
+#        define ADXL345_GAME_FILTER_DIV 4
+#    endif
+#    ifndef ADXL345_GAME_SWAP_XY
+#        define ADXL345_GAME_SWAP_XY 0
+#    endif
+#    ifndef ADXL345_GAME_INVERT_X
+#        define ADXL345_GAME_INVERT_X 0
+#    endif
+#    ifndef ADXL345_GAME_INVERT_Y
+#        define ADXL345_GAME_INVERT_Y 0
+#    endif
 #endif
 
 // ── Layer enum ──────────────────────────────────────────────
@@ -175,6 +193,8 @@ static uint8_t adxl345_addr = ADXL345_ADDR_PRIMARY;
 static int16_t adxl345_x = 0;
 static int16_t adxl345_y = 0;
 static int16_t adxl345_z = 0;
+static int16_t adxl345_game_x = 0;
+static int16_t adxl345_game_y = 0;
 static int16_t adxl345_zero_x = 0;
 static int16_t adxl345_zero_y = 0;
 static int16_t adxl345_zero_z = 0;
@@ -290,6 +310,12 @@ static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
 static bool tilt_game_right_held          = false;
+static int8_t tilt_game_x_state           = 0;
+static int8_t tilt_game_y_state           = 0;
+static int8_t tilt_game_x_pending         = 0;
+static int8_t tilt_game_y_pending         = 0;
+static uint32_t tilt_game_x_pending_since = 0;
+static uint32_t tilt_game_y_pending_since = 0;
 static vsc_mode_t last_key_vsc_mode       = VSC_MODE_BAR;
 static prompt_mode_t prompt_mode          = PROMPT_MODE_BASE;
 static prompt_mode_t last_key_prompt_mode = PROMPT_MODE_BASE;
@@ -1683,6 +1709,12 @@ static uint16_t abs_i16_u16(int16_t v) {
     return v < 0 ? (uint16_t)(-v) : (uint16_t)v;
 }
 
+static int8_t sign_i16(int16_t v) {
+    if (v > 0) return 1;
+    if (v < 0) return -1;
+    return 0;
+}
+
 static uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
     if (value < min) return min;
     if (value > max) return max;
@@ -1766,9 +1798,42 @@ static void update_tilt_game_arrow(uint16_t keycode, bool *held, bool pressed) {
     *held = pressed;
 }
 
-static bool adxl345_axis_active(int16_t value, bool held) {
-    int16_t magnitude = value < 0 ? (int16_t)-value : value;
-    return magnitude >= (held ? ADXL345_GAME_TILT_OFF : ADXL345_GAME_TILT_ON);
+static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state) {
+    uint16_t magnitude = abs_i16_u16(value);
+    int8_t sign = sign_i16(value);
+
+    if (current_state == 0) {
+        if (sign == 0 || magnitude < ADXL345_GAME_TILT_ON) return 0;
+        return sign;
+    }
+
+    if (magnitude <= ADXL345_GAME_TILT_OFF) return 0;
+    if (sign == 0 || sign == current_state) return current_state;
+
+    // If we cross through zero with enough magnitude, switch immediately.
+    return magnitude >= ADXL345_GAME_TILT_ON ? sign : current_state;
+}
+
+static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since) {
+    int8_t desired = adxl345_axis_desired_state(value, *state);
+    if (desired == *state) {
+        *pending = *state;
+        *pending_since = 0;
+        return *state;
+    }
+
+    if (*pending_since == 0 || *pending != desired) {
+        *pending = desired;
+        *pending_since = timer_read32() | 1;
+        return *state;
+    }
+
+    if (timer_elapsed32(*pending_since) >= ADXL345_GAME_AXIS_DEBOUNCE_MS) {
+        *state = desired;
+        *pending_since = 0;
+    }
+
+    return *state;
 }
 
 static void update_game_tilt_arrows(void) {
@@ -1778,11 +1843,21 @@ static void update_game_tilt_arrows(void) {
     bool press_left = false;
     bool press_right = false;
 
-    if (nav_tilt_active) {
-        press_up = adxl345_fluid_y > 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_up_held);
-        press_down = adxl345_fluid_y < 0 && adxl345_axis_active(adxl345_fluid_y, tilt_game_down_held);
-        press_left = adxl345_fluid_x < 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_left_held);
-        press_right = adxl345_fluid_x > 0 && adxl345_axis_active(adxl345_fluid_x, tilt_game_right_held);
+    if (!nav_tilt_active) {
+        tilt_game_x_state = 0;
+        tilt_game_y_state = 0;
+        tilt_game_x_pending = 0;
+        tilt_game_y_pending = 0;
+        tilt_game_x_pending_since = 0;
+        tilt_game_y_pending_since = 0;
+    } else {
+        tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since);
+        tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since);
+
+        press_up = tilt_game_y_state > 0;
+        press_down = tilt_game_y_state < 0;
+        press_left = tilt_game_x_state < 0;
+        press_right = tilt_game_x_state > 0;
     }
 
     update_tilt_game_arrow(KC_UP, &tilt_game_up_held, press_up);
@@ -1835,6 +1910,8 @@ static void adxl345_init(void) {
     adxl345_x = 0;
     adxl345_y = 0;
     adxl345_z = 0;
+    adxl345_game_x = 0;
+    adxl345_game_y = 0;
     adxl345_last_x = 0;
     adxl345_last_y = 0;
     adxl345_last_z = 0;
@@ -1901,6 +1978,8 @@ static void adxl345_task(void) {
         adxl345_x = 0;
         adxl345_y = 0;
         adxl345_z = 0;
+        adxl345_game_x = 0;
+        adxl345_game_y = 0;
         adxl345_motion = 0;
         adxl345_last_x = 0;
         adxl345_last_y = 0;
@@ -1933,6 +2012,31 @@ static void adxl345_task(void) {
     adxl345_last_y = y;
     adxl345_last_z = z;
     adxl345_update_fluid_state();
+
+    int16_t game_x = x;
+    int16_t game_y = y;
+#if ADXL345_GAME_SWAP_XY
+    int16_t tmp = game_x;
+    game_x = game_y;
+    game_y = tmp;
+#endif
+#if ADXL345_GAME_INVERT_X
+    game_x = (int16_t)-game_x;
+#endif
+#if ADXL345_GAME_INVERT_Y
+    game_y = (int16_t)-game_y;
+#endif
+
+    game_x = adxl345_apply_deadzone(game_x, ADXL345_GAME_DEADZONE);
+    game_y = adxl345_apply_deadzone(game_y, ADXL345_GAME_DEADZONE);
+
+#if ADXL345_GAME_FILTER_DIV <= 1
+    adxl345_game_x = game_x;
+    adxl345_game_y = game_y;
+#else
+    adxl345_game_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_GAME_FILTER_DIV - 1) + game_x) / ADXL345_GAME_FILTER_DIV);
+    adxl345_game_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_GAME_FILTER_DIV - 1) + game_y) / ADXL345_GAME_FILTER_DIV);
+#endif
 }
 
 static const char *adxl345_status_label(void) {
