@@ -55,9 +55,9 @@
 #    define ADXL345_I2C_TIMEOUT     100
 #    define ADXL345_READ_MS         20
 #    define ADXL345_FLUID_SHIFT     4
-#    define ADXL345_FLUID_ACCEL_DIV 7
-#    define ADXL345_FLUID_DAMP_NUM  3
-#    define ADXL345_FLUID_DAMP_DEN  4
+#    define ADXL345_FLUID_ACCEL_DIV 9
+#    define ADXL345_FLUID_DAMP_NUM  2
+#    define ADXL345_FLUID_DAMP_DEN  3
 #    define ADXL345_GAME_TILT_ON    70
 #    define ADXL345_GAME_TILT_OFF   40
 #    ifndef ADXL345_GAME_AXIS_DEBOUNCE_MS
@@ -1783,7 +1783,7 @@ static void adxl345_update_fluid_state(void) {
     velocity = (uint32_t)abs_i32_u16(adxl345_fluid_vx_fp) + (uint32_t)abs_i32_u16(adxl345_fluid_vy_fp);
     velocity >>= ADXL345_FLUID_SHIFT;
     if (velocity > UINT8_MAX) velocity = UINT8_MAX;
-    adxl345_fluid_motion = (uint16_t)(((uint32_t)adxl345_fluid_motion * 3 + velocity) / 4);
+    adxl345_fluid_motion = (uint16_t)(((uint32_t)adxl345_fluid_motion * 7 + velocity) / 8);
 }
 
 static void update_tilt_game_arrow(uint16_t keycode, bool *held, bool pressed) {
@@ -3006,7 +3006,7 @@ static void render_rgb_tilt_mode(void) {
     // Render from the higher-resolution fluid state so tilt glides continuously.
     int16_t center_x_fp = (int16_t)(2 * 256 + ((int32_t)adxl345_fluid_x_fp * 256) / (110 << ADXL345_FLUID_SHIFT));
     int16_t center_y_fp = (int16_t)(1 * 256 + ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
-    uint8_t motion_boost = adxl345_fluid_motion > 120 ? 70 : (uint8_t)(adxl345_fluid_motion / 2);
+    uint8_t motion_boost = adxl345_fluid_motion > 120 ? 52 : (uint8_t)(adxl345_fluid_motion / 3);
 
     if (center_x_fp < 0) center_x_fp = 0;
     if (center_x_fp > 4 * 256) center_x_fp = 4 * 256;
