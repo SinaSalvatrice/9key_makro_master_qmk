@@ -121,7 +121,7 @@ enum custom_keycodes {
     PRM_PICS,
     PRM_ETSY,
     GM_NAV,
-    GM_WASD,
+    GM_MOUSE,
     GM_1,
     GM_2,
     GM_3,
@@ -279,7 +279,7 @@ typedef enum {
 
 typedef enum {
     GAME_MODE_NAV,
-    GAME_MODE_WASD,
+    GAME_MODE_MOUSE,
 } game_mode_t;
 
 typedef enum {
@@ -314,8 +314,8 @@ static text_mode_t last_key_text_mode     = TEXT_MODE_WIN;
 static bool window_browser_held           = false;
 static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
-static game_mode_t game_mode              = GAME_MODE_WASD;
-static game_mode_t last_key_game_mode     = GAME_MODE_WASD;
+static game_mode_t game_mode              = GAME_MODE_MOUSE;
+static game_mode_t last_key_game_mode     = GAME_MODE_MOUSE;
 static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
@@ -523,11 +523,11 @@ static const char *const window_win_functions[6]     = {"Previous desktop", "Tas
 static const char *const window_browser_functions[6] = {"Browser back", "Refresh page", "Browser forward", "Previous tab", "New tab", "Next tab"};
 static const char *const window_snap_functions[6]    = {"Maximize window", "Snap or maximize up", "Close window", "Snap left", "Snap or restore down", "Snap right"};
 
-static const char *const game_nav_labels[6]  = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
-static const char *const game_wasd_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
+static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
+static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
 
-static const char *const game_nav_functions[6]  = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
-static const char *const game_wasd_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
+static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
+static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
@@ -540,7 +540,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
     [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
-    [_DEV]    = {"SEL",  "NAV",  "WASD", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
+    [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME", "VSC+", "BASE", "PROMT"},
@@ -774,10 +774,10 @@ static MAYBE_UNUSED const char *rgb_function_for(uint8_t index) { return rgb_fun
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "NAV";
-    if (index == 2) return "WASD";
+    if (index == 2) return "MOUSE";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_wasd_labels[slot];
+        return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_mouse_labels[slot];
     }
     return "----";
 }
@@ -785,10 +785,10 @@ static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
 static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Switch to menu navigation";
-    if (index == 2) return "Switch to movement controls";
+    if (index == 2) return "Switch to tilt mouse controls";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_wasd_functions[slot];
+        return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_mouse_functions[slot];
     }
     return "Unknown";
 }
@@ -797,7 +797,7 @@ static MAYBE_UNUSED const char *game_label_for(uint8_t index) { return game_labe
 static MAYBE_UNUSED const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
 
 static const char *game_mode_name(game_mode_t mode) {
-    return mode == GAME_MODE_NAV ? "NAV" : "WASD";
+    return mode == GAME_MODE_NAV ? "NAV" : "MOUSE";
 }
 
 static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
@@ -1833,7 +1833,7 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 static void update_game_tilt_arrows(void) {
     bool tilt_active = adxl345_ready && active_layer_raw() == _DEV;
     bool nav_tilt_active = tilt_active && game_mode == GAME_MODE_NAV;
-    bool wasd_tilt_active = tilt_active && game_mode == GAME_MODE_WASD;
+    bool mouse_tilt_active = tilt_active && game_mode == GAME_MODE_MOUSE;
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;
@@ -1847,7 +1847,7 @@ static void update_game_tilt_arrows(void) {
         tilt_game_x_pending_since = 0;
         tilt_game_y_pending_since = 0;
     } else {
-        uint16_t debounce_ms = wasd_tilt_active ? ADXL345_MOUSE_AXIS_DEBOUNCE_MS : ADXL345_GAME_AXIS_DEBOUNCE_MS;
+        uint16_t debounce_ms = mouse_tilt_active ? ADXL345_MOUSE_AXIS_DEBOUNCE_MS : ADXL345_GAME_AXIS_DEBOUNCE_MS;
 
         tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms);
         tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms);
@@ -1863,10 +1863,11 @@ static void update_game_tilt_arrows(void) {
     update_tilt_game_control(KC_LEFT, &tilt_game_left_held, nav_tilt_active && press_left);
     update_tilt_game_control(KC_RGHT, &tilt_game_right_held, nav_tilt_active && press_right);
 
-    update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, wasd_tilt_active && press_up);
-    update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, wasd_tilt_active && press_down);
-    update_tilt_game_control(MS_LEFT, &tilt_game_mouse_left_held, wasd_tilt_active && press_left);
-    update_tilt_game_control(MS_RGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);}
+    update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, mouse_tilt_active && press_up);
+    update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, mouse_tilt_active && press_down);
+    update_tilt_game_control(MS_LEFT, &tilt_game_mouse_left_held, mouse_tilt_active && press_right);
+    update_tilt_game_control(MS_RGHT, &tilt_game_mouse_right_held, mouse_tilt_active && press_left);
+}
 
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
     const int16_t range = 220;
@@ -3159,7 +3160,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,       KC_NO,   KC_NO
     ),
     [_DEV] = LAYOUT(
-        TD(TD_LAYER_SELECT), GM_NAV,  GM_WASD,
+        TD(TD_LAYER_SELECT), GM_NAV,  GM_MOUSE,
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
@@ -3455,8 +3456,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) game_mode = GAME_MODE_NAV;
             return false;
 
-        case GM_WASD:
-            if (record->event.pressed) game_mode = GAME_MODE_WASD;
+        case GM_MOUSE:
+            if (record->event.pressed) game_mode = GAME_MODE_MOUSE;
             return false;
 
         case GM_1:
