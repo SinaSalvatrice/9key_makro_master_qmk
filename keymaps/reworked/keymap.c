@@ -6,6 +6,12 @@
 #endif
 #include <stdio.h>
 
+#if defined(__GNUC__)
+#    define MAYBE_UNUSED __attribute__((unused))
+#else
+#    define MAYBE_UNUSED
+#endif
+
 // ============================================================
 // RGB / OLED selector build
 // - GP12 cycles OLED legend pages
@@ -573,7 +579,7 @@ static const char *layer_name_short(uint8_t l) {
     }
 }
 
-static const char *layer_name_long(uint8_t l) {
+static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
     switch (l) {
         case _BASE:   return "BASE";
         case _WINDOW: return "WINDOW";
@@ -1410,18 +1416,6 @@ static const char *legend_label_for(uint8_t layer, uint8_t row, uint8_t col) {
     return layer_legend[layer][index];
 }
 
-static const char *function_label_for(uint8_t layer, uint8_t row, uint8_t col) {
-    uint8_t index = (row * MATRIX_COLS) + col;
-    if (layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "Unknown";
-    if (layer == _TEXT) return text_function_for(index);
-    if (layer == _WINDOW) return window_function_for(index);
-    if (layer == _RGB) return rgb_function_for(index);
-    if (layer == _DEV) return game_function_for(index);
-    if (layer == _VSC) return vsc_function_for(current_vsc_preview_mode(), index);
-    if (layer == _PROMPT) return prompt_function_for(index);
-    return layer_function[layer][index];
-}
-
 static const char *last_key_label_for(void) {
     uint8_t index = (last_row * MATRIX_COLS) + last_col;
     if (last_key_layer >= _LAYER_COUNT || index >= PAD_KEY_COUNT) return "----";
@@ -1660,14 +1654,6 @@ static void toggle_rgb_zone_bits(uint8_t zone_bits) {
 
 static void toggle_rgb_all_zones(void) {
     rgb_zone_mask = rgb_zone_mask == RGB_ZONE_ALL ? 0 : RGB_ZONE_ALL;
-
-#ifdef RGBLIGHT_ENABLE
-    render_rgb_layer_visuals();
-#endif
-}
-
-static void toggle_rgb_output_state(void) {
-    rgb_output_enabled = !rgb_output_enabled;
 
 #ifdef RGBLIGHT_ENABLE
     render_rgb_layer_visuals();
