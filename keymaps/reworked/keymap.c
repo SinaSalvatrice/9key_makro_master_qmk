@@ -635,7 +635,7 @@ static game_mode_t current_game_preview_mode(void) {
 static const char *encoder_function_for_layer(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "Wheel scroll up/down";
-        case _WINDOW: return window_browser_held ? "Browser page prev/next" : (window_snap_held ? "Snap left/right" : "Alt-Tab window switch");
+        case _WINDOW: return window_browser_held ? "Browser page prev/next" : (window_snap_held ? "Snap left/right" : (encoder_btn_pressed ? "Desktop prev/next" : "Alt-Tab window switch"));
         case _TEXT:   return encoder_btn_pressed ? "Select text left/right" : "Move cursor left/right";
         case _MEDIA:  return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
@@ -3564,6 +3564,8 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
                 tap_code16(clockwise ? C(KC_PGDN) : C(KC_PGUP));
             } else if (current_window_preview_mode() == WINDOW_MODE_SNAP) {
                 tap_code16(clockwise ? G(KC_RGHT) : G(KC_LEFT));
+            } else if (encoder_btn_pressed) {
+                tap_code16(clockwise ? G(C(KC_RGHT)) : G(C(KC_LEFT)));
             } else if (clockwise) {
                 tap_code16(A(KC_TAB));
             } else {
