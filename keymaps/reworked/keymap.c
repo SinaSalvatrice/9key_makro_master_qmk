@@ -549,7 +549,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
-    [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Switch to tilt mouse controls", "Arrow down", "Toggle RGB output"},
+    [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Go to game mouse layer", "Arrow down", "Toggle RGB output"},
     [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
@@ -3376,7 +3376,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) {
                 rgb_output_enabled = !rgb_output_enabled;
 #ifdef RGBLIGHT_ENABLE
-                render_rgb_layer_visuals();
+                if (rgb_output_enabled) {
+                    rgblight_enable_noeeprom();
+                    render_rgb_layer_visuals();
+                } else {
+                    rgblight_disable_noeeprom();
+                }
 #endif
             }
             return false;
@@ -3483,7 +3488,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case GM_MOUSE:
-            if (record->event.pressed) game_mode = GAME_MODE_MOUSE;
+            if (record->event.pressed) {
+                game_mode = GAME_MODE_MOUSE;
+                select_target_layer(_DEV);
+            }
             return false;
 
         case GM_1:
@@ -3570,8 +3578,11 @@ case TXT_EDT:
 
     }
 
-    return true;
+ return true;
 }
+
+
+
 
 bool encoder_update_user(uint8_t index, bool clockwise) {
     (void)index;
