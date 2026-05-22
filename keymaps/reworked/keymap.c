@@ -703,10 +703,10 @@ static const char *window_function_for_mode(window_mode_t mode, uint8_t index) {
     return "Unknown";
 }
 
-static const char *text_label_for(uint8_t index) { return text_label_for_mode(current_text_preview_mode(), index); }
-static const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
-static const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
-static const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
+static MAYBE_UNUSED const char *text_label_for(uint8_t index) { return text_label_for_mode(current_text_preview_mode(), index); }
+static MAYBE_UNUSED const char *text_function_for(uint8_t index) { return text_function_for_mode(current_text_preview_mode(), index); }
+static MAYBE_UNUSED const char *window_label_for(uint8_t index) { return window_label_for_mode(current_window_preview_mode(), index); }
+static MAYBE_UNUSED const char *window_function_for(uint8_t index) { return window_function_for_mode(current_window_preview_mode(), index); }
 
 static const char *rgb_animation_label(void) {
     switch (rgb_animation_mode) {
@@ -764,8 +764,8 @@ static const char *rgb_function_for_mode(bool mode_held, uint8_t index) {
     return mode_held ? mode_functions[index] : normal_functions[index];
 }
 
-static const char *rgb_label_for(uint8_t index) { return rgb_label_for_mode(rgb_mode_held, index); }
-static const char *rgb_function_for(uint8_t index) { return rgb_function_for_mode(rgb_mode_held, index); }
+static MAYBE_UNUSED const char *rgb_label_for(uint8_t index) { return rgb_label_for_mode(rgb_mode_held, index); }
+static MAYBE_UNUSED const char *rgb_function_for(uint8_t index) { return rgb_function_for_mode(rgb_mode_held, index); }
 
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
@@ -789,8 +789,8 @@ static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
     return "Unknown";
 }
 
-static const char *game_label_for(uint8_t index) { return game_label_for_mode(current_game_preview_mode(), index); }
-static const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
+static MAYBE_UNUSED const char *game_label_for(uint8_t index) { return game_label_for_mode(current_game_preview_mode(), index); }
+static MAYBE_UNUSED const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
 
 static const char *game_mode_name(game_mode_t mode) {
     return mode == GAME_MODE_NAV ? "NAV" : "WASD";
@@ -828,8 +828,8 @@ static const char *prompt_function_for_mode(prompt_mode_t mode, uint8_t index) {
     return "Unknown";
 }
 
-static const char *prompt_label_for(uint8_t index) { return prompt_label_for_mode(prompt_mode, index); }
-static const char *prompt_function_for(uint8_t index) { return prompt_function_for_mode(prompt_mode, index); }
+static MAYBE_UNUSED const char *prompt_label_for(uint8_t index) { return prompt_label_for_mode(prompt_mode, index); }
+static MAYBE_UNUSED const char *prompt_function_for(uint8_t index) { return prompt_function_for_mode(prompt_mode, index); }
 
 static const char *prompt_mode_name(prompt_mode_t mode) {
     switch (mode) {
