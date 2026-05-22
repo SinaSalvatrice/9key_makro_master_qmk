@@ -1861,8 +1861,7 @@ static void update_game_tilt_arrows(void) {
     update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, wasd_tilt_active && press_up);
     update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, wasd_tilt_active && press_down);
     update_tilt_game_control(MS_LEFT, &tilt_game_mouse_left_held, wasd_tilt_active && press_left);
-    update_tilt_game_control(MS_RIGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);
-}
+    update_tilt_game_control(MS_RGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);}
 
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
     const int16_t range = 220;
@@ -3291,7 +3290,7 @@ tap_dance_action_t tap_dance_actions[] = {
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (keycode == TD(TD_LAYER_SELECT)) {
+    if (keycode == TD(TD_LASSSYER_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = canonical_rgb_layer(active_layer_raw());
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
