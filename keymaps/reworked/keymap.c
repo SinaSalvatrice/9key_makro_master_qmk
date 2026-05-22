@@ -3290,7 +3290,7 @@ tap_dance_action_t tap_dance_actions[] = {
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (keycode == TD(TD_LASSSYER_SELECT)) {
+    if (keycode == TD(TD_LAYER_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = canonical_rgb_layer(active_layer_raw());
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
