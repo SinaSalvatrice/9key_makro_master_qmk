@@ -163,6 +163,7 @@ enum custom_keycodes {
 };
 
 enum tap_dance_ids {
+    TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
     TD_SEL_TXT_WORK,
     TD_SEL_VSC_SYS,
@@ -1857,10 +1858,10 @@ static void update_game_tilt_arrows(void) {
     update_tilt_game_control(KC_LEFT, &tilt_game_left_held, nav_tilt_active && press_left);
     update_tilt_game_control(KC_RGHT, &tilt_game_right_held, nav_tilt_active && press_right);
 
-    update_tilt_game_control(KC_MS_UP, &tilt_game_mouse_up_held, wasd_tilt_active && press_up);
-    update_tilt_game_control(KC_MS_DOWN, &tilt_game_mouse_down_held, wasd_tilt_active && press_down);
-    update_tilt_game_control(KC_MS_LEFT, &tilt_game_mouse_left_held, wasd_tilt_active && press_left);
-    update_tilt_game_control(KC_MS_RIGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);
+    update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, wasd_tilt_active && press_up);
+    update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, wasd_tilt_active && press_down);
+    update_tilt_game_control(MS_LEFT, &tilt_game_mouse_left_held, wasd_tilt_active && press_left);
+    update_tilt_game_control(MS_RIGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);
 }
 
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {
@@ -3104,72 +3105,72 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        MO(_SELECT), KC_HOME,       KC_BSPC,
+        TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
     [_WINDOW] = LAYOUT(
-        MO(_SELECT), WIN_BRO, WIN_AUX,
+        TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
         WIN_1,       WIN_2,   WIN_3,
         WIN_4,       WIN_5,   WIN_6
     ),
     [_TEXT] = LAYOUT(
-        MO(_SELECT), TXT_ACT, TXT_EDT,
+        TD(TD_LAYER_SELECT), TXT_ACT, TXT_EDT,
         TXT_1,       TXT_2,   TXT_3,
         TXT_4,       TXT_5,   TXT_6
     ),
     [_MEDIA] = LAYOUT(
-        MO(_SELECT), KC_MPRV, KC_MNXT,
+        TD(TD_LAYER_SELECT), KC_MPRV, KC_MNXT,
         KC_VOLD,     KC_MPLY, KC_VOLU,
         KC_MRWD,     KC_MUTE, KC_MFFD
     ),
     [_RGB] = LAYOUT(
-        MO(_SELECT), RGB_MODE, RGB_TOG,
+        TD(TD_LAYER_SELECT), RGB_MODE, RGB_TOG,
         RGB_HUEU,    RGB_HUED, RGB_VALU,
         RGB_SATU,    RGB_SATD, RGB_VALD
     ),
     [_RGBMOD] = LAYOUT(
-        MO(_SELECT), KC_TRNS, KC_NO,
+        TD(TD_LAYER_SELECT), KC_TRNS, KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
     [_RGBADJ] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_TRNS,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_TRNS,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
     [_MARK] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_NO,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
     [_WORK] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_NO,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
     [_SYS] = LAYOUT(
-        MO(_SELECT), KC_NO,   KC_NO,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
     [_DEV] = LAYOUT(
-        MO(_SELECT), GM_NAV,  GM_WASD,
+        TD(TD_LAYER_SELECT), GM_NAV,  GM_WASD,
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
     [_VSC] = LAYOUT(
-        MO(_SELECT), VSC_BAR, VSC_CHAT,
+        TD(TD_LAYER_SELECT), VSC_BAR, VSC_CHAT,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
     [_PROMPT] = LAYOUT(
-        MO(_SELECT), PRM_PICS, PRM_ETSY,
+        TD(TD_LAYER_SELECT), PRM_PICS, PRM_ETSY,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
     [_SELECT] = LAYOUT(
-        MO(_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
+        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
         SEL_MEDIA,   KC_NO,              SEL_DEV,
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
@@ -3204,6 +3205,43 @@ static void select_target_layer(uint8_t layer) {
     }
 }
 
+
+static void selector_hold_begin(void) {
+    selector_origin_layer = canonical_rgb_layer(active_layer_raw());
+    if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
+
+    matrix_select_held = true;
+    update_select_layer_state();
+}
+
+static void selector_hold_end(void) {
+    matrix_select_held = false;
+    update_select_layer_state();
+
+    if (selector_target == selector_origin_layer && timer_elapsed32(selector_last_tap) <= SELECTOR_DOUBLE_TAP_MS) {
+        selector_target = _BASE;
+        select_cursor = slot_for_layer(selector_target);
+        layer_move(_BASE);
+        selector_last_tap = 0;
+    } else {
+        layer_move(selector_target);
+        selector_last_tap = (selector_target == selector_origin_layer) ? timer_read32() : 0;
+    }
+}
+
+static uint8_t tap_dance_layer_for_count(uint8_t count) {
+    switch (count) {
+        case 1: return _BASE;
+        case 2: return _WINDOW;
+        case 3: return _TEXT;
+        case 4: return _MEDIA;
+        case 5: return _DEV;
+        case 6: return _VSC;
+        case 7: return _RGB;
+        default: return _PROMPT;
+    }
+}
+
 #ifdef TAP_DANCE_ENABLE
 static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
@@ -3220,15 +3258,40 @@ static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data
     select_target_layer(state->count >= 2 ? _SYS : _VSC);
 }
 
+static bool td_layer_select_held = false;
+
+static void td_layer_select_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+
+    if (state->pressed) {
+        td_layer_select_held = true;
+        selector_hold_begin();
+        return;
+    }
+
+    select_target_layer(tap_dance_layer_for_count(state->count));
+}
+
+static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+
+    if (td_layer_select_held) {
+        td_layer_select_held = false;
+        selector_hold_end();
+    }
+}
+
 tap_dance_action_t tap_dance_actions[] = {
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
+
 };
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (keycode == MO(_SELECT)) {
+    if (keycode == TD(TD_LAYER_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = canonical_rgb_layer(active_layer_raw());
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
@@ -3425,14 +3488,18 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case TXT_ACT:
-            text_edit_held = false;
-            text_action_held = record->event.pressed;
-            return false;
+    if (record->event.pressed) {
+        text_edit_held = false;
+        text_action_held = !text_action_held;
+    }
+    return false;
 
-        case TXT_EDT:
-            text_action_held = false;
-            text_edit_held = record->event.pressed;
-            return false;
+case TXT_EDT:
+    if (record->event.pressed) {
+        text_action_held = false;
+        text_edit_held = !text_edit_held;
+    }
+    return false;
 
         case TXT_1:
         case TXT_2:
