@@ -310,6 +310,10 @@ static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
 static bool tilt_game_right_held          = false;
+static bool tilt_game_mouse_up_held       = false;
+static bool tilt_game_mouse_down_held     = false;
+static bool tilt_game_mouse_left_held     = false;
+static bool tilt_game_mouse_right_held    = false;
 static int8_t tilt_game_x_state           = 0;
 static int8_t tilt_game_y_state           = 0;
 static int8_t tilt_game_x_pending         = 0;
@@ -1786,7 +1790,7 @@ static void adxl345_update_fluid_state(void) {
     adxl345_fluid_motion = (uint16_t)(((uint32_t)adxl345_fluid_motion * 7 + velocity) / 8);
 }
 
-static void update_tilt_game_arrow(uint16_t keycode, bool *held, bool pressed) {
+static void update_tilt_game_control(uint16_t keycode, bool *held, bool pressed) {
     if (pressed == *held) return;
 
     if (pressed) {
@@ -1837,13 +1841,15 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 }
 
 static void update_game_tilt_arrows(void) {
-    bool nav_tilt_active = adxl345_ready && active_layer_raw() == _DEV && game_mode == GAME_MODE_NAV;
+    bool tilt_active = adxl345_ready && active_layer_raw() == _DEV;
+    bool nav_tilt_active = tilt_active && game_mode == GAME_MODE_NAV;
+    bool wasd_tilt_active = tilt_active && game_mode == GAME_MODE_WASD;
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;
     bool press_right = false;
 
-    if (!nav_tilt_active) {
+    if (!tilt_active) {
         tilt_game_x_state = 0;
         tilt_game_y_state = 0;
         tilt_game_x_pending = 0;
@@ -1860,10 +1866,15 @@ static void update_game_tilt_arrows(void) {
         press_right = tilt_game_x_state > 0;
     }
 
-    update_tilt_game_arrow(KC_UP, &tilt_game_up_held, press_up);
-    update_tilt_game_arrow(KC_DOWN, &tilt_game_down_held, press_down);
-    update_tilt_game_arrow(KC_LEFT, &tilt_game_left_held, press_left);
-    update_tilt_game_arrow(KC_RGHT, &tilt_game_right_held, press_right);
+    update_tilt_game_control(KC_UP, &tilt_game_up_held, nav_tilt_active && press_up);
+    update_tilt_game_control(KC_DOWN, &tilt_game_down_held, nav_tilt_active && press_down);
+    update_tilt_game_control(KC_LEFT, &tilt_game_left_held, nav_tilt_active && press_left);
+    update_tilt_game_control(KC_RGHT, &tilt_game_right_held, nav_tilt_active && press_right);
+
+    update_tilt_game_control(KC_MS_UP, &tilt_game_mouse_up_held, wasd_tilt_active && press_up);
+    update_tilt_game_control(KC_MS_DOWN, &tilt_game_mouse_down_held, wasd_tilt_active && press_down);
+    update_tilt_game_control(KC_MS_LEFT, &tilt_game_mouse_left_held, wasd_tilt_active && press_left);
+    update_tilt_game_control(KC_MS_RIGHT, &tilt_game_mouse_right_held, wasd_tilt_active && press_right);
 }
 
 static uint8_t adxl345_map_axis_to_span(int16_t value, uint8_t span_len) {

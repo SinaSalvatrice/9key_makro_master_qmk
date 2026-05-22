@@ -219,6 +219,8 @@ SHFT  W     SPC
 A     S     D
 ```
 
+If an ADXL345 accelerometer is connected via I2C, WASD mode uses the same filtered tilt input to drive mouse cursor movement via QMK mouse keys while the `_DEV` layer is active.
+
 ---
 
 ### VSC
