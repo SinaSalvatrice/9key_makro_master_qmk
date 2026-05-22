@@ -136,6 +136,7 @@ enum custom_keycodes {
     WIN_4,
     WIN_5,
     WIN_6,
+    AIR_MOUSE,
     // QMK reserves only 32 keyboard-level custom slots (QK_KB_0..QK_KB_31).
     // Start the remaining local-only keycodes at SAFE_RANGE to keep introspection builds valid.
     TXT_ACT = SAFE_RANGE,
@@ -314,8 +315,8 @@ static text_mode_t last_key_text_mode     = TEXT_MODE_WIN;
 static bool window_browser_held           = false;
 static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
-static game_mode_t game_mode              = GAME_MODE_MOUSE;
-static game_mode_t last_key_game_mode     = GAME_MODE_MOUSE;
+static game_mode_t game_mode              = GAME_MODE_NAV;
+static game_mode_t last_key_game_mode     = GAME_MODE_NAV;
 static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
@@ -508,11 +509,11 @@ static const char *const prompt_etsy_macros[6] = {
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
-static const char *const text_action_labels[6] = {"ALL", "COPY", "PASTE", "CUT", "UNDO", "REDO"};
+static const char *const text_action_labels[6] = {"CUT", "COPY", "PASTE", "UNDO", "ALL", "REDO"};
 static const char *const text_edit_labels[6]   = {"ENT", "BSPC", "DEL", "TAB", "SPC", "SHIFT"};
 
 static const char *const text_win_functions[6]    = {"Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"};
-static const char *const text_action_functions[6] = {"Select all", "Copy", "Paste", "Cut", "Undo", "Redo"};
+static const char *const text_action_functions[6] = {"Cut", "Copy", "Paste", "Undo", "Select all", "Redo"};
 static const char *const text_edit_functions[6]   = {"Enter", "Backspace", "Delete", "Tab", "Space", "One-shot Shift"};
 
 static const char *const window_win_labels[6]     = {"DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"};
@@ -524,13 +525,13 @@ static const char *const window_browser_functions[6] = {"Browser back", "Refresh
 static const char *const window_snap_functions[6]    = {"Maximize window", "Snap or maximize up", "Close window", "Snap left", "Snap or restore down", "Snap right"};
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
-static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
+static const char *const game_mouse_labels[6] = {"ESC", "W", "SPC", "A", "S", "D"};
 
 static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
-static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
+static const char *const game_mouse_functions[6] = {"Escape or pause", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
-    [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
+    [_BASE]   = {"SEL",  "AIR",  "TEXT", "WINDOW", "MEDIA", "GAME", "UNDO", "COPY", "PASTE"},
     [_WINDOW] = {"SEL",  "BRO",  "SNAP", "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "EDIT", "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "VOL-", "PLAY", "VOL+", "RWND", "MUTE", "FFWD"},
@@ -540,14 +541,14 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
     [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
-    [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
+    [_DEV]    = {"SEL",  "NAV",  "MOVE",  "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME", "VSC+", "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
-    [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Undo", "Arrow down", "Redo"},
+    [_BASE]   = {"Select layer", "Air Mouse", "Go to text layer", "Go to window layer", "Go to media layer", "Go to game layer", "Undo", "Copy", "Paste"},
     [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
@@ -557,7 +558,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
     [_WORK]   = {"Select layer", "Planning", "Writing", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
     [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
-    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
+    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to move controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Go to RGB", "Go to game", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
@@ -774,7 +775,7 @@ static MAYBE_UNUSED const char *rgb_function_for(uint8_t index) { return rgb_fun
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "NAV";
-    if (index == 2) return "MOUSE";
+    if (index == 2) return "MOVE";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_mouse_labels[slot];
@@ -785,7 +786,7 @@ static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
 static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Switch to menu navigation";
-    if (index == 2) return "Switch to tilt mouse controls";
+    if (index == 2) return "Switch to move controls";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_mouse_functions[slot];
@@ -797,7 +798,7 @@ static MAYBE_UNUSED const char *game_label_for(uint8_t index) { return game_labe
 static MAYBE_UNUSED const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
 
 static const char *game_mode_name(game_mode_t mode) {
-    return mode == GAME_MODE_NAV ? "NAV" : "MOUSE";
+    return mode == GAME_MODE_NAV ? "NAV" : "MOVE";
 }
 
 static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
@@ -1486,12 +1487,12 @@ static void tap_text_target(uint8_t slot) {
     switch (current_text_preview_mode()) {
         case TEXT_MODE_ACTIONS:
             switch (slot) {
-                case 0: tap_code16(C(KC_A)); break;
+                case 0: tap_code16(C(KC_X)); break;
                 case 1: tap_code16(C(KC_C)); break;
                 case 2: tap_code16(C(KC_V)); break;
-                case 3: tap_code16(C(KC_X)); break;
-                case 4: tap_code16(C(KC_Y)); break;
-                case 5: tap_code16(C(KC_Z)); break;
+                case 3: tap_code16(C(KC_Z)); break;
+                case 4: tap_code16(C(KC_A)); break;
+                case 5: tap_code16(C(KC_Y)); break;
             }
             break;
 
@@ -1571,7 +1572,7 @@ static void tap_game_target(uint8_t slot) {
         }
     } else {
         switch (slot) {
-            case 0: set_oneshot_mods(MOD_LSFT); break;
+            case 0: tap_code(KC_ESC); break;
             case 1: tap_code(KC_W); break;
             case 2: tap_code(KC_SPC); break;
             case 3: tap_code(KC_A); break;
@@ -3110,9 +3111,9 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
-        KC_LEFT,     KC_ENT,      KC_RGHT,
-        LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
+        TD(TD_LAYER_SELECT), AIR_MOUSE, SEL_TEXT,
+        SEL_WINDOW, SEL_MEDIA, SEL_DEV,
+        LCTL(KC_Z),  LCTL(KC_C), LCTL(KC_V)
     ),
     [_WINDOW] = LAYOUT(
         TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
@@ -3337,6 +3338,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 
     switch (keycode) {
+        case AIR_MOUSE:
+            if (record->event.pressed) {
+                game_mode = GAME_MODE_MOUSE;
+                select_target_layer(_DEV);
+            }
+            return false;
+
         case SEL_BASE:
             if (record->event.pressed) select_target_layer(_BASE);
             return false;
