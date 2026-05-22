@@ -317,6 +317,7 @@ static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static game_mode_t game_mode              = GAME_MODE_MOUSE;
 static game_mode_t last_key_game_mode     = GAME_MODE_MOUSE;
+static uint8_t mouse_accel_level          = 1;
 static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
@@ -525,10 +526,10 @@ static const char *const window_browser_functions[6] = {"Browser back", "Refresh
 static const char *const window_snap_functions[6]    = {"Maximize window", "Snap or maximize up", "Close window", "Snap left", "Snap or restore down", "Snap right"};
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
-static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
+static const char *const game_mouse_labels[6] = {"LCLK", "MIDL", "RCLK", "BACK", "FWD", "----"};
 
 static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
-static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
+static const char *const game_mouse_functions[6] = {"Left mouse button", "Middle mouse button", "Right mouse button", "Mouse side button 1", "Mouse side button 2", "Unused"};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "MOUSE", "DOWN", "RGB"},
@@ -633,6 +634,21 @@ static game_mode_t current_game_preview_mode(void) {
     return game_mode;
 }
 
+static void apply_mouse_accel_level(void) {
+    switch (mouse_accel_level) {
+        case 0:
+            tap_code(MS_ACL0);
+            break;
+        case 2:
+            tap_code(MS_ACL2);
+            break;
+        case 1:
+        default:
+            tap_code(MS_ACL1);
+            break;
+    }
+}
+
 static const char *encoder_function_for_layer(uint8_t layer) {
     switch (layer) {
         case _BASE:   return "Wheel scroll up/down";
@@ -642,7 +658,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _RGB:    return "RGB brightness +/-";
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
-        case _DEV:    return "Weapon or inventory scroll";
+        case _DEV:    return game_mode == GAME_MODE_MOUSE ? "Cursor accel +/-" : "Weapon or inventory scroll";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
@@ -1572,12 +1588,12 @@ static void tap_game_target(uint8_t slot) {
         }
     } else {
         switch (slot) {
-            case 0: set_oneshot_mods(MOD_LSFT); break;
-            case 1: tap_code(KC_W); break;
-            case 2: tap_code(KC_SPC); break;
-            case 3: tap_code(KC_A); break;
-            case 4: tap_code(KC_S); break;
-            case 5: tap_code(KC_D); break;
+            case 0: tap_code(MS_BTN1); break;
+            case 1: tap_code(MS_BTN3); break;
+            case 2: tap_code(MS_BTN2); break;
+            case 3: tap_code(MS_BTN4); break;
+            case 4: tap_code(MS_BTN5); break;
+            case 5: break;
         }
     }
 }
@@ -3617,7 +3633,16 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _DEV:
-            tap_code(clockwise ? MS_WHLU : MS_WHLD);
+            if (game_mode == GAME_MODE_MOUSE) {
+                if (clockwise) {
+                    if (mouse_accel_level < 2) mouse_accel_level++;
+                } else {
+                    if (mouse_accel_level > 0) mouse_accel_level--;
+                }
+                apply_mouse_accel_level();
+            } else {
+                tap_code(clockwise ? MS_WHLU : MS_WHLD);
+            }
             break;
 
         case _VSC:
@@ -3752,6 +3777,8 @@ void keyboard_post_init_user(void) {
 #ifdef OLED_TOGGLE_BTN_PIN
     gpio_set_pin_input_high(OLED_TOGGLE_BTN_PIN);
 #endif
+
+    apply_mouse_accel_level();
 
     gpio_set_pin_output(GP25);
     gpio_write_pin_high(GP25);
