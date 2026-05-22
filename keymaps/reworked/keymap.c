@@ -157,6 +157,7 @@ enum custom_keycodes {
     RGB_PROFILE,
     RGB_MODE,
     RGB_TOG,
+    RGB_POWER,
     RGB_HUEU,
     RGB_HUED,
     RGB_VALU,
@@ -530,7 +531,7 @@ static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up
 static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
-    [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
+    [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "MOUSE", "DOWN", "RGB"},
     [_WINDOW] = {"SEL",  "BRO",  "SNAP", "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "EDIT", "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "VOL-", "PLAY", "VOL+", "RWND", "MUTE", "FFWD"},
@@ -547,7 +548,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
-    [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Undo", "Arrow down", "Redo"},
+    [_BASE]   = {"Select layer", "Arrow up", "Backspace", "Arrow left", "Enter", "Arrow right", "Switch to tilt mouse controls", "Arrow down", "Toggle RGB output"},
     [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
@@ -3112,7 +3113,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
-        LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
+        GM_MOUSE,    KC_END,     RGB_POWER
     ),
     [_WINDOW] = LAYOUT(
         TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
@@ -3352,6 +3353,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 } else {
                     cycle_rgb_animation_mode();
                 }
+            }
+            return false;
+
+        case RGB_POWER:
+            if (record->event.pressed) {
+                rgb_output_enabled = !rgb_output_enabled;
+#ifdef RGBLIGHT_ENABLE
+                render_rgb_layer_visuals();
+#endif
             }
             return false;
 
