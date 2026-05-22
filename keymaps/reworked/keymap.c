@@ -69,6 +69,9 @@
 #    ifndef ADXL345_GAME_AXIS_DEBOUNCE_MS
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
+#    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 18
+#    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 6
 #    endif
@@ -1805,7 +1808,7 @@ static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state) {
     return magnitude >= ADXL345_GAME_TILT_ON ? sign : current_state;
 }
 
-static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since) {
+static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since, uint16_t debounce_ms) {
     int8_t desired = adxl345_axis_desired_state(value, *state);
     if (desired == *state) {
         *pending = *state;
@@ -1819,7 +1822,7 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
         return *state;
     }
 
-    if (timer_elapsed32(*pending_since) >= ADXL345_GAME_AXIS_DEBOUNCE_MS) {
+    if (timer_elapsed32(*pending_since) >= debounce_ms) {
         *state = desired;
         *pending_since = 0;
     }
@@ -1844,8 +1847,10 @@ static void update_game_tilt_arrows(void) {
         tilt_game_x_pending_since = 0;
         tilt_game_y_pending_since = 0;
     } else {
-        tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since);
-        tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since);
+        uint16_t debounce_ms = wasd_tilt_active ? ADXL345_MOUSE_AXIS_DEBOUNCE_MS : ADXL345_GAME_AXIS_DEBOUNCE_MS;
+
+        tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms);
+        tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms);
 
         press_up = tilt_game_y_state > 0;
         press_down = tilt_game_y_state < 0;

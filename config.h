@@ -19,6 +19,15 @@
 #define RGBLIGHT_DEFAULT_SAT 255
 #define RGBLIGHT_DEFAULT_VAL 96
 #define RGBLIGHT_DEFAULT_SPD 128
+
+// Keep ADXL345 tilt mouse movement responsive without the large default mousekey startup delay
+// or the aggressive acceleration that makes cursor movement feel jumpy.
+#define MOUSEKEY_DELAY 0
+#define MOUSEKEY_INTERVAL 20
+#define MOUSEKEY_MOVE_DELTA 2
+#define MOUSEKEY_MAX_SPEED 3
+#define MOUSEKEY_TIME_TO_MAX 12
+
 #define VIA_EEPROM_CUSTOM_CONFIG_SIZE 128
 #define VIA_FIRMWARE_VERSION 0x0000000B
 #define ONBOARD_LED_PIN GP13
