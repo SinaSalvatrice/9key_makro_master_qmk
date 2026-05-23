@@ -307,27 +307,31 @@ When `WALK` is active, turning the encoder sends a temporary chase/wander pulse 
 
 ---
 
-## Hidden Selector Layers
+## Selector Layer
 
-The selector layer keeps the visible layout compact while allowing extra layers behind double-tap selector positions.
+The selector layer keeps the visible layout compact while still allowing fast layer switching.
 
-Selector concept:
+Selector grid:
 
 ```text
-SEL   WIN+  TXT+
-MED   RGB   GAME
-VSC+  BASE  PRM
+SEL   WIN   TXT
+MED   ---   GAME
+VSC   RGB   PRM
 ```
 
-Meaning:
+Behavior:
 
 | Selector key | Single tap | Double tap |
 |---|---|---|
-| WIN+ | WINDOW | MARK |
-| TXT+ | TEXT | WORK |
-| VSC+ | VSC | SYS |
+| WIN | Select WINDOW target | Enter WINDOW immediately |
+| TXT | Select TEXT target | Enter TEXT immediately |
+| MED | Select MEDIA target | Enter MEDIA immediately |
+| GAME | Select GAME/DEV target | Enter GAME/DEV immediately |
+| VSC | Select VSC target | Enter VSC immediately |
+| RGB | Select RGB target | Enter RGB immediately |
+| PRM | Select PROMPT target | Enter PROMPT immediately |
 
-The visible layer remains simple. Power layers live behind the obvious related keys.
+Holding `SEL` opens the selector grid. Single taps update the selector target and apply on `SEL` release; double taps enter the chosen layer immediately (without waiting for `SEL` release). Double-tapping `SEL` while keeping the same target returns to `BASE`.
 
 ---
 
