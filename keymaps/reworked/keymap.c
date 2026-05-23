@@ -171,6 +171,10 @@ enum tap_dance_ids {
     TD_SEL_WIN_MARK,
     TD_SEL_TXT_WORK,
     TD_SEL_VSC_SYS,
+    TD_SEL_MEDIA,
+    TD_SEL_DEV,
+    TD_SEL_RGB,
+    TD_SEL_PROMPT,
 };
 
 enum rgb_zone_bits {
@@ -3193,8 +3197,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
-        SEL_MEDIA,   KC_NO,              SEL_DEV,
-        TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
+        TD(TD_SEL_MEDIA),   KC_NO,              TD(TD_SEL_DEV),
+        TD(TD_SEL_VSC_SYS), TD(TD_SEL_RGB),     TD(TD_SEL_PROMPT)
     ),
 };
 
@@ -3251,33 +3255,47 @@ static void selector_hold_end(void) {
     }
 }
 
-static uint8_t tap_dance_layer_for_count(uint8_t count) {
-    switch (count) {
-        case 1: return _BASE;
-        case 2: return _WINDOW;
-        case 3: return _TEXT;
-        case 4: return _MEDIA;
-        case 5: return _DEV;
-        case 6: return _VSC;
-        case 7: return _RGB;
-        default: return _PROMPT;
-    }
-}
-
 #ifdef TAP_DANCE_ENABLE
 static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
+    (void)state;
+    select_target_layer(_WINDOW);
 }
 
 static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _WORK : _TEXT);
+    (void)state;
+    select_target_layer(_TEXT);
 }
 
 static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _SYS : _VSC);
+    (void)state;
+    select_target_layer(_VSC);
+}
+
+static void td_select_media_finished(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+    select_target_layer(_MEDIA);
+}
+
+static void td_select_dev_finished(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+    select_target_layer(_DEV);
+}
+
+static void td_select_rgb_finished(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+    select_target_layer(_RGB);
+}
+
+static void td_select_prompt_finished(tap_dance_state_t *state, void *user_data) {
+    (void)state;
+    (void)user_data;
+    select_target_layer(_PROMPT);
 }
 
 static bool td_layer_select_held = false;
@@ -3291,7 +3309,7 @@ static void td_layer_select_finished(tap_dance_state_t *state, void *user_data) 
         return;
     }
 
-    select_target_layer(tap_dance_layer_for_count(state->count));
+    select_target_layer(_BASE);
 }
 
 static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
@@ -3305,39 +3323,18 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 }
 
 tap_dance_action_t tap_dance_actions[] = {
+    [TD_LAYER_SELECT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_layer_select_finished, td_layer_select_reset),
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
-
+    [TD_SEL_MEDIA]    = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_media_finished, NULL),
+    [TD_SEL_DEV]      = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_finished, NULL),
+    [TD_SEL_RGB]      = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_rgb_finished, NULL),
+    [TD_SEL_PROMPT]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_prompt_finished, NULL),
 };
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (keycode == TD(TD_LAYER_SELECT)) {
-        if (record->event.pressed) {
-            selector_origin_layer = canonical_rgb_layer(active_layer_raw());
-            if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
-
-            matrix_select_held = true;
-            update_select_layer_state();
-        } else {
-            matrix_select_held = false;
-            update_select_layer_state();
-
-            if (selector_target == selector_origin_layer && timer_elapsed32(selector_last_tap) <= SELECTOR_DOUBLE_TAP_MS) {
-                selector_target = _BASE;
-                select_cursor = slot_for_layer(selector_target);
-                layer_move(_BASE);
-                selector_last_tap = 0;
-            } else {
-                layer_move(selector_target);
-                selector_last_tap = (selector_target == selector_origin_layer) ? timer_read32() : 0;
-            }
-        }
-
-        return false;
-    }
-
     if (record->event.pressed) {
         last_keycode = keycode;
         last_key_layer = active_layer_raw();
