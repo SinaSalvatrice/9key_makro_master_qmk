@@ -3275,26 +3275,26 @@ static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data
 }
 
 static void td_select_media_finished(tap_dance_state_t *state, void *user_data) {
-    (void)state;
     (void)user_data;
+    (void)state;
     select_target_layer(_MEDIA);
 }
 
 static void td_select_dev_finished(tap_dance_state_t *state, void *user_data) {
-    (void)state;
     (void)user_data;
+    (void)state;
     select_target_layer(_DEV);
 }
 
 static void td_select_rgb_finished(tap_dance_state_t *state, void *user_data) {
-    (void)state;
     (void)user_data;
+    (void)state;
     select_target_layer(_RGB);
 }
 
 static void td_select_prompt_finished(tap_dance_state_t *state, void *user_data) {
-    (void)state;
     (void)user_data;
+    (void)state;
     select_target_layer(_PROMPT);
 }
 
@@ -3309,6 +3309,7 @@ static void td_layer_select_finished(tap_dance_state_t *state, void *user_data) 
         return;
     }
 
+    // Central count-cycling is intentionally removed in favor of per-position selector tap dances.
     select_target_layer(_BASE);
 }
 
