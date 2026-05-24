@@ -40,7 +40,7 @@
 #define SELECTOR_DOUBLE_TAP_MS 300
 #define CLEAR_EEPROM_HOLD_MS   3000
 #define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 7
+#define REWORKED_LAYOUT_VERSION 8
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 #define RGB_FRAME_WANDER_SHOW_MS 900
@@ -105,6 +105,7 @@ enum layers {
     _SYS,
     _PROMPT,
     _SELECT,
+    _GAME,
     _LAYER_COUNT
 };
 
@@ -122,6 +123,7 @@ enum custom_keycodes {
     PRM_ETSY,
     GM_NAV,
     GM_MOUSE,
+    GM_TILT,
     GM_1,
     GM_2,
     GM_3,
@@ -169,6 +171,7 @@ enum tap_dance_ids {
     TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
     TD_SEL_TXT_WORK,
+    TD_SEL_DEV_GAME,
     TD_SEL_VSC_SYS,
 };
 
@@ -316,6 +319,7 @@ static bool window_snap_held              = false;
 static window_mode_t last_key_window_mode = WINDOW_MODE_WIN;
 static game_mode_t game_mode              = GAME_MODE_MOUSE;
 static game_mode_t last_key_game_mode     = GAME_MODE_MOUSE;
+static bool game_tilt_enabled             = true;
 static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
@@ -525,9 +529,20 @@ static const char *const window_snap_functions[6]    = {"Maximize window", "Snap
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
 static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
+static const char *const game_hidden_labels[8] = {"SEL", "X", "Y", "LSTK", "R", "L", "RT", "LT"};
 
 static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
 static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
+static const char *const game_hidden_functions[8] = {
+    "Select layer",
+    "Game face button X",
+    "Game face button Y",
+    "Switch to left-stick movement",
+    "Game shoulder button R",
+    "Game shoulder button L",
+    "Game right trigger",
+    "Game left trigger"
+};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
@@ -541,9 +556,10 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
+    [_GAME]   = {"SEL",  "X",    "Y",     "LSTK", "R",    "L",    "RT",   "LT",   "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME", "VSC+", "BASE", "PROMT"},
+    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME+", "VSC+", "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -558,9 +574,10 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WORK]   = {"Select layer", "Planning", "Writing", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
     [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
+    [_GAME]   = {"Select layer", "Game face button X", "Game face button Y", "Switch to left-stick movement", "Game shoulder button R", "Game shoulder button L", "Game right trigger", "Game left trigger", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Go to RGB", "Go to game", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
+    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Go to RGB", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -576,6 +593,7 @@ static const char *layer_name_short(uint8_t l) {
         case _WORK:   return "WORK";
         case _SYS:    return "SYS";
         case _DEV:    return "GAME";
+        case _GAME:   return "GAME+";
         case _VSC:    return "VSC";
         case _PROMPT: return "PRM";
         case _SELECT: return "SEL";
@@ -596,6 +614,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _WORK:   return "WORK";
         case _SYS:    return "SYSTEM";
         case _DEV:    return "GAME";
+        case _GAME:   return "GAME ALT";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
@@ -604,7 +623,9 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
 }
 
 static uint8_t canonical_rgb_layer(uint8_t layer) {
-    return (layer == _RGBMOD || layer == _RGBADJ) ? _RGB : layer;
+    if (layer == _RGBMOD || layer == _RGBADJ) return _RGB;
+    if (layer == _GAME) return _DEV;
+    return layer;
 }
 
 static uint8_t active_layer_raw(void) {
