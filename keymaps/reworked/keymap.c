@@ -3366,7 +3366,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         return false;
     }
-
     if (record->event.pressed) {
         last_keycode = keycode;
         last_key_layer = active_layer_raw();
