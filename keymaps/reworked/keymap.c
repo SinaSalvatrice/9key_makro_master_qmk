@@ -189,7 +189,6 @@ enum custom_keycodes {
 enum tap_dance_ids {
     TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
-    TD_SEL_TXT_WORK,
     TD_SEL_DEV_GAME,
     TD_SEL_VSC_SYS,
 };
@@ -646,7 +645,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN+", "TXT+", "MED",  "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED",  "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -664,7 +663,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -3339,7 +3338,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_SELECT] = LAYOUT(
-        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
+        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), SEL_TEXT,
         SEL_MEDIA,   SEL_WORK,           TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
@@ -3449,11 +3448,6 @@ static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_dat
     select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
 }
 
-static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_data) {
-    (void)user_data;
-    select_target_layer(state->count >= 2 ? _WORK : _TEXT);
-}
-
 static void td_select_dev_game_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _GAME : _DEV);
@@ -3490,7 +3484,6 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 
 tap_dance_action_t tap_dance_actions[] = {
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
-    [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
     [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 
