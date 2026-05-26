@@ -72,10 +72,19 @@
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
 #    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
-#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 18
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 32
+#    endif
+#    ifndef ADXL345_MOUSE_TILT_ON
+#        define ADXL345_MOUSE_TILT_ON 90
+#    endif
+#    ifndef ADXL345_MOUSE_TILT_OFF
+#        define ADXL345_MOUSE_TILT_OFF 60
+#    endif
+#    ifndef ADXL345_MOUSE_BLEND_DIV
+#        define ADXL345_MOUSE_BLEND_DIV 3
 #    endif
 #    ifndef ADXL345_GAME_DEADZONE
-#        define ADXL345_GAME_DEADZONE 6
+#        define ADXL345_GAME_DEADZONE 5
 #    endif
 #    ifndef ADXL345_GAME_FILTER_DIV
 #        define ADXL345_GAME_FILTER_DIV 4
@@ -1913,24 +1922,24 @@ static void update_tilt_game_control(uint16_t keycode, bool *held, bool pressed)
     *held = pressed;
 }
 
-static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state) {
+static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state, uint16_t on_threshold, uint16_t off_threshold) {
     uint16_t magnitude = abs_i16_u16(value);
     int8_t sign = sign_i16(value);
 
     if (current_state == 0) {
-        if (sign == 0 || magnitude < ADXL345_GAME_TILT_ON) return 0;
+        if (sign == 0 || magnitude < on_threshold) return 0;
         return sign;
     }
 
-    if (magnitude <= ADXL345_GAME_TILT_OFF) return 0;
+    if (magnitude <= off_threshold) return 0;
     if (sign == 0 || sign == current_state) return current_state;
 
     // If we cross through zero with enough magnitude, switch immediately.
-    return magnitude >= ADXL345_GAME_TILT_ON ? sign : current_state;
+    return magnitude >= on_threshold ? sign : current_state;
 }
 
-static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since, uint16_t debounce_ms) {
-    int8_t desired = adxl345_axis_desired_state(value, *state);
+static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since, uint16_t debounce_ms, uint16_t on_threshold, uint16_t off_threshold) {
+    int8_t desired = adxl345_axis_desired_state(value, *state, on_threshold, off_threshold);
     if (desired == *state) {
         *pending = *state;
         *pending_since = 0;
@@ -1968,10 +1977,27 @@ static void update_game_tilt_arrows(void) {
         tilt_game_x_pending_since = 0;
         tilt_game_y_pending_since = 0;
     } else {
-        uint16_t debounce_ms = mouse_tilt_active ? ADXL345_MOUSE_AXIS_DEBOUNCE_MS : ADXL345_GAME_AXIS_DEBOUNCE_MS;
+        int16_t axis_x = adxl345_game_x;
+        int16_t axis_y = adxl345_game_y;
+        uint16_t debounce_ms = ADXL345_GAME_AXIS_DEBOUNCE_MS;
+        uint16_t on_threshold = ADXL345_GAME_TILT_ON;
+        uint16_t off_threshold = ADXL345_GAME_TILT_OFF;
 
-        tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms);
-        tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms);
+        if (mouse_tilt_active) {
+#if ADXL345_MOUSE_BLEND_DIV <= 1
+            axis_x = adxl345_fluid_x;
+            axis_y = adxl345_fluid_y;
+#else
+            axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_x) / ADXL345_MOUSE_BLEND_DIV);
+            axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_y) / ADXL345_MOUSE_BLEND_DIV);
+#endif
+            debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
+            on_threshold = ADXL345_MOUSE_TILT_ON;
+            off_threshold = ADXL345_MOUSE_TILT_OFF;
+        }
+
+        tilt_game_x_state = adxl345_axis_update_state(axis_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms, on_threshold, off_threshold);
+        tilt_game_y_state = adxl345_axis_update_state(axis_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms, on_threshold, off_threshold);
 
         press_up = tilt_game_y_state > 0;
         press_down = tilt_game_y_state < 0;
