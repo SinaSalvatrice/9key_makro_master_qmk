@@ -41,7 +41,5 @@
 #define OLED_DISPLAY_ADDRESS 0x3C
 #define OLED_TIMEOUT 0
 
-#
-
 // Emergency only: uncomment, flash once, boot once, comment again, flash again.
 // #define FORCE_EEPROM_RESET_ON_BOOT
