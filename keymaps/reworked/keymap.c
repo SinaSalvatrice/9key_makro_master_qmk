@@ -419,6 +419,8 @@ enum via_custom_value {
     id_via_gap_effect_speed   = 14,
 };
 
+#define VIA_CUSTOM_CHANNEL_ID 1
+
 typedef struct {
     uint8_t      signature;
     uint8_t      layout_version;
@@ -1505,7 +1507,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     uint8_t *channel_id = &data[1];
     uint8_t *value_id_and_data = &data[2];
 
-    if (*channel_id == 0) {
+    if (*channel_id == VIA_CUSTOM_CHANNEL_ID) {
         switch (*command_id) {
             case id_custom_set_value: via_config_set_value(value_id_and_data); break;
             case id_custom_get_value: via_config_get_value(value_id_and_data); break;

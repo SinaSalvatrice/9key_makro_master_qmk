@@ -34,7 +34,7 @@
               ],
               "content": [
                 "id_via_oled_view",
-                0,
+                1,
                 1
               ]
             }
@@ -53,7 +53,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[0]",
-                0,
+                1,
                 3,
                 0
               ]
@@ -67,7 +67,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[0]",
-                0,
+                1,
                 4,
                 0
               ]
@@ -155,7 +155,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[0]",
-                0,
+                1,
                 5,
                 0
               ]
@@ -169,7 +169,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[0]",
-                0,
+                1,
                 6,
                 0
               ]
@@ -179,7 +179,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[1]",
-                0,
+                1,
                 3,
                 1
               ]
@@ -193,7 +193,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[1]",
-                0,
+                1,
                 4,
                 1
               ]
@@ -281,7 +281,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[1]",
-                0,
+                1,
                 5,
                 1
               ]
@@ -295,7 +295,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[1]",
-                0,
+                1,
                 6,
                 1
               ]
@@ -305,7 +305,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[2]",
-                0,
+                1,
                 3,
                 2
               ]
@@ -319,7 +319,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[2]",
-                0,
+                1,
                 4,
                 2
               ]
@@ -407,7 +407,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[2]",
-                0,
+                1,
                 5,
                 2
               ]
@@ -421,7 +421,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[2]",
-                0,
+                1,
                 6,
                 2
               ]
@@ -431,7 +431,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[3]",
-                0,
+                1,
                 3,
                 3
               ]
@@ -445,7 +445,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[3]",
-                0,
+                1,
                 4,
                 3
               ]
@@ -533,7 +533,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[3]",
-                0,
+                1,
                 5,
                 3
               ]
@@ -547,7 +547,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[3]",
-                0,
+                1,
                 6,
                 3
               ]
@@ -557,7 +557,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[4]",
-                0,
+                1,
                 3,
                 4
               ]
@@ -571,7 +571,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[4]",
-                0,
+                1,
                 4,
                 4
               ]
@@ -659,7 +659,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[4]",
-                0,
+                1,
                 5,
                 4
               ]
@@ -673,7 +673,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[4]",
-                0,
+                1,
                 6,
                 4
               ]
@@ -683,7 +683,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[5]",
-                0,
+                1,
                 3,
                 5
               ]
@@ -697,7 +697,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[5]",
-                0,
+                1,
                 4,
                 5
               ]
@@ -785,7 +785,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[5]",
-                0,
+                1,
                 5,
                 5
               ]
@@ -799,7 +799,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[5]",
-                0,
+                1,
                 6,
                 5
               ]
@@ -809,7 +809,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[6]",
-                0,
+                1,
                 3,
                 6
               ]
@@ -823,7 +823,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[6]",
-                0,
+                1,
                 4,
                 6
               ]
@@ -911,7 +911,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[6]",
-                0,
+                1,
                 5,
                 6
               ]
@@ -925,7 +925,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[6]",
-                0,
+                1,
                 6,
                 6
               ]
@@ -935,7 +935,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[7]",
-                0,
+                1,
                 3,
                 7
               ]
@@ -949,7 +949,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[7]",
-                0,
+                1,
                 4,
                 7
               ]
@@ -1037,7 +1037,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[7]",
-                0,
+                1,
                 5,
                 7
               ]
@@ -1051,7 +1051,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[7]",
-                0,
+                1,
                 6,
                 7
               ]
@@ -1071,7 +1071,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[0]",
-                0,
+                1,
                 11,
                 0
               ]
@@ -1085,7 +1085,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[0]",
-                0,
+                1,
                 12,
                 0
               ]
@@ -1173,7 +1173,7 @@
               ],
               "content": [
                 "id_via_gap_effect[0]",
-                0,
+                1,
                 13,
                 0
               ]
@@ -1187,7 +1187,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[0]",
-                0,
+                1,
                 14,
                 0
               ]
@@ -1197,7 +1197,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[1]",
-                0,
+                1,
                 11,
                 1
               ]
@@ -1211,7 +1211,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[1]",
-                0,
+                1,
                 12,
                 1
               ]
@@ -1299,7 +1299,7 @@
               ],
               "content": [
                 "id_via_gap_effect[1]",
-                0,
+                1,
                 13,
                 1
               ]
@@ -1313,7 +1313,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[1]",
-                0,
+                1,
                 14,
                 1
               ]
@@ -1323,7 +1323,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[2]",
-                0,
+                1,
                 11,
                 2
               ]
@@ -1337,7 +1337,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[2]",
-                0,
+                1,
                 12,
                 2
               ]
@@ -1425,7 +1425,7 @@
               ],
               "content": [
                 "id_via_gap_effect[2]",
-                0,
+                1,
                 13,
                 2
               ]
@@ -1439,7 +1439,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[2]",
-                0,
+                1,
                 14,
                 2
               ]
@@ -1449,7 +1449,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[3]",
-                0,
+                1,
                 11,
                 3
               ]
@@ -1463,7 +1463,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[3]",
-                0,
+                1,
                 12,
                 3
               ]
@@ -1551,7 +1551,7 @@
               ],
               "content": [
                 "id_via_gap_effect[3]",
-                0,
+                1,
                 13,
                 3
               ]
@@ -1565,7 +1565,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[3]",
-                0,
+                1,
                 14,
                 3
               ]
@@ -1575,7 +1575,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[4]",
-                0,
+                1,
                 11,
                 4
               ]
@@ -1589,7 +1589,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[4]",
-                0,
+                1,
                 12,
                 4
               ]
@@ -1677,7 +1677,7 @@
               ],
               "content": [
                 "id_via_gap_effect[4]",
-                0,
+                1,
                 13,
                 4
               ]
@@ -1691,7 +1691,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[4]",
-                0,
+                1,
                 14,
                 4
               ]
@@ -1701,7 +1701,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[5]",
-                0,
+                1,
                 11,
                 5
               ]
@@ -1715,7 +1715,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[5]",
-                0,
+                1,
                 12,
                 5
               ]
@@ -1803,7 +1803,7 @@
               ],
               "content": [
                 "id_via_gap_effect[5]",
-                0,
+                1,
                 13,
                 5
               ]
@@ -1817,7 +1817,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[5]",
-                0,
+                1,
                 14,
                 5
               ]
@@ -1827,7 +1827,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[6]",
-                0,
+                1,
                 11,
                 6
               ]
@@ -1841,7 +1841,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[6]",
-                0,
+                1,
                 12,
                 6
               ]
@@ -1929,7 +1929,7 @@
               ],
               "content": [
                 "id_via_gap_effect[6]",
-                0,
+                1,
                 13,
                 6
               ]
@@ -1943,7 +1943,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[6]",
-                0,
+                1,
                 14,
                 6
               ]
@@ -1953,7 +1953,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[7]",
-                0,
+                1,
                 11,
                 7
               ]
@@ -1967,7 +1967,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[7]",
-                0,
+                1,
                 12,
                 7
               ]
@@ -2055,7 +2055,7 @@
               ],
               "content": [
                 "id_via_gap_effect[7]",
-                0,
+                1,
                 13,
                 7
               ]
@@ -2069,7 +2069,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[7]",
-                0,
+                1,
                 14,
                 7
               ]
@@ -2089,7 +2089,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[0]",
-                0,
+                1,
                 7,
                 0
               ]
@@ -2103,7 +2103,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[0]",
-                0,
+                1,
                 8,
                 0
               ]
@@ -2191,7 +2191,7 @@
               ],
               "content": [
                 "id_via_frame_effect[0]",
-                0,
+                1,
                 9,
                 0
               ]
@@ -2205,7 +2205,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[0]",
-                0,
+                1,
                 10,
                 0
               ]
@@ -2215,7 +2215,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[1]",
-                0,
+                1,
                 7,
                 1
               ]
@@ -2229,7 +2229,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[1]",
-                0,
+                1,
                 8,
                 1
               ]
@@ -2317,7 +2317,7 @@
               ],
               "content": [
                 "id_via_frame_effect[1]",
-                0,
+                1,
                 9,
                 1
               ]
@@ -2331,7 +2331,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[1]",
-                0,
+                1,
                 10,
                 1
               ]
@@ -2341,7 +2341,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[2]",
-                0,
+                1,
                 7,
                 2
               ]
@@ -2355,7 +2355,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[2]",
-                0,
+                1,
                 8,
                 2
               ]
@@ -2443,7 +2443,7 @@
               ],
               "content": [
                 "id_via_frame_effect[2]",
-                0,
+                1,
                 9,
                 2
               ]
@@ -2457,7 +2457,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[2]",
-                0,
+                1,
                 10,
                 2
               ]
@@ -2467,7 +2467,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[3]",
-                0,
+                1,
                 7,
                 3
               ]
@@ -2481,7 +2481,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[3]",
-                0,
+                1,
                 8,
                 3
               ]
@@ -2569,7 +2569,7 @@
               ],
               "content": [
                 "id_via_frame_effect[3]",
-                0,
+                1,
                 9,
                 3
               ]
@@ -2583,7 +2583,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[3]",
-                0,
+                1,
                 10,
                 3
               ]
@@ -2593,7 +2593,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[4]",
-                0,
+                1,
                 7,
                 4
               ]
@@ -2607,7 +2607,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[4]",
-                0,
+                1,
                 8,
                 4
               ]
@@ -2695,7 +2695,7 @@
               ],
               "content": [
                 "id_via_frame_effect[4]",
-                0,
+                1,
                 9,
                 4
               ]
@@ -2709,7 +2709,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[4]",
-                0,
+                1,
                 10,
                 4
               ]
@@ -2719,7 +2719,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[5]",
-                0,
+                1,
                 7,
                 5
               ]
@@ -2733,7 +2733,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[5]",
-                0,
+                1,
                 8,
                 5
               ]
@@ -2821,7 +2821,7 @@
               ],
               "content": [
                 "id_via_frame_effect[5]",
-                0,
+                1,
                 9,
                 5
               ]
@@ -2835,7 +2835,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[5]",
-                0,
+                1,
                 10,
                 5
               ]
@@ -2845,7 +2845,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[6]",
-                0,
+                1,
                 7,
                 6
               ]
@@ -2859,7 +2859,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[6]",
-                0,
+                1,
                 8,
                 6
               ]
@@ -2947,7 +2947,7 @@
               ],
               "content": [
                 "id_via_frame_effect[6]",
-                0,
+                1,
                 9,
                 6
               ]
@@ -2961,7 +2961,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[6]",
-                0,
+                1,
                 10,
                 6
               ]
@@ -2971,7 +2971,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[7]",
-                0,
+                1,
                 7,
                 7
               ]
@@ -2985,7 +2985,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[7]",
-                0,
+                1,
                 8,
                 7
               ]
@@ -3073,7 +3073,7 @@
               ],
               "content": [
                 "id_via_frame_effect[7]",
-                0,
+                1,
                 9,
                 7
               ]
@@ -3087,7 +3087,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[7]",
-                0,
+                1,
                 10,
                 7
               ]
