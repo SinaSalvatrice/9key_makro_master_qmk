@@ -14,9 +14,9 @@
 
 // ============================================================
 // RGB / OLED selector build
-// - GP12 cycles OLED legend pages
+// - GP12: tap cycles view, hold returns KEYS, double-tap opens STATUS
 // - Long encoder-button hold shows temporary Encoder Help view
-// - GAME reuses the old DEV layer slot; MEDIA keeps its swapped palette slot
+// - Selector grid: BASE/WIN/TXT, MED/GIT/GAME, VSC/RGB/PROMPT
 // ============================================================
 
 #ifndef RGBLIGHT_LED_COUNT
@@ -3683,7 +3683,7 @@ case TXT_EDT:
 
         case WRK_COMMIT:
             if (record->event.pressed) {
-                send_string("git add -A && git commit -m \");
+                send_string("git add -A && git commit -m \"");
             }
             return false;
 
@@ -4132,7 +4132,7 @@ static void render_rgb_help_view(void) {
     write_line(3, "ENC:VAL ZONE+ENC=WALK");
 }
 
-static void render_help_view(uint8_t layer) {
+static MAYBE_UNUSED void render_help_view(uint8_t layer) {
     char line[22];
 
     snprintf(line, sizeof(line), "STATUS %-6.6s", layer_name_short(layer));
@@ -4413,7 +4413,7 @@ static void render_rgb_help_view(void) {
     write_line(7, "GP12: next page");
 }
 
-static void render_help_view(uint8_t layer) {
+static MAYBE_UNUSED void render_help_view(uint8_t layer) {
     char line[22];
 
     snprintf(line, sizeof(line), "STATUS %s", layer_name_long(layer));
