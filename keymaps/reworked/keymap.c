@@ -750,6 +750,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
         case _DEV:    return "Weapon or inventory scroll";
+        case _GAME:   return "Mouse wheel up/down";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
@@ -1818,6 +1819,7 @@ static bool layer_mode_key_for_layer(uint8_t layer, uint8_t key_index) {
         case _WORK:
         case _SYS:
         case _DEV:
+        case _GAME:
         case _VSC:
         case _RGB:
         case _PROMPT:
@@ -3863,6 +3865,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
 
+        case _GAME:
+            tap_code(clockwise ? MS_WHLU : MS_WHLD);
+            break;
+
         case _VSC:
         case _SYS:
         case _PROMPT:
@@ -4083,8 +4089,10 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "GIT");
-    } else if (layer == _DEV) {
+    } else if (layer == _DEV) {r == _DEV) {
         snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "GAME+ TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4148,7 +4156,7 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "WIN/TXT/VSC 2x");
+        write_line(1, "WIN/TXT/GAME/VSC 2x");
         write_line(2, "MARK/WORK/SYS");
         write_line(3, "MED GIT GAME RGB");
         return;
@@ -4301,6 +4309,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "GIT");
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "GAME+ TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4358,6 +4368,8 @@ static void render_legend_view(uint8_t layer) {
     } else if (layer == _WINDOW) {
         const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "APP");
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "GAME+ TILT [%s]", game_tilt_enabled ? "ON" : "OFF");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP12: KEYS/MODES/RGB/STATUS");
@@ -4402,7 +4414,7 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "1x WIN/TXT/VSC");
+        write_line(1, "1x WIN/TXT/GAME/VSC");
         write_line(2, "2x MARK/WORK/SYS");
         write_line(3, "MED GIT GAME RGB");
         write_line(4, "PROMPT on bottom");
@@ -4453,8 +4465,8 @@ static void render_tap_view(uint8_t layer) {
     write_line(1, "SELECT hidden:");
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
-    write_line(4, "VSC 2x = SYS");
-    write_line(5, "");
+    write_line(4, "GAME 2x = GAME+");
+    write_line(5, "VSC 2x = SYS");
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
 }
