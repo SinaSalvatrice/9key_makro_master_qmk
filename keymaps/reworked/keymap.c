@@ -461,16 +461,16 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 5, 6, 7, 8
+    0, 1, 2, 3, 4, 6, 7, 8
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GIT(old WORK slot), VSC, RGB, PROMPT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {128, 220, 108}, // BASE
     {176, 240, 112}, // WINDOW
     { 90, 230, 112}, // TEXT
     { 18, 255, 118}, // MEDIA
-    { 32, 255, 118}, // GAME
+    { 86, 220, 120}, // GIT
     {166, 255, 118}, // VSC
     {210, 255, 124}, // RGB
     { 14, 255, 124}, // PROMPT
@@ -511,7 +511,7 @@ static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
     {176, 220,  42},
     { 90, 220,  48},
     { 18, 255,  44},
-    { 32, 255,  40},
+    { 86, 220,  42},
     {166, 255,  46},
     {210, 255,  56},
     { 14, 255,  44},
@@ -537,7 +537,7 @@ static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
     {176, 220,  90},
     { 90, 210,  88},
     { 18, 255,  92},
-    { 32, 255,  90},
+    { 86, 220,  92},
     {166, 240,  90},
     {210, 255, 104},
     { 14, 240,  92},

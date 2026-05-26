@@ -553,7 +553,7 @@
               ]
             },
             {
-              "label": "GAME Color",
+              "label": "GIT Color",
               "type": "color",
               "content": [
                 "id_via_layer_color[4]",
@@ -563,7 +563,7 @@
               ]
             },
             {
-              "label": "GAME Brightness",
+              "label": "GIT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -577,7 +577,7 @@
               ]
             },
             {
-              "label": "GAME Effect",
+              "label": "GIT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -665,7 +665,7 @@
               ]
             },
             {
-              "label": "GAME Effect Speed",
+              "label": "GIT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1571,7 +1571,7 @@
               ]
             },
             {
-              "label": "GAME Color",
+              "label": "GIT Color",
               "type": "color",
               "content": [
                 "id_via_gap_color[4]",
@@ -1581,7 +1581,7 @@
               ]
             },
             {
-              "label": "GAME Brightness",
+              "label": "GIT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1595,7 +1595,7 @@
               ]
             },
             {
-              "label": "GAME Effect",
+              "label": "GIT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1683,7 +1683,7 @@
               ]
             },
             {
-              "label": "GAME Effect Speed",
+              "label": "GIT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -2589,7 +2589,7 @@
               ]
             },
             {
-              "label": "GAME Color",
+              "label": "GIT Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[4]",
@@ -2599,7 +2599,7 @@
               ]
             },
             {
-              "label": "GAME Brightness",
+              "label": "GIT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -2613,7 +2613,7 @@
               ]
             },
             {
-              "label": "GAME Effect",
+              "label": "GIT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -2701,7 +2701,7 @@
               ]
             },
             {
-              "label": "GAME Effect Speed",
+              "label": "GIT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -3144,11 +3144,6 @@
       "shortName": "PRM"
     },
     {
-      "name": "SEL_KEY",
-      "title": "Selector key (hold for selector, tap to jump)",
-      "shortName": "SEL"
-    },
-    {
       "name": "PRM_PICS",
       "title": "Prompt picture mode",
       "shortName": "PICS"
@@ -3242,6 +3237,11 @@
       "name": "WIN_6",
       "title": "Context slot S6 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
       "shortName": "S6"
+    },
+    {
+      "name": "SEL_KEY",
+      "title": "Selector key (hold for selector, tap to jump)",
+      "shortName": "SEL"
     },
     {
       "name": "TXT_ACT",
