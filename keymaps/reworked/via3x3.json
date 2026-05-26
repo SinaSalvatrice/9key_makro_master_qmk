@@ -3239,11 +3239,6 @@
       "shortName": "S6"
     },
     {
-      "name": "SEL_KEY",
-      "title": "Selector key (hold for selector, tap to jump)",
-      "shortName": "SEL"
-    },
-    {
       "name": "TXT_ACT",
       "title": "Toggle TXT actions",
       "shortName": "ACT"
