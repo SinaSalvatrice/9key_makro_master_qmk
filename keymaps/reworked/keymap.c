@@ -3485,6 +3485,7 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 }
 
 tap_dance_action_t tap_dance_actions[] = {
+    [TD_LAYER_SELECT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_layer_select_finished, td_layer_select_reset),
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
