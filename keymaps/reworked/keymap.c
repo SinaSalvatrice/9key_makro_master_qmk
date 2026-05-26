@@ -559,7 +559,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"SEL",  "X",    "Y",     "LSTK", "R",    "L",    "RT",   "LT",   "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "RGB",  "GAME+", "VSC+", "BASE", "PROMT"},
+    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "TILT", "GAME+", "VSC+", "BASE", "PROMT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -577,7 +577,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"Select layer", "Game face button X", "Game face button Y", "Switch to left-stick movement", "Game shoulder button R", "Game shoulder button L", "Game right trigger", "Game left trigger", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Go to RGB", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
+    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Toggle tilt detection", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -1852,7 +1852,7 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 }
 
 static void update_game_tilt_arrows(void) {
-    bool tilt_active = adxl345_ready && active_layer_raw() == _DEV;
+    bool tilt_active = adxl345_ready && game_tilt_enabled && active_layer_raw() == _DEV;
     bool nav_tilt_active = tilt_active && game_mode == GAME_MODE_NAV;
     bool mouse_tilt_active = tilt_active && game_mode == GAME_MODE_MOUSE;
     bool press_up = false;
@@ -3197,7 +3197,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
-        SEL_MEDIA,   KC_NO,              SEL_DEV,
+        SEL_MEDIA,   GM_TILT,            SEL_DEV,
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
@@ -3479,6 +3479,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case GM_MOUSE:
             if (record->event.pressed) game_mode = GAME_MODE_MOUSE;
+            return false;
+
+        case GM_TILT:
+            if (record->event.pressed) game_tilt_enabled = !game_tilt_enabled;
             return false;
 
         case GM_1:
