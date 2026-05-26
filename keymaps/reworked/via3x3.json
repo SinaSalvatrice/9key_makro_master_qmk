@@ -3144,6 +3144,11 @@
       "shortName": "PRM"
     },
     {
+      "name": "SEL_KEY",
+      "title": "Selector key (hold for selector, tap to jump)",
+      "shortName": "SEL"
+    },
+    {
       "name": "PRM_PICS",
       "title": "Prompt picture mode",
       "shortName": "PICS"
@@ -3200,43 +3205,43 @@
     },
     {
       "name": "WIN_BRO",
-      "title": "Toggle WINDOW browser mode",
-      "shortName": "BRO"
+      "title": "Context mode key M1 (WINDOW=BRO, TEXT=ACT, VSC=NAV, RGB=ZONE, WORK=VSC, PROMPT=PICS)",
+      "shortName": "M1"
     },
     {
       "name": "WIN_AUX",
-      "title": "Toggle WINDOW snap mode",
-      "shortName": "SNAP"
+      "title": "Context mode key M2 (WINDOW=SNAP, TEXT=EDIT, VSC=AI, RGB=ANIM, WORK=APP, PROMPT=ETSY)",
+      "shortName": "M2"
     },
     {
       "name": "WIN_1",
-      "title": "WINDOW slot 1 (DESK< / BACK / MAX)",
-      "shortName": "W1"
+      "title": "Context slot S1 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S1"
     },
     {
       "name": "WIN_2",
-      "title": "WINDOW slot 2 (TASK / REFR / UP)",
-      "shortName": "W2"
+      "title": "Context slot S2 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S2"
     },
     {
       "name": "WIN_3",
-      "title": "WINDOW slot 3 (DESK> / FWD / MIN)",
-      "shortName": "W3"
+      "title": "Context slot S3 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S3"
     },
     {
       "name": "WIN_4",
-      "title": "WINDOW slot 4 (WIN< / TAB< / LEFT)",
-      "shortName": "W4"
+      "title": "Context slot S4 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S4"
     },
     {
       "name": "WIN_5",
-      "title": "WINDOW slot 5 (SHOW / NEW / DOWN)",
-      "shortName": "W5"
+      "title": "Context slot S5 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S5"
     },
     {
       "name": "WIN_6",
-      "title": "WINDOW slot 6 (WIN> / TAB> / RGHT)",
-      "shortName": "W6"
+      "title": "Context slot S6 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S6"
     },
     {
       "name": "TXT_ACT",
