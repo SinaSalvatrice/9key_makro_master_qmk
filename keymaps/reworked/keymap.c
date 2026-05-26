@@ -3620,7 +3620,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
         case _RGB:
         case _RGBMOD:
         case _RGBADJ:
-            if (rgb_animation_mode == RGB_ANIM_FRAME_WANDER) {
+            if (rgb_animation_mode == RGB_ANIM_FRAME_WANDER && rgb_mode_held) {
                 rgb_frame_wander_clockwise = clockwise;
                 rgb_frame_wander_started = timer_read32() | 1;
 #ifdef RGBLIGHT_ENABLE
@@ -3933,7 +3933,7 @@ static void render_rgb_help_view(void) {
     }
 #endif
     write_line(2, "ZONE+ALL/FRME/KEY");
-    write_line(3, "ENC:VAL or WALK");
+    write_line(3, "ENC:VAL ZONE+ENC=WALK");
 }
 
 static void render_help_view(uint8_t layer) {
