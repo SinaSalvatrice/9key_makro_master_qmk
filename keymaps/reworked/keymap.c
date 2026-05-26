@@ -549,20 +549,20 @@ static const char *const vsc_nav_commands[6] = {
     "Go Forward"
 };
 
-static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
-static const char *const vsc_chat_functions[6] = {"Summarize", "Review", "Suggest fix", "Write tests", "Explain code", "Commit message"};
+static const char *const vsc_chat_labels[6] = {"EXPL", "REVW", "FIX", "TEST", "DOCS", "COMMIT"};
+static const char *const vsc_chat_functions[6] = {"Explain", "Review", "Fix", "Test", "Docs", "Commit"};
 static const char *const vsc_chat_macros[6] = {
-    "Explain this QMK error or build output. Identify the most likely root cause, the affected file or setting, why it happens, and the safest fix. Include the exact command or file to check next. Do not modify files automatically.",
+    "Explain this code clearly.",
 
-    "Perform a thorough error analysis of the project. Search for root causes, erroneous dependencies, configuration issues, broken tests, security risks, and architecture breaks. Prioritize the issues, fix them gradually, and validate any change.",
+    "Review this code for bugs and risks.",
 
-    "Review the selected QMK code or configuration for improvement opportunities, but do not change files. Suggest safe improvements for readability, maintainability, structure, naming, comments, QMK best practices, and reliability. Prioritize the suggestions by impact and risk.",
+    "Suggest a minimal safe fix.",
 
-    "Create an Arduino sketch with pin output. It should show coordinate in the matrix, function, and if available and recognized, the GPIO pin. Make two versions: one as serial sketch and one as real keyboard. Include RGBs, OLED and encoder if given.",
+    "Write focused tests for this.",
 
-    "Check my QMK environment in VS Code, but don't change files. Execute diagnostic commands such as qmk doctor, qmk config, and qmk userspace-doctor. Analyze OS, shell, dependencies, compilers, paths, VS Code terminal, tasks, and QMK project structure. Create a prioritized error list with specific fix steps.",
+    "Document this function briefly.",
 
-    "Repair my QMK development environment in VS Code. Use the output of qmk doctor, build errors, and VS Code configurations. Only fix secure issues such as missing paths, incorrect terminal profiles, erroneous tasks, incorrect QMK configuration, or obvious dependency issues. Then validate with qmk doctor and a test build."
+    "Create a concise commit message."
 };
 
 static const char *const prompt_base_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
