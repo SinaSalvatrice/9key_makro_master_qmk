@@ -618,20 +618,9 @@ static const char *const window_snap_functions[6]    = {"Maximize window", "Snap
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
 static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
-static const char *const game_hidden_labels[8] = {"SEL", "X", "Y", "LSTK", "R", "L", "RT", "LT"};
 
 static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
 static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
-static const char *const game_hidden_functions[8] = {
-    "Select layer",
-    "Game face button X",
-    "Game face button Y",
-    "Switch to left-stick movement",
-    "Game shoulder button R",
-    "Game shoulder button L",
-    "Game right trigger",
-    "Game left trigger"
-};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
@@ -645,10 +634,10 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WORK]   = {"SEL",  "VSC",  "DESK", "PULL", "COMMIT", "PUSH", "BRCH", "PR", "SYNC"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_GAME]   = {"SEL",  "X",    "Y",     "LSTK", "R",    "L",    "RT",   "LT",   "TILT"},
+    [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN",  "TXT", "MED",  "GIT", "GAME", "VSC", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT+", "MED",  "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -663,10 +652,10 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WORK]   = {"Select layer", "Go to VSC layer", "Open GitHub Desktop or app", "git pull", "git add/commit prompt", "git push", "Create branch", "Create PR in browser", "git status"},
     [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_GAME]   = {"Select layer", "Game face button X", "Game face button Y", "Switch to left-stick movement", "Game shoulder button R", "Game shoulder button L", "Game right trigger", "Game left trigger", "Toggle tilt detection"},
+    [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to MEDIA layer", "Go to GIT layer", "Go to GAME layer", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -3292,6 +3281,11 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
+    [_GAME] = LAYOUT(
+        TD(TD_LAYER_SELECT), KC_BTN1, KC_BTN2,
+        KC_MS_L,     KC_MS_U, KC_MS_R,
+        KC_BTN3,     KC_MS_D, GM_TILT
+    ),
     [_VSC] = LAYOUT(
         TD(TD_LAYER_SELECT), VSC_BAR, VSC_CHAT,
         VSC_1,       VSC_2,   VSC_3,
@@ -3304,13 +3298,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
-        SEL_MEDIA,   SEL_WORK,           SEL_DEV,
+        SEL_MEDIA,   SEL_WORK,           TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     static layer_state_t last_state = 0;
+    static uint8_t last_active_layer = _BASE;
     bool select_now = layer_state_cmp(state, _SELECT);
     bool select_before = layer_state_cmp(last_state, _SELECT);
 
@@ -3322,6 +3317,37 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
         selector_target = base;
         select_cursor = slot_for_layer(selector_target);
+    }
+
+    uint8_t active = get_highest_layer(state | default_layer_state);
+    if (active != last_active_layer) {
+        // Changing top layer should always clear transient sub-modes.
+        text_action_held = false;
+        text_edit_held = false;
+        text_selection_pending_copy = false;
+        window_browser_held = false;
+        window_snap_held = false;
+        vsc_mode = VSC_MODE_NONE;
+        rgb_mode_held = false;
+
+        switch (active) {
+            case _TEXT:
+                text_mode = TEXT_MODE_WIN;
+                break;
+            case _VSC:
+                last_vsc_mode = VSC_MODE_NONE;
+                break;
+            case _PROMPT:
+                prompt_mode = PROMPT_MODE_BASE;
+                break;
+            case _DEV:
+                game_mode = GAME_MODE_NAV;
+                break;
+            default:
+                break;
+        }
+
+        last_active_layer = active;
     }
 
     last_state = state;
@@ -3386,6 +3412,11 @@ static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_dat
     select_target_layer(state->count >= 2 ? _WORK : _TEXT);
 }
 
+static void td_select_dev_game_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _GAME : _DEV);
+}
+
 static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _SYS : _VSC);
@@ -3418,6 +3449,7 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 tap_dance_action_t tap_dance_actions[] = {
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
+    [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 
 };
@@ -4109,7 +4141,7 @@ static void render_tap_view(uint8_t layer) {
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
     write_line(0, line);
     write_line(1, "SEL: hold selector");
-    write_line(2, "WIN/TXT/VSC +");
+    write_line(2, "WIN/TXT/GAME/VSC+");
     write_line(3, "2x hidden layer");
 }
 
