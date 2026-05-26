@@ -3135,57 +3135,67 @@ static void render_rgb_tilt_mode(void) {
     hsv_config_t p = palette_for_layer(layer);
     uint32_t now = timer_read32();
 
-    clear_all_keys();
+    static int8_t tilt_wave_dir = 1;
+    uint16_t period_ms = effect_period_for_layer(layer, 2200);
+    uint8_t head = 0;
 
-#ifndef ADXL345_ENABLE
-    render_effect_sweep(layer);
-    return;
-#else
-    if (!adxl345_ready) {
-        uint8_t pulse = pulse_val(now, effect_period_for_layer(layer, 1800), 0, palette_floor(p.val / 16, 5), palette_floor(p.val / 2, 18));
-        set_key_hsv(4, p.hue, p.sat, pulse);
-        set_key_hsv(1, p.hue, p.sat, scale_val(pulse, 110));
-        set_key_hsv(7, p.hue, p.sat, scale_val(pulse, 110));
-        flush_led_frame();
-        return;
-    }
+#ifdef ADXL345_ENABLE
+    if (adxl345_ready) {
+        uint16_t abs_x = abs_i16_u16(adxl345_fluid_x);
+        uint16_t abs_y = abs_i16_u16(adxl345_fluid_y);
+        uint16_t mag = abs_x + abs_y;
+        if (mag > 300) mag = 300;
 
-    // Render from the higher-resolution fluid state so tilt glides continuously.
-    int16_t center_x_fp = (int16_t)(2 * 256 + ((int32_t)adxl345_fluid_x_fp * 256) / (110 << ADXL345_FLUID_SHIFT));
-    int16_t center_y_fp = (int16_t)(1 * 256 + ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
-    uint8_t motion_boost = adxl345_fluid_motion > 120 ? 52 : (uint8_t)(adxl345_fluid_motion / 3);
-
-    if (center_x_fp < 0) center_x_fp = 0;
-    if (center_x_fp > 4 * 256) center_x_fp = 4 * 256;
-    if (center_y_fp < 0) center_y_fp = 0;
-    if (center_y_fp > 2 * 256) center_y_fp = 2 * 256;
-
-    for (uint8_t led = 0; led < RGB_KEYFIELD_LED_COUNT; led++) {
-        uint8_t row = led_row_index(led);
-        uint8_t col = led_col_index(led);
-        int16_t led_x_fp = (int16_t)col * 256;
-        int16_t led_y_fp = (int16_t)row * 256;
-        uint16_t dx = abs_i16_u16(led_x_fp - center_x_fp);
-        uint16_t dy = abs_i16_u16(led_y_fp - center_y_fp);
-        uint16_t major = dx > dy ? dx : dy;
-        uint16_t minor = dx > dy ? dy : dx;
-        uint16_t distance_fp = major + minor / 2;
-        uint8_t fade = distance_fp >= 768 ? 0 : (uint8_t)(255 - ((distance_fp * 255) / 768));
-        uint8_t base = palette_floor(p.val / 24, 3);
-        uint8_t peak = clamp_add_u8(p.val, motion_boost);
-        uint8_t span = peak > base ? (uint8_t)(peak - base) : 0;
-        uint8_t val = clamp_add_u8(base, scale_val(span, fade));
-
-        if (led_is_gap(led)) {
-            val = scale_val(val, 150);
-            val = clamp_add_u8(val, triwave8_period(now, 900 + led * 31, led * 17) / 12);
+        // Keep direction stable near center; flip only when tilt is intentional.
+        if (mag >= ADXL345_MOUSE_TILT_OFF) {
+            if (abs_y >= abs_x) {
+                tilt_wave_dir = adxl345_fluid_y >= 0 ? 1 : -1;
+            } else {
+                tilt_wave_dir = adxl345_fluid_x >= 0 ? 1 : -1;
+            }
         }
+
+        // Stronger tilt moves the packet faster, but never becomes unreadably fast.
+        period_ms = 2200 - (uint16_t)(mag * 6);
+        if (period_ms < 450) period_ms = 450;
+    }
+#endif
+
+    uint16_t step_ms = period_ms / RGBLIGHT_LED_COUNT;
+    if (step_ms < 1) step_ms = 1;
+    uint8_t pos = (uint8_t)((now / step_ms) % RGBLIGHT_LED_COUNT);
+    head = tilt_wave_dir > 0 ? pos : (uint8_t)(RGBLIGHT_LED_COUNT - 1 - pos);
+
+    // Keys/gaps pass.
+    rgb_rendering_frame = false;
+    for (uint8_t led = 0; led < RGB_FRAME_LED_FIRST; led++) {
+        uint8_t d = tilt_wave_dir > 0
+            ? (uint8_t)((head + RGBLIGHT_LED_COUNT - led) % RGBLIGHT_LED_COUNT)
+            : (uint8_t)((led + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT);
+        uint8_t val = 0;
+        if (d == 0) val = p.val;
+        else if (d == 1) val = palette_floor((p.val * 3) / 5, 14);
+        else if (d == 2) val = palette_floor(p.val / 4, 6);
 
         set_led_hsv(led, p.hue, p.sat, val);
     }
 
-    flush_led_frame();
-#endif
+    // Frame pass.
+    rgb_rendering_frame = true;
+    for (uint8_t led = RGB_FRAME_LED_FIRST; led < RGBLIGHT_LED_COUNT; led++) {
+        uint8_t d = tilt_wave_dir > 0
+            ? (uint8_t)((head + RGBLIGHT_LED_COUNT - led) % RGBLIGHT_LED_COUNT)
+            : (uint8_t)((led + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT);
+        uint8_t val = 0;
+        if (d == 0) val = p.val;
+        else if (d == 1) val = palette_floor((p.val * 3) / 5, 14);
+        else if (d == 2) val = palette_floor(p.val / 4, 6);
+
+        set_led_hsv(led, p.hue, p.sat, val);
+    }
+    rgb_rendering_frame = false;
+
+    rgblight_driver.flush();
 }
 
 static void render_rgb_layer_visuals(void) {
@@ -4089,7 +4099,7 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "GIT");
-    } else if (layer == _DEV) {r == _DEV) {
+    } else if (layer == _DEV) {
         snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
     } else if (layer == _GAME) {
         snprintf(line, sizeof(line), "GAME+ TLT %s", game_tilt_enabled ? "ON" : "OFF");
