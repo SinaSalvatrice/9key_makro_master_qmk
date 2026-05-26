@@ -3236,6 +3236,166 @@
       "name": "WIN_6",
       "title": "Context slot S6 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
       "shortName": "S6"
+    },
+    {
+      "name": "TXT_ACT",
+      "title": "Toggle TXT actions",
+      "shortName": "ACT"
+    },
+    {
+      "name": "TXT_EDT",
+      "title": "Toggle TXT edit tools",
+      "shortName": "EDT"
+    },
+    {
+      "name": "TXT_1",
+      "title": "TXT slot 1 (HOME / COPY / WRD<)",
+      "shortName": "T1"
+    },
+    {
+      "name": "TXT_2",
+      "title": "TXT slot 2 (UP / CUT / DELW)",
+      "shortName": "T2"
+    },
+    {
+      "name": "TXT_3",
+      "title": "TXT slot 3 (END / PASTE / WRD>)",
+      "shortName": "T3"
+    },
+    {
+      "name": "TXT_4",
+      "title": "TXT slot 4 (LEFT / UNDO / LINE<)",
+      "shortName": "T4"
+    },
+    {
+      "name": "TXT_5",
+      "title": "TXT slot 5 (DOWN / REDO / DELL)",
+      "shortName": "T5"
+    },
+    {
+      "name": "TXT_6",
+      "title": "TXT slot 6 (RGHT / SAVE / LINE>)",
+      "shortName": "T6"
+    },
+    {
+      "name": "VSC_BAR",
+      "title": "Hold VSC navigation mode",
+      "shortName": "NAV"
+    },
+    {
+      "name": "VSC_CHAT",
+      "title": "Hold VSC AI prompts",
+      "shortName": "AI"
+    },
+    {
+      "name": "VSC_1",
+      "title": "VSC slot 1 (EXPL / FILE)",
+      "shortName": "V1"
+    },
+    {
+      "name": "VSC_2",
+      "title": "VSC slot 2 (SRCH / SYMB / REVW)",
+      "shortName": "V2"
+    },
+    {
+      "name": "VSC_3",
+      "title": "VSC slot 3 (TERM / TERM / FIX)",
+      "shortName": "V3"
+    },
+    {
+      "name": "VSC_4",
+      "title": "VSC slot 4 (SRC / BACK / TEST)",
+      "shortName": "V4"
+    },
+    {
+      "name": "VSC_5",
+      "title": "VSC slot 5 (GIT / CMD / DOCS)",
+      "shortName": "V5"
+    },
+    {
+      "name": "VSC_6",
+      "title": "VSC slot 6 (RUN / FWD / COMMIT)",
+      "shortName": "V6"
+    },
+    {
+      "name": "RGB_PROFILE",
+      "title": "Toggle RGB minimal/profile mode",
+      "shortName": "PROF"
+    },
+    {
+      "name": "RGB_MODE",
+      "title": "Hold RGB zone controls",
+      "shortName": "ZONE"
+    },
+    {
+      "name": "RGB_TOG",
+      "title": "Cycle RGB animation mode or toggle all zones while ZONE is held",
+      "shortName": "ANIM"
+    },
+    {
+      "name": "RGB_HUEU",
+      "title": "Hue up or toggle frame LEDs",
+      "shortName": "HUE+"
+    },
+    {
+      "name": "RGB_HUED",
+      "title": "Hue down or toggle key LEDs",
+      "shortName": "HUE-"
+    },
+    {
+      "name": "RGB_VALU",
+      "title": "Brightness up or toggle gap LEDs",
+      "shortName": "VAL+"
+    },
+    {
+      "name": "RGB_VALD",
+      "title": "Brightness down",
+      "shortName": "VAL-"
+    },
+    {
+      "name": "RGB_SATU",
+      "title": "Saturation up",
+      "shortName": "SAT+"
+    },
+    {
+      "name": "RGB_SATD",
+      "title": "Saturation down",
+      "shortName": "SAT-"
+    },
+    {
+      "name": "WRK_APP",
+      "title": "WORK app shortcut (GitHub)",
+      "shortName": "APP"
+    },
+    {
+      "name": "WRK_PULL",
+      "title": "WORK: run git pull",
+      "shortName": "PULL"
+    },
+    {
+      "name": "WRK_COMMIT",
+      "title": "WORK: start git add/commit command",
+      "shortName": "CMMT"
+    },
+    {
+      "name": "WRK_PUSH",
+      "title": "WORK: run git push",
+      "shortName": "PUSH"
+    },
+    {
+      "name": "WRK_BRANCH",
+      "title": "WORK: start git checkout -b",
+      "shortName": "BRCH"
+    },
+    {
+      "name": "WRK_PR",
+      "title": "WORK: create PR in browser",
+      "shortName": "PR"
+    },
+    {
+      "name": "WRK_SYNC",
+      "title": "WORK: run git status",
+      "shortName": "SYNC"
     }
   ],
   "matrix": {
