@@ -3231,71 +3231,85 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_LEFT,     KC_ENT,      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
+
     [_WINDOW] = LAYOUT(
         TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
         WIN_1,       WIN_2,   WIN_3,
         WIN_4,       WIN_5,   WIN_6
     ),
+
     [_TEXT] = LAYOUT(
         TD(TD_LAYER_SELECT), TXT_ACT, TXT_EDT,
         TXT_1,       TXT_2,   TXT_3,
         TXT_4,       TXT_5,   TXT_6
     ),
+
     [_MEDIA] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_MPRV, KC_MNXT,
         KC_VOLD,     KC_MPLY, KC_VOLU,
         KC_MRWD,     KC_MUTE, KC_MFFD
     ),
+
     [_RGB] = LAYOUT(
         TD(TD_LAYER_SELECT), RGB_MODE, RGB_TOG,
         RGB_HUEU,    RGB_HUED, RGB_VALU,
         RGB_SATU,    RGB_SATD, RGB_VALD
     ),
+
     [_RGBMOD] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_TRNS, KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_RGBADJ] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_TRNS,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_MARK] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_WORK] = LAYOUT(
         TD(TD_LAYER_SELECT), SEL_VSC,   WRK_APP,
         WRK_PULL,    WRK_COMMIT, WRK_PUSH,
         WRK_BRANCH,  WRK_PR,     WRK_SYNC
     ),
+
     [_SYS] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_DEV] = LAYOUT(
         TD(TD_LAYER_SELECT), GM_NAV,  GM_MOUSE,
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
+
     [_GAME] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_BTN1, KC_BTN2,
-        KC_MS_L,     KC_MS_U, KC_MS_R,
-        KC_BTN3,     KC_MS_D, GM_TILT
+     TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
+     MS_LEFT,             MS_UP,   MS_RIGHT,
+     MS_BTN3,             MS_DOWN, GM_TILT
     ),
+
     [_VSC] = LAYOUT(
         TD(TD_LAYER_SELECT), VSC_BAR, VSC_CHAT,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
+
     [_PROMPT] = LAYOUT(
         TD(TD_LAYER_SELECT), PRM_PICS, PRM_ETSY,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
+
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
         SEL_MEDIA,   SEL_WORK,           TD(TD_SEL_DEV_GAME),
