@@ -72,22 +72,16 @@
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
 #    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
-#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 24
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 32
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_ON
-#        define ADXL345_MOUSE_TILT_ON 72
+#        define ADXL345_MOUSE_TILT_ON 90
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_OFF
-#        define ADXL345_MOUSE_TILT_OFF 44
+#        define ADXL345_MOUSE_TILT_OFF 60
 #    endif
 #    ifndef ADXL345_MOUSE_BLEND_DIV
 #        define ADXL345_MOUSE_BLEND_DIV 3
-#    endif
-#    ifndef ADXL345_MOUSE_Y_GAIN_NUM
-#        define ADXL345_MOUSE_Y_GAIN_NUM 3
-#    endif
-#    ifndef ADXL345_MOUSE_Y_GAIN_DEN
-#        define ADXL345_MOUSE_Y_GAIN_DEN 2
 #    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 5
@@ -156,7 +150,6 @@ enum custom_keycodes {
     WIN_4,
     WIN_5,
     WIN_6,
-    SEL_KEY,
     // QMK reserves only 32 keyboard-level custom slots (QK_KB_0..QK_KB_31).
     // Start the remaining local-only keycodes at SAFE_RANGE to keep introspection builds valid.
     TXT_ACT = SAFE_RANGE,
@@ -461,16 +454,16 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 4, 6, 7, 8
+    0, 1, 2, 3, 5, 6, 7, 8
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GIT(old WORK slot), VSC, RGB, PROMPT.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {128, 220, 108}, // BASE
     {176, 240, 112}, // WINDOW
     { 90, 230, 112}, // TEXT
     { 18, 255, 118}, // MEDIA
-    { 86, 220, 120}, // GIT
+    { 32, 255, 118}, // GAME
     {166, 255, 118}, // VSC
     {210, 255, 124}, // RGB
     { 14, 255, 124}, // PROMPT
@@ -511,7 +504,7 @@ static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
     {176, 220,  42},
     { 90, 220,  48},
     { 18, 255,  44},
-    { 86, 220,  42},
+    { 32, 255,  40},
     {166, 255,  46},
     {210, 255,  56},
     { 14, 255,  44},
@@ -537,7 +530,7 @@ static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
     {176, 220,  90},
     { 90, 210,  88},
     { 18, 255,  92},
-    { 86, 220,  92},
+    { 32, 255,  90},
     {166, 240,  90},
     {210, 255, 104},
     { 14, 240,  92},
@@ -2000,9 +1993,6 @@ static void update_game_tilt_arrows(void) {
             axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_x) / ADXL345_MOUSE_BLEND_DIV);
             axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_y) / ADXL345_MOUSE_BLEND_DIV);
 #endif
-    #if ADXL345_MOUSE_Y_GAIN_DEN > 0
-            axis_y = (int16_t)(((int32_t)axis_y * ADXL345_MOUSE_Y_GAIN_NUM) / ADXL345_MOUSE_Y_GAIN_DEN);
-    #endif
             debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
             on_threshold = ADXL345_MOUSE_TILT_ON;
             off_threshold = ADXL345_MOUSE_TILT_OFF;
@@ -3145,67 +3135,57 @@ static void render_rgb_tilt_mode(void) {
     hsv_config_t p = palette_for_layer(layer);
     uint32_t now = timer_read32();
 
-    static int8_t tilt_wave_dir = 1;
-    uint16_t period_ms = effect_period_for_layer(layer, 2200);
-    uint8_t head = 0;
+    clear_all_keys();
 
-#ifdef ADXL345_ENABLE
-    if (adxl345_ready) {
-        uint16_t abs_x = abs_i16_u16(adxl345_fluid_x);
-        uint16_t abs_y = abs_i16_u16(adxl345_fluid_y);
-        uint16_t mag = abs_x + abs_y;
-        if (mag > 300) mag = 300;
+#ifndef ADXL345_ENABLE
+    render_effect_sweep(layer);
+    return;
+#else
+    if (!adxl345_ready) {
+        uint8_t pulse = pulse_val(now, effect_period_for_layer(layer, 1800), 0, palette_floor(p.val / 16, 5), palette_floor(p.val / 2, 18));
+        set_key_hsv(4, p.hue, p.sat, pulse);
+        set_key_hsv(1, p.hue, p.sat, scale_val(pulse, 110));
+        set_key_hsv(7, p.hue, p.sat, scale_val(pulse, 110));
+        flush_led_frame();
+        return;
+    }
 
-        // Keep direction stable near center; flip only when tilt is intentional.
-        if (mag >= ADXL345_MOUSE_TILT_OFF) {
-            if (abs_y >= abs_x) {
-                tilt_wave_dir = adxl345_fluid_y >= 0 ? 1 : -1;
-            } else {
-                tilt_wave_dir = adxl345_fluid_x >= 0 ? 1 : -1;
-            }
+    // Render from the higher-resolution fluid state so tilt glides continuously.
+    int16_t center_x_fp = (int16_t)(2 * 256 + ((int32_t)adxl345_fluid_x_fp * 256) / (110 << ADXL345_FLUID_SHIFT));
+    int16_t center_y_fp = (int16_t)(1 * 256 + ((int32_t)adxl345_fluid_y_fp * 256) / (130 << ADXL345_FLUID_SHIFT));
+    uint8_t motion_boost = adxl345_fluid_motion > 120 ? 52 : (uint8_t)(adxl345_fluid_motion / 3);
+
+    if (center_x_fp < 0) center_x_fp = 0;
+    if (center_x_fp > 4 * 256) center_x_fp = 4 * 256;
+    if (center_y_fp < 0) center_y_fp = 0;
+    if (center_y_fp > 2 * 256) center_y_fp = 2 * 256;
+
+    for (uint8_t led = 0; led < RGB_KEYFIELD_LED_COUNT; led++) {
+        uint8_t row = led_row_index(led);
+        uint8_t col = led_col_index(led);
+        int16_t led_x_fp = (int16_t)col * 256;
+        int16_t led_y_fp = (int16_t)row * 256;
+        uint16_t dx = abs_i16_u16(led_x_fp - center_x_fp);
+        uint16_t dy = abs_i16_u16(led_y_fp - center_y_fp);
+        uint16_t major = dx > dy ? dx : dy;
+        uint16_t minor = dx > dy ? dy : dx;
+        uint16_t distance_fp = major + minor / 2;
+        uint8_t fade = distance_fp >= 768 ? 0 : (uint8_t)(255 - ((distance_fp * 255) / 768));
+        uint8_t base = palette_floor(p.val / 24, 3);
+        uint8_t peak = clamp_add_u8(p.val, motion_boost);
+        uint8_t span = peak > base ? (uint8_t)(peak - base) : 0;
+        uint8_t val = clamp_add_u8(base, scale_val(span, fade));
+
+        if (led_is_gap(led)) {
+            val = scale_val(val, 150);
+            val = clamp_add_u8(val, triwave8_period(now, 900 + led * 31, led * 17) / 12);
         }
 
-        // Stronger tilt moves the packet faster, but never becomes unreadably fast.
-        period_ms = 2200 - (uint16_t)(mag * 6);
-        if (period_ms < 450) period_ms = 450;
+        set_led_hsv(led, p.hue, p.sat, val);
     }
+
+    flush_led_frame();
 #endif
-
-    uint16_t step_ms = period_ms / RGBLIGHT_LED_COUNT;
-    if (step_ms < 1) step_ms = 1;
-    uint8_t pos = (uint8_t)((now / step_ms) % RGBLIGHT_LED_COUNT);
-    head = tilt_wave_dir > 0 ? pos : (uint8_t)(RGBLIGHT_LED_COUNT - 1 - pos);
-
-    // Keys/gaps pass.
-    rgb_rendering_frame = false;
-    for (uint8_t led = 0; led < RGB_FRAME_LED_FIRST; led++) {
-        uint8_t d = tilt_wave_dir > 0
-            ? (uint8_t)((head + RGBLIGHT_LED_COUNT - led) % RGBLIGHT_LED_COUNT)
-            : (uint8_t)((led + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT);
-        uint8_t val = 0;
-        if (d == 0) val = p.val;
-        else if (d == 1) val = palette_floor((p.val * 3) / 5, 14);
-        else if (d == 2) val = palette_floor(p.val / 4, 6);
-
-        set_led_hsv(led, p.hue, p.sat, val);
-    }
-
-    // Frame pass.
-    rgb_rendering_frame = true;
-    for (uint8_t led = RGB_FRAME_LED_FIRST; led < RGBLIGHT_LED_COUNT; led++) {
-        uint8_t d = tilt_wave_dir > 0
-            ? (uint8_t)((head + RGBLIGHT_LED_COUNT - led) % RGBLIGHT_LED_COUNT)
-            : (uint8_t)((led + RGBLIGHT_LED_COUNT - head) % RGBLIGHT_LED_COUNT);
-        uint8_t val = 0;
-        if (d == 0) val = p.val;
-        else if (d == 1) val = palette_floor((p.val * 3) / 5, 14);
-        else if (d == 2) val = palette_floor(p.val / 4, 6);
-
-        set_led_hsv(led, p.hue, p.sat, val);
-    }
-    rgb_rendering_frame = false;
-
-    rgblight_driver.flush();
 }
 
 static void render_rgb_layer_visuals(void) {
@@ -3275,91 +3255,91 @@ static void render_rgb_layer_visuals(void) {
 // ── Keymaps ─────────────────────────────────────────────────
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
-        SEL_KEY,             KC_HOME,       KC_BSPC,
+        TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
         KC_LEFT,     KC_ENT,      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
 
     [_WINDOW] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
+        TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
         WIN_1,       WIN_2,   WIN_3,
         WIN_4,       WIN_5,   WIN_6
     ),
 
     [_TEXT] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
-        WIN_1,       WIN_2,   WIN_3,
-        WIN_4,       WIN_5,   WIN_6
+        TD(TD_LAYER_SELECT), TXT_ACT, TXT_EDT,
+        TXT_1,       TXT_2,   TXT_3,
+        TXT_4,       TXT_5,   TXT_6
     ),
 
     [_MEDIA] = LAYOUT(
-        SEL_KEY,             KC_MPRV, KC_MNXT,
+        TD(TD_LAYER_SELECT), KC_MPRV, KC_MNXT,
         KC_VOLD,     KC_MPLY, KC_VOLU,
         KC_MRWD,     KC_MUTE, KC_MFFD
     ),
 
     [_RGB] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
-        WIN_1,       WIN_2,   WIN_3,
-        WIN_4,       WIN_5,   WIN_6
+        TD(TD_LAYER_SELECT), RGB_MODE, RGB_TOG,
+        RGB_HUEU,    RGB_HUED, RGB_VALU,
+        RGB_SATU,    RGB_SATD, RGB_VALD
     ),
 
     [_RGBMOD] = LAYOUT(
-        SEL_KEY,             KC_TRNS, KC_NO,
+        TD(TD_LAYER_SELECT), KC_TRNS, KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
 
     [_RGBADJ] = LAYOUT(
-        SEL_KEY,             KC_NO,   KC_TRNS,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_TRNS,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
 
     [_MARK] = LAYOUT(
-        SEL_KEY,             KC_NO,   KC_NO,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
 
     [_WORK] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
-        WIN_1,       WIN_2,   WIN_3,
-        WIN_4,       WIN_5,   WIN_6
+        TD(TD_LAYER_SELECT), SEL_VSC,   WRK_APP,
+        WRK_PULL,    WRK_COMMIT, WRK_PUSH,
+        WRK_BRANCH,  WRK_PR,     WRK_SYNC
     ),
 
     [_SYS] = LAYOUT(
-        SEL_KEY,             KC_NO,   KC_NO,
+        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
 
     [_DEV] = LAYOUT(
-        SEL_KEY,             GM_NAV,  GM_MOUSE,
+        TD(TD_LAYER_SELECT), GM_NAV,  GM_MOUSE,
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
 
     [_GAME] = LAYOUT(
-     SEL_KEY,             MS_BTN1, MS_BTN2,
+     TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
      MS_LEFT,             MS_UP,   MS_RGHT,
      MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
     [_VSC] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
-        WIN_1,       WIN_2,   WIN_3,
-        WIN_4,       WIN_5,   WIN_6
+        TD(TD_LAYER_SELECT), VSC_BAR, VSC_CHAT,
+        VSC_1,       VSC_2,   VSC_3,
+        VSC_4,       VSC_5,   VSC_6
     ),
 
     [_PROMPT] = LAYOUT(
-        SEL_KEY,             WIN_BRO, WIN_AUX,
-        WIN_1,       WIN_2,   WIN_3,
-        WIN_4,       WIN_5,   WIN_6
+        TD(TD_LAYER_SELECT), PRM_PICS, PRM_ETSY,
+        VSC_1,       VSC_2,   VSC_3,
+        VSC_4,       VSC_5,   VSC_6
     ),
 
     [_SELECT] = LAYOUT(
-        SEL_KEY,             TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
+        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
         SEL_MEDIA,   SEL_WORK,           TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
@@ -3518,7 +3498,7 @@ tap_dance_action_t tap_dance_actions[] = {
 #endif
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    if (keycode == TD(TD_LAYER_SELECT) || keycode == SEL_KEY) {
+    if (keycode == TD(TD_LAYER_SELECT)) {
         if (record->event.pressed) {
             selector_origin_layer = canonical_rgb_layer(active_layer_raw());
             if (selector_origin_layer >= _SELECT) selector_origin_layer = _BASE;
@@ -3699,217 +3679,28 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) tap_game_target((uint8_t)(keycode - GM_1));
             return false;
 
-        case WIN_BRO: {
-            uint8_t layer = active_layer_raw();
-
-            if (layer == _WINDOW) {
-                if (record->event.pressed) {
-                    window_browser_held = !window_browser_held;
-                    if (window_browser_held) window_snap_held = false;
-                }
-                return false;
-            }
-
-            if (layer == _TEXT) {
-                if (record->event.pressed) {
-                    text_edit_held = false;
-                    text_action_held = !text_action_held;
-                }
-                return false;
-            }
-
-            if (layer == _VSC) {
-                if (record->event.pressed) {
-                    vsc_mode = VSC_MODE_BAR;
-                } else {
-                    vsc_mode = VSC_MODE_NONE;
-                }
-                return false;
-            }
-
-            if (layer == _RGB) {
-                rgb_mode_held = record->event.pressed;
-                return false;
-            }
-
-            if (layer == _WORK) {
-                if (record->event.pressed) select_target_layer(_VSC);
-                return false;
-            }
-
-            if (layer == _PROMPT) {
-                if (record->event.pressed) {
-                    prompt_mode = PROMPT_MODE_PICS;
-                    selector_target = _PROMPT;
-                    select_cursor = slot_for_layer(selector_target);
-                    layer_move(_PROMPT);
-                }
-                return false;
-            }
-
+        case WIN_BRO:
             if (record->event.pressed) {
                 window_browser_held = !window_browser_held;
                 if (window_browser_held) window_snap_held = false;
             }
             return false;
-        }
 
-        case WIN_AUX: {
-            uint8_t layer = active_layer_raw();
-
-            if (layer == _WINDOW) {
-                if (record->event.pressed) {
-                    window_snap_held = !window_snap_held;
-                    if (window_snap_held) window_browser_held = false;
-                }
-                return false;
-            }
-
-            if (layer == _TEXT) {
-                if (record->event.pressed) {
-                    text_action_held = false;
-                    text_edit_held = !text_edit_held;
-                }
-                return false;
-            }
-
-            if (layer == _VSC) {
-                if (record->event.pressed) {
-                    vsc_mode = VSC_MODE_CHAT;
-                } else {
-                    vsc_mode = VSC_MODE_NONE;
-                }
-                return false;
-            }
-
-            if (layer == _RGB) {
-                if (record->event.pressed) {
-                    if (rgb_mode_held) {
-                        toggle_rgb_all_zones();
-                    } else {
-                        cycle_rgb_animation_mode();
-                    }
-                }
-                return false;
-            }
-
-            if (layer == _WORK) {
-                if (record->event.pressed) {
-                    send_string("github");
-                    tap_code(KC_ENT);
-                }
-                return false;
-            }
-
-            if (layer == _PROMPT) {
-                if (record->event.pressed) {
-                    prompt_mode = PROMPT_MODE_ETSY;
-                    selector_target = _PROMPT;
-                    select_cursor = slot_for_layer(selector_target);
-                    layer_move(_PROMPT);
-                }
-                return false;
-            }
-
+        case WIN_AUX:
             if (record->event.pressed) {
                 window_snap_held = !window_snap_held;
                 if (window_snap_held) window_browser_held = false;
             }
             return false;
-        }
 
         case WIN_1:
         case WIN_2:
         case WIN_3:
         case WIN_4:
         case WIN_5:
-        case WIN_6: {
-            uint8_t slot = (uint8_t)(keycode - WIN_1);
-            uint8_t layer = active_layer_raw();
-
-            if (!record->event.pressed) return false;
-
-            if (layer == _WINDOW) {
-                tap_window_target(slot);
-                return false;
-            }
-
-            if (layer == _TEXT) {
-                tap_text_target(slot);
-                return false;
-            }
-
-            if (layer == _VSC || layer == _PROMPT) {
-                trigger_vsc_target(slot);
-                return false;
-            }
-
-            if (layer == _RGB) {
-                switch (slot) {
-                    case 0:
-                        if (rgb_mode_held) {
-                            toggle_rgb_zone_bits(RGB_ZONE_FRAME);
-                        } else {
-                            adjust_layer_hue(_RGB, RGBLIGHT_HUE_STEP);
-                        }
-                        break;
-                    case 1:
-                        if (rgb_mode_held) {
-                            toggle_rgb_zone_bits(RGB_ZONE_KEY);
-                        } else {
-                            adjust_layer_hue(_RGB, -RGBLIGHT_HUE_STEP);
-                        }
-                        break;
-                    case 2:
-                        if (rgb_mode_held) {
-                            toggle_rgb_zone_bits(RGB_ZONE_GAP);
-                        } else {
-                            adjust_layer_brightness(_RGB, RGBLIGHT_VAL_STEP);
-                        }
-                        break;
-                    case 3:
-                        if (!rgb_mode_held) adjust_layer_saturation(_RGB, RGBLIGHT_SAT_STEP);
-                        break;
-                    case 4:
-                        if (!rgb_mode_held) adjust_layer_saturation(_RGB, -RGBLIGHT_SAT_STEP);
-                        break;
-                    case 5:
-                        if (!rgb_mode_held) adjust_layer_brightness(_RGB, -RGBLIGHT_VAL_STEP);
-                        break;
-                }
-                return false;
-            }
-
-            if (layer == _WORK) {
-                switch (slot) {
-                    case 0:
-                        send_string("git pull");
-                        tap_code(KC_ENT);
-                        break;
-                    case 1:
-                        send_string("git add -A && git commit -m \"");
-                        break;
-                    case 2:
-                        send_string("git push");
-                        tap_code(KC_ENT);
-                        break;
-                    case 3:
-                        send_string("git checkout -b ");
-                        break;
-                    case 4:
-                        send_string("gh pr create --web");
-                        tap_code(KC_ENT);
-                        break;
-                    case 5:
-                        send_string("git status");
-                        tap_code(KC_ENT);
-                        break;
-                }
-                return false;
-            }
-
+        case WIN_6:
+            if (record->event.pressed) tap_window_target((uint8_t)(keycode - WIN_1));
             return false;
-        }
 
         case TXT_ACT:
     if (record->event.pressed) {
