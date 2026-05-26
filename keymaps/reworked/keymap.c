@@ -3294,7 +3294,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_GAME] = LAYOUT(
      TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
-     MS_LEFT,             MS_UP,   MS_RIGHT,
+     MS_LEFT,             MS_UP,   MS_RGHT,
      MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
