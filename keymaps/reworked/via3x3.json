@@ -3119,6 +3119,11 @@
       "shortName": "MED"
     },
     {
+      "name": "SEL_WORK",
+      "title": "Go to GIT layer",
+      "shortName": "GIT"
+    },
+    {
       "name": "SEL_RGB",
       "title": "Go to RGB layer",
       "shortName": "RGB"
@@ -3154,9 +3159,9 @@
       "shortName": "NAV"
     },
     {
-      "name": "GM_WASD",
-      "title": "GAME movement mode",
-      "shortName": "WASD"
+      "name": "GM_MOUSE",
+      "title": "GAME mouse mode",
+      "shortName": "MOUSE"
     },
     {
       "name": "GM_1",

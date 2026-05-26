@@ -38,6 +38,8 @@
 #define BOOT_TOTAL_MS          2800
 #define BUTTON_DEBOUNCE_MS     150
 #define SELECTOR_DOUBLE_TAP_MS 300
+#define OLED_DOUBLE_TAP_MS     320
+#define OLED_HOLD_MS           450
 #define CLEAR_EEPROM_HOLD_MS   3000
 #define VIA_LAYER_SLOT_COUNT   8
 #define REWORKED_LAYOUT_VERSION 8
@@ -115,6 +117,7 @@ enum custom_keycodes {
     SEL_WINDOW,
     SEL_TEXT,
     SEL_MEDIA,
+    SEL_WORK,
     SEL_RGB,
     SEL_DEV,
     SEL_VSC,
@@ -164,7 +167,14 @@ enum custom_keycodes {
     RGB_VALU,
     RGB_VALD,
     RGB_SATU,
-    RGB_SATD
+    RGB_SATD,
+    WRK_APP,
+    WRK_PULL,
+    WRK_COMMIT,
+    WRK_PUSH,
+    WRK_BRANCH,
+    WRK_PR,
+    WRK_SYNC
 };
 
 enum tap_dance_ids {
@@ -302,7 +312,7 @@ static uint32_t rgb_frame_timer           = 0;
 static uint32_t boot_start                = 0;
 static oled_view_t oled_view              = OLED_VIEW_LEGEND;
 static vsc_mode_t vsc_mode                = VSC_MODE_NONE;
-static vsc_mode_t last_vsc_mode           = VSC_MODE_BAR;
+static vsc_mode_t last_vsc_mode           = VSC_MODE_NONE;
 static text_mode_t text_mode              = TEXT_MODE_WIN;
 static bool matrix_select_held            = false;
 static bool encoder_btn_pressed           = false;
@@ -420,44 +430,123 @@ typedef struct {
 static via_user_config_t via_user_config;
 #endif
 
-// GAME / MEDIA share the old DEV slot to keep VIA layer indexing stable.
+// Selector grid in physical key order:
+// BASE WIN TXT / MED GIT GAME / VSC RGB PROMPT
 static select_slot_t select_slots[PAD_KEY_COUNT] = {
-    { _SELECT,   0,   0, 120, "SELECT", false },
-    { _WINDOW, 176, 240, 120, "WINDOW", true  },
-    { _TEXT,    96, 220, 110, "TXT",    true  },
-    { _MEDIA,   18, 255, 130, "MEDIA",  true  },
-    { _BASE,   160, 220, 120, "BASE",   true  },
-    { _DEV,     32, 255, 130, "GAME",   true  },
-    { _VSC,    200, 255, 130, "VSC",    true  },
-    { _RGB,    215, 240, 130, "RGB",    true  },
-    { _PROMPT,   8, 255, 140, "PROMT",  true  },
+    { _BASE,   128, 220, 108, "BASE",   true  },
+    { _WINDOW, 176, 240, 112, "WINDOW", true  },
+    { _TEXT,    90, 230, 112, "TXT",    true  },
+    { _MEDIA,   18, 255, 118, "MEDIA",  true  },
+    { _WORK,    86, 220, 120, "GIT",    true  },
+    { _DEV,     32, 255, 118, "GAME",   true  },
+    { _VSC,    166, 255, 118, "VSC",    true  },
+    { _RGB,    210, 255, 124, "RGB",    true  },
+    { _PROMPT,  14, 255, 124, "PROMPT", true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    4, 1, 2, 3, 5, 6, 7, 8
+    0, 1, 2, 3, 5, 6, 7, 8
 };
 
 // Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
-    {160, 220, 120},
-    {176, 240, 120},
-    { 96, 220, 110},
-    { 18, 255, 130}, // MEDIA
-    { 32, 255, 130}, // GAME
-    {200, 255, 130},
-    {215, 240, 130},
-    {  8, 255, 140}, // PROMPT
+    {128, 220, 108}, // BASE
+    {176, 240, 112}, // WINDOW
+    { 90, 230, 112}, // TEXT
+    { 18, 255, 118}, // MEDIA
+    { 32, 255, 118}, // GAME
+    {166, 255, 118}, // VSC
+    {210, 255, 124}, // RGB
+    { 14, 255, 124}, // PROMPT
 };
 
-static const char *const vsc_bar_labels[6] = {"EXPL", "SRC", "TERM", "GIT", "GPT", "RUN"};
-static const char *const vsc_bar_functions[6] = {"Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"};
-static const char *const vsc_bar_commands[6] = {
+static const uint8_t via_default_layer_effect[VIA_LAYER_SLOT_COUNT] = {
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
+    RGB_EFFECT_RAINBOW,
+    RGB_EFFECT_SOLID,
+};
+
+static const uint8_t via_default_layer_speed[VIA_LAYER_SLOT_COUNT] = {
+    88, 104, 96, 112, 112, 98, 124, 94,
+};
+
+static const uint8_t via_default_gap_effect[VIA_LAYER_SLOT_COUNT] = {
+    RGB_EFFECT_OFF,
+    RGB_EFFECT_SCAN,
+    RGB_EFFECT_TYPEWRITER,
+    RGB_EFFECT_PULSE,
+    RGB_EFFECT_SCAN,
+    RGB_EFFECT_PACKET,
+    RGB_EFFECT_RUNNING,
+    RGB_EFFECT_PULSE,
+};
+
+static const uint8_t via_default_gap_speed[VIA_LAYER_SLOT_COUNT] = {
+    80, 104, 96, 108, 108, 110, 130, 92,
+};
+
+static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
+    {128, 180,  28},
+    {176, 220,  42},
+    { 90, 220,  48},
+    { 18, 255,  44},
+    { 32, 255,  40},
+    {166, 255,  46},
+    {210, 255,  56},
+    { 14, 255,  44},
+};
+
+static const uint8_t via_default_frame_effect[VIA_LAYER_SLOT_COUNT] = {
+    RGB_EFFECT_BREATHING,
+    RGB_EFFECT_COMET,
+    RGB_EFFECT_SWEEP,
+    RGB_EFFECT_BREATHING,
+    RGB_EFFECT_BREATHING,
+    RGB_EFFECT_BREATHING,
+    RGB_EFFECT_RAINBOW,
+    RGB_EFFECT_BLOOM,
+};
+
+static const uint8_t via_default_frame_speed[VIA_LAYER_SLOT_COUNT] = {
+    92, 106, 94, 110, 108, 100, 130, 92,
+};
+
+static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
+    {128, 200,  86},
+    {176, 220,  90},
+    { 90, 210,  88},
+    { 18, 255,  92},
+    { 32, 255,  90},
+    {166, 240,  90},
+    {210, 255, 104},
+    { 14, 240,  92},
+};
+
+static const char *const vsc_main_labels[6] = {"EXPL", "SRCH", "TERM", "SRC", "GIT", "RUN"};
+static const char *const vsc_main_functions[6] = {"Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"};
+static const char *const vsc_main_commands[6] = {
     "View: Show Explorer",
-    "View: Show Source Control",
+    "View: Show Search",
     "Terminal: Focus Terminal",
+    "View: Show Source Control",
     "GitHub Pull Requests: Focus on GitHub Pull Requests View",
-    "GitHub Copilot Chat: Focus on Chat View",
     "Tasks: Run Task"
+};
+
+static const char *const vsc_nav_labels[6] = {"FILE", "SYMB", "TERM", "BACK", "CMD", "FWD"};
+static const char *const vsc_nav_functions[6] = {"Quick open", "Go to symbol", "Terminal", "Navigate back", "Command palette", "Navigate forward"};
+static const char *const vsc_nav_commands[6] = {
+    "Go to File...",
+    "Go to Symbol in Editor...",
+    "Terminal: Focus Terminal",
+    "Go Back",
+    "Show All Commands",
+    "Go Forward"
 };
 
 static const char *const vsc_chat_labels[6] = {"SUM", "REVW", "FIX", "TEST", "EXPL", "COMMIT"};
@@ -512,20 +601,20 @@ static const char *const prompt_etsy_macros[6] = {
 };
 
 static const char *const text_win_labels[6]    = {"HOME", "UP", "END", "LEFT", "DOWN", "RGHT"};
-static const char *const text_action_labels[6] = {"ALL", "COPY", "PASTE", "CUT", "UNDO", "REDO"};
-static const char *const text_edit_labels[6]   = {"ENT", "BSPC", "DEL", "TAB", "SPC", "SHIFT"};
+static const char *const text_action_labels[6] = {"COPY", "CUT", "PASTE", "UNDO", "REDO", "SAVE"};
+static const char *const text_edit_labels[6]   = {"WRD<", "DELW", "WRD>", "LINE<", "DELL", "LINE>"};
 
 static const char *const text_win_functions[6]    = {"Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"};
-static const char *const text_action_functions[6] = {"Select all", "Copy", "Paste", "Cut", "Undo", "Redo"};
-static const char *const text_edit_functions[6]   = {"Enter", "Backspace", "Delete", "Tab", "Space", "One-shot Shift"};
+static const char *const text_action_functions[6] = {"Copy", "Cut", "Paste", "Undo", "Redo", "Save"};
+static const char *const text_edit_functions[6]   = {"Word left", "Delete word", "Word right", "Line start", "Delete line", "Line end"};
 
 static const char *const window_win_labels[6]     = {"DESK<", "TASK", "DESK>", "WIN<", "SHOW", "WIN>"};
 static const char *const window_browser_labels[6] = {"BACK", "REFR", "FWD", "TAB<", "NEW", "TAB>"};
-static const char *const window_snap_labels[6]    = {"MAX", "UP", "CLOSE", "LEFT", "DOWN", "RGHT"};
+static const char *const window_snap_labels[6]    = {"MAX", "UP", "MIN", "LEFT", "DOWN", "RGHT"};
 
 static const char *const window_win_functions[6]     = {"Previous desktop", "Task view", "Next desktop", "Previous window", "Show desktop", "Next window"};
 static const char *const window_browser_functions[6] = {"Browser back", "Refresh page", "Browser forward", "Previous tab", "New tab", "Next tab"};
-static const char *const window_snap_functions[6]    = {"Maximize window", "Snap or maximize up", "Close window", "Snap left", "Snap or restore down", "Snap right"};
+static const char *const window_snap_functions[6]    = {"Maximize window", "Snap up", "Minimize window", "Snap left", "Snap down", "Snap right"};
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
 static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
@@ -553,13 +642,13 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
-    [_WORK]   = {"SEL",  "PLAN", "WRITE", "SHOP", "CODE", "BUILD","IMG",  "LIST", "CHECK"},
+    [_WORK]   = {"SEL",  "VSC",  "DESK", "PULL", "COMMIT", "PUSH", "BRCH", "PR", "SYNC"},
     [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_GAME]   = {"SEL",  "X",    "Y",     "LSTK", "R",    "L",    "RT",   "LT",   "TILT"},
-    [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRC",  "TERM", "GIT",  "GPT",  "RUN"},
+    [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"SEL",  "WIN+", "TXT+", "MED",  "TILT", "GAME+", "VSC+", "BASE", "PROMT"},
+    [_SELECT] = {"BASE", "WIN",  "TXT", "MED",  "GIT", "GAME", "VSC", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -571,13 +660,13 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
-    [_WORK]   = {"Select layer", "Planning", "Writing", "Shop workflow", "Coding", "Build workflow", "Images", "Listings", "Checks"},
+    [_WORK]   = {"Select layer", "Go to VSC layer", "Open GitHub Desktop or app", "git pull", "git add/commit prompt", "git push", "Create branch", "Create PR in browser", "git status"},
     [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_GAME]   = {"Select layer", "Game face button X", "Game face button Y", "Switch to left-stick movement", "Game shoulder button R", "Game shoulder button L", "Game right trigger", "Game left trigger", "Toggle tilt detection"},
-    [_VSC]    = {"Select layer", "Hold VSC navigation", "Hold AI prompts", "Explorer", "Source control", "Terminal", "GitHub PRs", "Copilot Chat", "Run task"},
+    [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Select layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to media", "Toggle tilt detection", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to base", "Go to prompt"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to MEDIA layer", "Go to GIT layer", "Go to GAME layer", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -590,12 +679,12 @@ static const char *layer_name_short(uint8_t l) {
         case _RGBMOD: return "MOD";
         case _RGBADJ: return "ADJ";
         case _MARK:   return "MARK";
-        case _WORK:   return "WORK";
+        case _WORK:   return "GIT";
         case _SYS:    return "SYS";
         case _DEV:    return "GAME";
         case _GAME:   return "GAME+";
         case _VSC:    return "VSC";
-        case _PROMPT: return "PRM";
+        case _PROMPT: return "PROMPT";
         case _SELECT: return "SEL";
         default:      return "BASE";
     }
@@ -871,18 +960,22 @@ static const char *vsc_label_for(vsc_mode_t mode, uint8_t index) {
     if (index == 2) return "AI";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        return mode == VSC_MODE_CHAT ? vsc_chat_labels[slot] : vsc_bar_labels[slot];
+        if (mode == VSC_MODE_CHAT) return vsc_chat_labels[slot];
+        if (mode == VSC_MODE_BAR) return vsc_nav_labels[slot];
+        return vsc_main_labels[slot];
     }
     return "----";
 }
 
 static const char *vsc_function_for(vsc_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
-    if (index == 1) return "Hold VSC navigation";
+    if (index == 1) return "Hold VSC nav mode";
     if (index == 2) return "Hold AI prompts";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
-        return mode == VSC_MODE_CHAT ? vsc_chat_functions[slot] : vsc_bar_functions[slot];
+        if (mode == VSC_MODE_CHAT) return vsc_chat_functions[slot];
+        if (mode == VSC_MODE_BAR) return vsc_nav_functions[slot];
+        return vsc_main_functions[slot];
     }
     return "Unknown";
 }
@@ -899,7 +992,6 @@ static uint8_t slot_for_layer(uint8_t layer) {
     layer = canonical_rgb_layer(layer);
 
     if (layer == _MARK) layer = _WINDOW;
-    if (layer == _WORK) layer = _TEXT;
     if (layer == _SYS) layer = _VSC;
 
     for (uint8_t i = 0; i < PAD_KEY_COUNT; i++) {
@@ -918,7 +1010,7 @@ static uint8_t via_palette_index_for_slot(uint8_t slot) {
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
         if (via_layer_slots[i] == slot) return i;
     }
-    return 0;
+    return UINT8_MAX;
 }
 
 static hsv_config_t palette_for_layer(uint8_t layer) {
@@ -933,6 +1025,9 @@ static uint8_t via_palette_index_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
+    if (layer == _WORK) {
+        return RGB_EFFECT_SOLID;
+    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.layer_effect[index] < RGB_EFFECT_COUNT) {
@@ -959,6 +1054,9 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
 }
 
 static hsv_config_t gap_palette_for_layer(uint8_t layer) {
+    if (layer == _WORK) {
+        return (hsv_config_t){42, 255, 44};
+    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -969,6 +1067,9 @@ static hsv_config_t gap_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t gap_effect_for_layer(uint8_t layer) {
+    if (layer == _WORK) {
+        return RGB_EFFECT_TWINKLE;
+    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.gap_effect[index] < RGB_EFFECT_COUNT) {
@@ -998,6 +1099,9 @@ static uint16_t gap_effect_period_for_layer(uint8_t layer, uint16_t base_period)
 }
 
 static hsv_config_t frame_palette_for_layer(uint8_t layer) {
+    if (layer == _WORK) {
+        return (hsv_config_t){210, 96, 90};
+    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -1008,6 +1112,9 @@ static hsv_config_t frame_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t frame_effect_for_layer(uint8_t layer) {
+    if (layer == _WORK) {
+        return RGB_EFFECT_BREATHING;
+    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_effect[index] < RGB_EFFECT_COUNT) {
@@ -1186,15 +1293,15 @@ static void set_via_config_defaults(void) {
     via_user_config.fx_mode = 0;
 
     for (uint8_t i = 0; i < VIA_LAYER_SLOT_COUNT; i++) {
-        via_user_config.layer_effect[i] = RGB_EFFECT_WILD;
-        via_user_config.layer_speed[i] = 128;
+        via_user_config.layer_effect[i] = via_default_layer_effect[i];
+        via_user_config.layer_speed[i] = via_default_layer_speed[i];
         via_user_config.layer_palette[i] = via_default_palette[i];
-        via_user_config.gap_effect[i] = RGB_EFFECT_WILD;
-        via_user_config.gap_speed[i] = 128;
-        via_user_config.gap_palette[i] = via_default_palette[i];
-        via_user_config.frame_effect[i] = RGB_EFFECT_BREATHING;
-        via_user_config.frame_speed[i] = 128;
-        via_user_config.frame_palette[i] = via_default_palette[i];
+        via_user_config.gap_effect[i] = via_default_gap_effect[i];
+        via_user_config.gap_speed[i] = via_default_gap_speed[i];
+        via_user_config.gap_palette[i] = via_default_gap_palette[i];
+        via_user_config.frame_effect[i] = via_default_frame_effect[i];
+        via_user_config.frame_speed[i] = via_default_frame_speed[i];
+        via_user_config.frame_palette[i] = via_default_frame_palette[i];
     }
 
     apply_via_runtime_config();
@@ -1492,12 +1599,12 @@ static void trigger_vsc_target(uint8_t slot) {
     }
 
     vsc_mode_t mode = current_vsc_preview_mode();
-    if (mode == VSC_MODE_NONE) return;
-
     if (mode == VSC_MODE_BAR) {
-        send_vsc_command(vsc_bar_commands[slot]);
+        send_vsc_command(vsc_nav_commands[slot]);
     } else if (mode == VSC_MODE_CHAT) {
         send_string(vsc_chat_macros[slot]);
+    } else {
+        send_vsc_command(vsc_main_commands[slot]);
     }
 }
 
@@ -1507,23 +1614,27 @@ static void tap_text_target(uint8_t slot) {
     switch (current_text_preview_mode()) {
         case TEXT_MODE_ACTIONS:
             switch (slot) {
-                case 0: tap_code16(C(KC_A)); break;
-                case 1: tap_code16(C(KC_C)); break;
+                case 0: tap_code16(C(KC_C)); break;
+                case 1: tap_code16(C(KC_X)); break;
                 case 2: tap_code16(C(KC_V)); break;
-                case 3: tap_code16(C(KC_X)); break;
+                case 3: tap_code16(C(KC_Z)); break;
                 case 4: tap_code16(C(KC_Y)); break;
-                case 5: tap_code16(C(KC_Z)); break;
+                case 5: tap_code16(C(KC_S)); break;
             }
             break;
 
         case TEXT_MODE_EDIT:
             switch (slot) {
-                case 0: tap_code(KC_ENT); break;
-                case 1: tap_code(KC_BSPC); break;
-                case 2: tap_code(KC_DEL); break;
-                case 3: tap_code(KC_TAB); break;
-                case 4: tap_code(KC_SPC); break;
-                case 5: set_oneshot_mods(MOD_LSFT); break;
+                case 0: tap_code16(C(KC_LEFT)); break;
+                case 1: tap_code16(C(KC_BSPC)); break;
+                case 2: tap_code16(C(KC_RGHT)); break;
+                case 3: tap_code(KC_HOME); break;
+                case 4:
+                    tap_code(KC_HOME);
+                    tap_code16(S(KC_END));
+                    tap_code(KC_DEL);
+                    break;
+                case 5: tap_code(KC_END); break;
             }
             break;
 
@@ -1549,9 +1660,9 @@ static void tap_window_target(uint8_t slot) {
             case 0: tap_code16(A(KC_LEFT)); break;
             case 1: tap_code16(C(KC_R)); break;
             case 2: tap_code16(A(KC_RGHT)); break;
-            case 3: tap_code16(C(S(KC_TAB))); break;
+            case 3: tap_code16(C(KC_PGUP)); break;
             case 4: tap_code16(C(KC_T)); break;
-            case 5: tap_code16(C(KC_TAB)); break;
+            case 5: tap_code16(C(KC_PGDN)); break;
         }
         return;
     }
@@ -1560,7 +1671,7 @@ static void tap_window_target(uint8_t slot) {
         switch (slot) {
             case 0: tap_code16(G(KC_UP)); break;
             case 1: tap_code16(G(KC_UP)); break;
-            case 2: tap_code16(A(KC_F4)); break;
+            case 2: tap_code16(G(KC_DOWN)); break;
             case 3: tap_code16(G(KC_LEFT)); break;
             case 4: tap_code16(G(KC_DOWN)); break;
             case 5: tap_code16(G(KC_RGHT)); break;
@@ -2691,11 +2802,6 @@ static void render_select_wild(void) {
         uint8_t sat = slot->sat;
         uint8_t hue = slot->hue;
 
-        if (i == 4) {
-            sat = 0;
-            val = 22;
-        }
-
         if (i == target_slot && i != select_cursor && slot->selectable) val = 76;
 
         if (i == select_cursor) {
@@ -3118,6 +3224,7 @@ static void render_rgb_layer_visuals(void) {
         case _WINDOW: render_window_wild(); break;
         case _TEXT:   render_text_wild();   break;
         case _MEDIA:  render_media_wild();  break;
+        case _WORK:   render_effect_solid(_WORK); break;
         case _RGB:    render_rgb_wild();    break;
         case _DEV:    render_dev_wild();    break;
         case _VSC:    render_vsc_wild();    break;
@@ -3171,9 +3278,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,       KC_NO,   KC_NO
     ),
     [_WORK] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO
+        TD(TD_LAYER_SELECT), SEL_VSC,   WRK_APP,
+        WRK_PULL,    WRK_COMMIT, WRK_PUSH,
+        WRK_BRANCH,  WRK_PR,     WRK_SYNC
     ),
     [_SYS] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
@@ -3197,7 +3304,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
-        SEL_MEDIA,   GM_TILT,            SEL_DEV,
+        SEL_MEDIA,   SEL_WORK,           SEL_DEV,
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
@@ -3436,6 +3543,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             if (record->event.pressed) select_target_layer(_MEDIA);
             return false;
 
+        case SEL_WORK:
+            if (record->event.pressed) select_target_layer(_WORK);
+            return false;
+
         case SEL_RGB:
             if (record->event.pressed) select_target_layer(_RGB);
             return false;
@@ -3543,7 +3654,6 @@ case TXT_EDT:
         case VSC_BAR:
             if (record->event.pressed) {
                 vsc_mode = VSC_MODE_BAR;
-                last_vsc_mode = VSC_MODE_BAR;
             } else {
                 vsc_mode = VSC_MODE_NONE;
             }
@@ -3552,9 +3662,55 @@ case TXT_EDT:
         case VSC_CHAT:
             if (record->event.pressed) {
                 vsc_mode = VSC_MODE_CHAT;
-                last_vsc_mode = VSC_MODE_CHAT;
             } else {
                 vsc_mode = VSC_MODE_NONE;
+            }
+            return false;
+
+        case WRK_APP:
+            if (record->event.pressed) {
+                send_string("github");
+                tap_code(KC_ENT);
+            }
+            return false;
+
+        case WRK_PULL:
+            if (record->event.pressed) {
+                send_string("git pull");
+                tap_code(KC_ENT);
+            }
+            return false;
+
+        case WRK_COMMIT:
+            if (record->event.pressed) {
+                send_string("git add -A && git commit -m \");
+            }
+            return false;
+
+        case WRK_PUSH:
+            if (record->event.pressed) {
+                send_string("git push");
+                tap_code(KC_ENT);
+            }
+            return false;
+
+        case WRK_BRANCH:
+            if (record->event.pressed) {
+                send_string("git checkout -b ");
+            }
+            return false;
+
+        case WRK_PR:
+            if (record->event.pressed) {
+                send_string("gh pr create --web");
+                tap_code(KC_ENT);
+            }
+            return false;
+
+        case WRK_SYNC:
+            if (record->event.pressed) {
+                send_string("git status");
+                tap_code(KC_ENT);
             }
             return false;
 
@@ -3661,6 +3817,9 @@ void matrix_scan_user(void) {
     static bool oled_toggle_was_pressed = false;
     static bool oled_toggle_combo_used = false;
     static uint32_t oled_toggle_last_action = 0;
+    static uint32_t oled_toggle_last_tap = 0;
+    static uint32_t oled_toggle_pressed_at = 0;
+    static bool oled_toggle_hold_handled = false;
 #endif
 
     adxl345_task();
@@ -3704,6 +3863,11 @@ void matrix_scan_user(void) {
 #ifdef OLED_TOGGLE_BTN_PIN
     bool oled_toggle_pressed = (gpio_read_pin(OLED_TOGGLE_BTN_PIN) == 0);
 
+    if (oled_toggle_pressed && !oled_toggle_was_pressed) {
+        oled_toggle_pressed_at = timer_read32() | 1;
+        oled_toggle_hold_handled = false;
+    }
+
     bool clear_buttons_pressed = encoder_btn_pressed && oled_toggle_pressed;
 
     if (clear_buttons_pressed) {
@@ -3728,18 +3892,38 @@ void matrix_scan_user(void) {
         button_clear_armed = false;
     }
 
+    if (oled_toggle_pressed && !clear_buttons_pressed && !oled_toggle_hold_handled && oled_toggle_pressed_at != 0 && timer_elapsed32(oled_toggle_pressed_at) >= OLED_HOLD_MS) {
+        oled_view = OLED_VIEW_LEGEND;
+        oled_toggle_hold_handled = true;
+
+#    ifdef VIA_ENABLE
+        via_user_config.oled_view = oled_view;
+        save_via_config();
+#    endif
+    }
+
     if (!oled_toggle_pressed && oled_toggle_was_pressed) {
-        if (!oled_toggle_combo_used && timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
-            oled_view = (oled_view_t)((oled_view + 1) % OLED_VIEW_ENCODER);
+        if (!oled_toggle_combo_used && !oled_toggle_hold_handled && timer_elapsed32(oled_toggle_last_action) > BUTTON_DEBOUNCE_MS) {
+            uint32_t now = timer_read32();
+
+            if (oled_toggle_last_tap != 0 && timer_elapsed32(oled_toggle_last_tap) <= OLED_DOUBLE_TAP_MS) {
+                oled_view = OLED_VIEW_HELP;
+                oled_toggle_last_tap = 0;
+            } else {
+                oled_view = (oled_view_t)((oled_view + 1) % OLED_VIEW_ENCODER);
+                oled_toggle_last_tap = now;
+            }
 
 #    ifdef VIA_ENABLE
             via_user_config.oled_view = oled_view;
             save_via_config();
 #    endif
 
-            oled_toggle_last_action = timer_read32();
+            oled_toggle_last_action = now;
         }
 
+        oled_toggle_pressed_at = 0;
+        oled_toggle_hold_handled = false;
         oled_toggle_combo_used = false;
     }
 
@@ -3822,21 +4006,33 @@ static void render_header(uint8_t layer) {
     char line[22];
 
     if (layer == _SELECT) {
-        snprintf(line, sizeof(line), "SEL->%-10.10s", layer_name_short(selector_target));
+        snprintf(line, sizeof(line), "MODES -> %-8.8s", layer_name_short(selector_target));
     } else if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
+        snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
+    } else if (layer == _WORK) {
+        snprintf(line, sizeof(line), "GIT");
     } else if (layer == _DEV) {
-        snprintf(line, sizeof(line), "GME %-4s", game_mode_name(game_mode));
+        snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN SNAP");
+    } else if (layer == _WINDOW) {
+        snprintf(line, sizeof(line), "%-10.10s", "WIN APP");
     } else if (layer == _TEXT && text_action_held) {
         snprintf(line, sizeof(line), "%-10.10s", "TXT ACT");
     } else if (layer == _TEXT && text_edit_held) {
-        snprintf(line, sizeof(line), "%-10.10s", "TXT EDT");
+        snprintf(line, sizeof(line), "%-10.10s", "TXT EDIT");
+    } else if (layer == _TEXT) {
+        snprintf(line, sizeof(line), "%-10.10s", "TXT MOVE");
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "VSC %-4s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "CHAT" : "BAR");
+        if (current_vsc_preview_mode() == VSC_MODE_CHAT) {
+            snprintf(line, sizeof(line), "VSC AI");
+        } else if (current_vsc_preview_mode() == VSC_MODE_BAR) {
+            snprintf(line, sizeof(line), "VSC NAV");
+        } else {
+            snprintf(line, sizeof(line), "VSC MAIN");
+        }
     } else {
         snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
     }
@@ -3862,7 +4058,7 @@ static void render_legend_view(uint8_t layer) {
 static void render_last_key_view(void) {
     char buf[22];
 
-    snprintf(buf, sizeof(buf), "LAST %-6.6s", layer_name_short(last_key_layer));
+    snprintf(buf, sizeof(buf), "STATUS %-6.6s", layer_name_short(last_key_layer));
     write_line(0, buf);
 
     snprintf(buf, sizeof(buf), "K:%-7.7s %04X", last_key_label_for(), last_keycode);
@@ -3879,10 +4075,10 @@ static void render_tap_view(uint8_t layer) {
     char line[22];
 
     if (layer == _SELECT) {
-        write_line(0, "SELECT TAP");
-        write_line(1, "WIN+  TXT+");
-        write_line(2, "VSC+ -> hidden");
-        write_line(3, "2x = MARK/WORK/SYS");
+        write_line(0, "MODES");
+        write_line(1, "WIN/TXT/VSC 2x");
+        write_line(2, "MARK/WORK/SYS");
+        write_line(3, "MED GIT GAME RGB");
         return;
     }
 
@@ -3895,10 +4091,10 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _WORK) {
-        write_line(0, "WORK TAP");
-        write_line(1, "PLAN WRITE SHOP");
-        write_line(2, "CODE BUILD IMG");
-        write_line(3, "LIST CHECK");
+        write_line(0, "GIT MODES");
+        write_line(1, "PULL COMMIT PUSH");
+        write_line(2, "BRCH PR   SYNC");
+        write_line(3, "VSC / DESKTOP");
         return;
     }
 
@@ -3920,7 +4116,7 @@ static void render_tap_view(uint8_t layer) {
 static void render_rgb_help_view(void) {
     char line[22];
 
-    write_line(0, "RGB HELP");
+    write_line(0, "RGB");
     snprintf(line, sizeof(line), "AN:%-5.5s %s", rgb_animation_label(), adxl345_ready ? "OK" : "NO");
     write_line(1, line);
 #ifdef ADXL345_ENABLE
@@ -3939,11 +4135,11 @@ static void render_rgb_help_view(void) {
 static void render_help_view(uint8_t layer) {
     char line[22];
 
-    snprintf(line, sizeof(line), "HELP %-6.6s", layer_name_short(layer));
+    snprintf(line, sizeof(line), "STATUS %-6.6s", layer_name_short(layer));
     write_line(0, line);
-    write_line(1, "GP12: next legend");
-    write_line(2, "ENC hold: help");
-    write_line(3, "SEL hold: choose");
+    write_line(1, "GP12: TAP next page");
+    write_line(2, "GP12: HOLD -> KEYS");
+    write_line(3, "GP12: 2x -> STATUS");
 }
 
 static void render_encoder_view(void) {
@@ -3983,7 +4179,7 @@ bool oled_task_user(void) {
         } else if (oled_view == OLED_VIEW_RGB_PAGE) {
             render_rgb_help_view();
         } else if (oled_view == OLED_VIEW_HELP) {
-            render_help_view(_SELECT);
+            render_last_key_view();
         } else {
             render_legend_view(_SELECT);
         }
@@ -3992,7 +4188,7 @@ bool oled_task_user(void) {
     } else if (oled_view == OLED_VIEW_RGB_PAGE) {
         render_rgb_help_view();
     } else if (oled_view == OLED_VIEW_HELP) {
-        render_help_view(layer);
+        render_last_key_view();
     } else {
         render_legend_view(layer);
     }
@@ -4027,8 +4223,32 @@ static void render_boot(void) {
 static void render_header(uint8_t layer) {
     char line[22];
 
-    if (layer == _PROMPT) {
-        snprintf(line, sizeof(line), "PRM %-4s", prompt_mode_name(prompt_mode));
+    if (layer == _SELECT) {
+        snprintf(line, sizeof(line), "MODES");
+    } else if (layer == _PROMPT) {
+        snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
+    } else if (layer == _WORK) {
+        snprintf(line, sizeof(line), "GIT");
+    } else if (layer == _WINDOW && window_browser_held) {
+        snprintf(line, sizeof(line), "WIN BRO");
+    } else if (layer == _WINDOW && window_snap_held) {
+        snprintf(line, sizeof(line), "WIN SNAP");
+    } else if (layer == _WINDOW) {
+        snprintf(line, sizeof(line), "WIN APP");
+    } else if (layer == _TEXT && text_action_held) {
+        snprintf(line, sizeof(line), "TXT ACT");
+    } else if (layer == _TEXT && text_edit_held) {
+        snprintf(line, sizeof(line), "TXT EDIT");
+    } else if (layer == _TEXT) {
+        snprintf(line, sizeof(line), "TXT MOVE");
+    } else if (layer == _VSC) {
+        if (current_vsc_preview_mode() == VSC_MODE_CHAT) {
+            snprintf(line, sizeof(line), "VSC AI");
+        } else if (current_vsc_preview_mode() == VSC_MODE_BAR) {
+            snprintf(line, sizeof(line), "VSC NAV");
+        } else {
+            snprintf(line, sizeof(line), "VSC MAIN");
+        }
     } else {
         snprintf(line, sizeof(line), "%-10.10s", layer_name_short(layer));
     }
@@ -4058,16 +4278,17 @@ static void render_legend_view(uint8_t layer) {
     if (layer == _SELECT) {
         snprintf(line, sizeof(line), "Cur%u Tgt->%.10s", select_cursor + 1, layer_name_long(selector_target));
     } else if (layer == _VSC) {
-        snprintf(line, sizeof(line), "%s mode%s", current_vsc_preview_mode() == VSC_MODE_CHAT ? "AI" : "NAV", vsc_mode != VSC_MODE_NONE ? " [HELD]" : "");
+        const char *mode = current_vsc_preview_mode() == VSC_MODE_CHAT ? "AI" : (current_vsc_preview_mode() == VSC_MODE_BAR ? "NAV" : "MAIN");
+        snprintf(line, sizeof(line), "VSC %s%s", mode, vsc_mode != VSC_MODE_NONE ? " [HELD]" : "");
     } else if (layer == _TEXT) {
-        const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDT" : "WIN");
+        const char *mode = text_action_held ? "ACT" : (text_edit_held ? "EDIT" : "MOVE");
         snprintf(line, sizeof(line), "TXT %s%s", mode, (text_action_held || text_edit_held) ? " [HELD]" : "");
     } else if (layer == _WINDOW) {
-        const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "WIN");
+        const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "APP");
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
-        snprintf(line, sizeof(line), "GP12: legend page");
+        snprintf(line, sizeof(line), "GP12: KEYS/MODES/RGB/STATUS");
 #else
         snprintf(line, sizeof(line), "Hold SEL for grid");
 #endif
@@ -4080,7 +4301,7 @@ static void render_last_key_view(void) {
     char buf[22];
 
     render_header(last_key_layer);
-    write_line(1, "LAST KEY");
+    write_line(1, "STATUS");
 
     snprintf(buf, sizeof(buf), "Layer: %s", layer_name_long(last_key_layer));
     write_line(2, buf);
@@ -4098,7 +4319,7 @@ static void render_last_key_view(void) {
     write_line(6, buf);
 
 #ifdef OLED_TOGGLE_BTN_PIN
-    write_line(7, "GP12: legend page");
+    write_line(7, "GP12: 2x for STATUS");
 #else
     write_line(7, "Legend details");
 #endif
@@ -4108,11 +4329,11 @@ static void render_tap_view(uint8_t layer) {
     char line[22];
 
     if (layer == _SELECT) {
-        write_line(0, "SELECT TAP");
-        write_line(1, "Single / Double");
-        write_line(2, "WIN  -> MARK");
-        write_line(3, "TXT  -> WORK");
-        write_line(4, "VSC  -> SYS");
+        write_line(0, "MODES");
+        write_line(1, "1x WIN/TXT/VSC");
+        write_line(2, "2x MARK/WORK/SYS");
+        write_line(3, "MED GIT GAME RGB");
+        write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
         write_line(6, "");
         write_line(7, "GP12: next page");
@@ -4132,11 +4353,11 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _WORK) {
-        write_line(0, "WORK / FLOWS");
-        write_line(1, "SEL  PLAN WRITE");
-        write_line(2, "SHOP CODE BUILD");
-        write_line(3, "IMG  LIST CHECK");
-        write_line(4, "Tap actions TBD");
+        write_line(0, "GIT / WORK");
+        write_line(1, "SEL  VSC  DESK");
+        write_line(2, "PULL COMMIT PUSH");
+        write_line(3, "BRCH PR   SYNC");
+        write_line(4, "Safe git macros");
         write_line(5, "");
         write_line(6, "");
         write_line(7, "SEL: selector");
@@ -4169,7 +4390,7 @@ static void render_tap_view(uint8_t layer) {
 static void render_rgb_help_view(void) {
     char line[22];
 
-    write_line(0, "RGB HELP");
+    write_line(0, "RGB");
     snprintf(line, sizeof(line), "ANIM: %s", rgb_animation_label());
     write_line(1, line);
     write_line(2, adxl345_status_label());
@@ -4195,13 +4416,13 @@ static void render_rgb_help_view(void) {
 static void render_help_view(uint8_t layer) {
     char line[22];
 
-    snprintf(line, sizeof(line), "HELP %s", layer_name_long(layer));
+    snprintf(line, sizeof(line), "STATUS %s", layer_name_long(layer));
     write_line(0, line);
-    write_line(1, "GP12: legend page");
-    write_line(2, "SEL hold: selector");
-    write_line(3, "SELECT + 2x:");
-    write_line(4, "WIN=MARK TXT=WORK");
-    write_line(5, "VSC=SYS");
+    write_line(1, "GP12 tap: next view");
+    write_line(2, "GP12 hold: KEYS");
+    write_line(3, "GP12 2x: STATUS");
+    write_line(4, "SEL hold: selector");
+    write_line(5, "WIN/TXT/VSC 2x hidden");
     write_line(6, "ENC hold: encoder");
     write_line(7, "Combo: clear EEPROM");
 }
@@ -4248,7 +4469,7 @@ bool oled_task_user(void) {
         } else if (oled_view == OLED_VIEW_RGB_PAGE) {
             render_rgb_help_view();
         } else if (oled_view == OLED_VIEW_HELP) {
-            render_help_view(_SELECT);
+            render_last_key_view();
         } else {
             render_legend_view(_SELECT);
         }
@@ -4257,7 +4478,7 @@ bool oled_task_user(void) {
     } else if (oled_view == OLED_VIEW_RGB_PAGE) {
         render_rgb_help_view();
     } else if (oled_view == OLED_VIEW_HELP) {
-        render_help_view(layer);
+        render_last_key_view();
     } else {
         render_legend_view(layer);
     }
