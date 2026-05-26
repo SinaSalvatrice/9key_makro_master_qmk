@@ -72,16 +72,22 @@
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
 #    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
-#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 32
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 24
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_ON
-#        define ADXL345_MOUSE_TILT_ON 90
+#        define ADXL345_MOUSE_TILT_ON 72
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_OFF
-#        define ADXL345_MOUSE_TILT_OFF 60
+#        define ADXL345_MOUSE_TILT_OFF 44
 #    endif
 #    ifndef ADXL345_MOUSE_BLEND_DIV
 #        define ADXL345_MOUSE_BLEND_DIV 3
+#    endif
+#    ifndef ADXL345_MOUSE_Y_GAIN_NUM
+#        define ADXL345_MOUSE_Y_GAIN_NUM 3
+#    endif
+#    ifndef ADXL345_MOUSE_Y_GAIN_DEN
+#        define ADXL345_MOUSE_Y_GAIN_DEN 2
 #    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 5
@@ -1993,6 +1999,9 @@ static void update_game_tilt_arrows(void) {
             axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_x) / ADXL345_MOUSE_BLEND_DIV);
             axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_y) / ADXL345_MOUSE_BLEND_DIV);
 #endif
+    #if ADXL345_MOUSE_Y_GAIN_DEN > 0
+            axis_y = (int16_t)(((int32_t)axis_y * ADXL345_MOUSE_Y_GAIN_NUM) / ADXL345_MOUSE_Y_GAIN_DEN);
+    #endif
             debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
             on_threshold = ADXL345_MOUSE_TILT_ON;
             off_threshold = ADXL345_MOUSE_TILT_OFF;
