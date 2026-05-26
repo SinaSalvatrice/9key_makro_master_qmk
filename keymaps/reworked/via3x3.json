@@ -3164,6 +3164,11 @@
       "shortName": "MOUSE"
     },
     {
+      "name": "GM_TILT",
+      "title": "Toggle GAME tilt",
+      "shortName": "TILT"
+    },
+    {
       "name": "GM_1",
       "title": "GAME target 1",
       "shortName": "G1"
