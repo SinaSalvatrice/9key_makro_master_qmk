@@ -106,6 +106,7 @@ enum layers {
     _WINDOW,
     _TEXT,
     _MEDIA,
+    _MEDIA_GAME,
     _DEV,
     _VSC,
     _RGB,
@@ -189,6 +190,7 @@ enum custom_keycodes {
 enum tap_dance_ids {
     TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
+    TD_SEL_MEDIA_GAME,
     TD_SEL_DEV_GAME,
     TD_SEL_VSC_SYS,
 };
@@ -637,6 +639,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"SEL",  "BRO",  "SNAP", "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "EDIT", "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "VOL-", "PLAY", "VOL+", "RWND", "MUTE", "FFWD"},
+    [_MEDIA_GAME] = {"SEL", "L", "K", "I", "U", "H", "J", "O", "ESC"},
     [_RGB]    = {"SEL",  "ZONE", "ANIM",  "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
@@ -652,7 +655,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED",  "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -660,6 +663,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
+    [_MEDIA_GAME] = {"Select layer", "Type L", "Type K", "Type I", "Type U", "Type H", "Type J", "Type O", "Escape"},
     [_RGB]    = {"Select layer", "Hold RGB zone controls", "Cycle RGB animation mode", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
@@ -674,7 +678,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
     // description accordingly since SYS has been repurposed as NAV.
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -683,6 +687,7 @@ static const char *layer_name_short(uint8_t l) {
         case _WINDOW: return "WIN";
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MED";
+        case _MEDIA_GAME: return "MED+";
         case _RGB:    return "RGB";
         case _RGBMOD: return "MOD";
         case _RGBADJ: return "ADJ";
@@ -704,6 +709,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _WINDOW: return "WINDOW";
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MEDIA";
+        case _MEDIA_GAME: return "MEDIA ALT";
         case _RGB:    return "RGB";
         case _RGBMOD: return "RGB MOD";
         case _RGBADJ: return "ADJST";
@@ -721,6 +727,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
 
 static uint8_t canonical_rgb_layer(uint8_t layer) {
     if (layer == _RGBMOD || layer == _RGBADJ) return _RGB;
+    if (layer == _MEDIA_GAME) return _MEDIA;
     if (layer == _GAME) return _DEV;
     return layer;
 }
@@ -756,6 +763,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _WINDOW: return window_browser_held ? "Browser page prev/next" : (window_snap_held ? "Snap left/right" : (encoder_btn_pressed ? "Desktop prev/next" : "Alt-Tab window switch"));
         case _TEXT:   return encoder_btn_pressed ? "Select text left/right" : "Move cursor left/right";
         case _MEDIA:  return "Volume up/down";
+        case _MEDIA_GAME: return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
@@ -3288,6 +3296,12 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_MRWD,     KC_MUTE, KC_MFFD
     ),
 
+    [_MEDIA_GAME] = LAYOUT(
+        TD(TD_LAYER_SELECT), KC_L,    KC_K,
+        KC_I,        KC_U,   KC_H,
+        KC_J,        KC_O,   KC_ESC
+    ),
+
     [_RGB] = LAYOUT(
         TD(TD_LAYER_SELECT), RGB_MODE, RGB_TOG,
         RGB_HUEU,    RGB_HUED, RGB_VALU,
@@ -3350,7 +3364,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), SEL_TEXT,
-        SEL_MEDIA,   SEL_WORK,           TD(TD_SEL_DEV_GAME),
+        TD(TD_SEL_MEDIA_GAME), SEL_WORK, TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
@@ -3459,6 +3473,11 @@ static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_dat
     select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
 }
 
+static void td_select_media_game_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _MEDIA_GAME : _MEDIA);
+}
+
 static void td_select_dev_game_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _GAME : _DEV);
@@ -3496,6 +3515,7 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 tap_dance_action_t tap_dance_actions[] = {
     [TD_LAYER_SELECT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_layer_select_finished, td_layer_select_reset),
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
+    [TD_SEL_MEDIA_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_media_game_finished, NULL),
     [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 
@@ -4161,10 +4181,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "WIN/TXT/GAME/VSC 2x");
+        write_line(1, "WIN/TXT/MED/GAME 2x");
         // SYS has been repurposed to NAV; update the SELECT help to reflect this.
-        write_line(2, "MARK/WORK/NAV");
-        write_line(3, "MED GIT GAME RGB");
+        write_line(2, "MARK/MED+/GAME+/NAV");
+        write_line(3, "GIT RGB VSC PROMPT");
         return;
     }
 
@@ -4198,7 +4218,7 @@ static void render_tap_view(uint8_t layer) {
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
     write_line(0, line);
     write_line(1, "SEL: hold selector");
-    write_line(2, "WIN/TXT/GAME/VSC+");
+    write_line(2, "WIN/TXT/MED/GAME+");
     write_line(3, "2x hidden layer");
 }
 
@@ -4423,10 +4443,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "1x WIN/TXT/GAME/VSC");
+        write_line(1, "1x WIN/TXT/MED/GAME");
         // Update the second line: SYS has become NAV
-        write_line(2, "2x MARK/WORK/NAV");
-        write_line(3, "MED GIT GAME RGB");
+        write_line(2, "2x MARK/MED+/GAME+");
+        write_line(3, "VSC->NAV / GIT RGB");
         write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
         write_line(6, "");
@@ -4477,10 +4497,9 @@ static void render_tap_view(uint8_t layer) {
     write_line(1, "SELECT hidden:");
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
-    write_line(4, "GAME 2x = GAME+");
+    write_line(4, "MED 2x = MED+");
+    write_line(5, "GAME2x=GAME+ NAV");
     // SYS has been repurposed to NAV; adjust this description accordingly.
-    // SYS has been repurposed to NAV; adjust this description accordingly.
-    write_line(5, "VSC 2x = NAV");
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
 }
