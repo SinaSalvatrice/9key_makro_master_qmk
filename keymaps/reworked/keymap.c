@@ -113,7 +113,7 @@ enum layers {
     _RGBADJ,
     _MARK,
     _WORK,
-    _SYS,
+    _SYS, // repurposed as NAV layer
     _PROMPT,
     _SELECT,
     _GAME,
@@ -640,9 +640,14 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"SEL",  "ZONE", "ANIM",  "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
-    [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
+    [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "NAV"},
     [_WORK]   = {"SEL",  "VSC",  "DESK", "PULL", "COMMIT", "PUSH", "BRCH", "PR", "SYNC"},
-    [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
+    // Repurpose the SYS layer as a global navigation (NAV) layer.  The
+    // legend strings reflect the new key assignments: arrow keys on the
+    // middle row/column plus Page Up/Down and Home/End on the corners.  The
+    // center key retains its base-layer tap function (Enter) while acting as
+    // the momentary switch into this NAV layer on other layers via LT().
+    [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
@@ -658,14 +663,18 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGB]    = {"Select layer", "Hold RGB zone controls", "Cycle RGB animation mode", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
-    [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
+    [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "Nav shortcuts"},
     [_WORK]   = {"Select layer", "Go to VSC layer", "Open GitHub Desktop or app", "git pull", "git add/commit prompt", "git push", "Create branch", "Create PR in browser", "git status"},
-    [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
+    // Update function descriptions for the repurposed NAV layer.  The
+    // descriptions mirror the legend above.
+    [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
+    // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
+    // description accordingly since SYS has been repurposed as NAV.
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "Go to MEDIA layer", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -679,7 +688,7 @@ static const char *layer_name_short(uint8_t l) {
         case _RGBADJ: return "ADJ";
         case _MARK:   return "MARK";
         case _WORK:   return "GIT";
-        case _SYS:    return "SYS";
+        case _SYS:    return "NAV";
         case _DEV:    return "GAME";
         case _GAME:   return "GAME+";
         case _VSC:    return "VSC";
@@ -700,7 +709,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _RGBADJ: return "ADJST";
         case _MARK:   return "BOOKMARK";
         case _WORK:   return "WORK";
-        case _SYS:    return "SYSTEM";
+        case _SYS:    return "NAV";
         case _DEV:    return "GAME";
         case _GAME:   return "GAME ALT";
         case _VSC:    return "VSC";
@@ -3257,7 +3266,7 @@ static void render_rgb_layer_visuals(void) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
-        KC_LEFT,     KC_ENT,      KC_RGHT,
+        KC_LEFT,     LT(_SYS, KC_ENT),      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
 
@@ -3269,7 +3278,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_TEXT] = LAYOUT(
         TD(TD_LAYER_SELECT), TXT_ACT, TXT_EDT,
-        TXT_1,       TXT_2,   TXT_3,
+        TXT_1,       LT(_SYS, TXT_2),   TXT_3,
         TXT_4,       TXT_5,   TXT_6
     ),
 
@@ -3310,9 +3319,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_SYS] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO
+        TD(TD_LAYER_SELECT), KC_UP,   KC_PGUP,
+        KC_LEFT,     KC_ENT,  KC_RGHT,
+        KC_HOME,     KC_DOWN, KC_PGDN
     ),
 
     [_DEV] = LAYOUT(
@@ -3323,7 +3332,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_GAME] = LAYOUT(
      TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
-     MS_LEFT,             MS_UP,   MS_RGHT,
+     MS_LEFT,             LT(_SYS, MS_UP),   MS_RGHT,
      MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
@@ -4153,7 +4162,8 @@ static void render_tap_view(uint8_t layer) {
     if (layer == _SELECT) {
         write_line(0, "MODES");
         write_line(1, "WIN/TXT/GAME/VSC 2x");
-        write_line(2, "MARK/WORK/SYS");
+        // SYS has been repurposed to NAV; update the SELECT help to reflect this.
+        write_line(2, "MARK/WORK/NAV");
         write_line(3, "MED GIT GAME RGB");
         return;
     }
@@ -4162,7 +4172,8 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MARK TAP");
         write_line(1, "WEB APP SHOP");
         write_line(2, "AI  DEV MAIL");
-        write_line(3, "FILE SYS");
+        // SYS has become NAV; update the last row of the MARK help.
+        write_line(3, "FILE NAV");
         return;
     }
 
@@ -4175,10 +4186,12 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _SYS) {
-        write_line(0, "SYS TAP");
-        write_line(1, "TERM TASK QMK");
-        write_line(2, "GIT USB CONF");
-        write_line(3, "LOG LOCK");
+        // Provide help for the NAV (formerly SYS) layer.  Show the arrow and
+        // paging/home keys available on this layer.
+        write_line(0, "NAV TAP");
+        write_line(1, "SEL  UP  PGUP");
+        write_line(2, "LEFT ENT RGHT");
+        write_line(3, "HOME DN  PGDN");
         return;
     }
 
@@ -4411,7 +4424,8 @@ static void render_tap_view(uint8_t layer) {
     if (layer == _SELECT) {
         write_line(0, "MODES");
         write_line(1, "1x WIN/TXT/GAME/VSC");
-        write_line(2, "2x MARK/WORK/SYS");
+        // Update the second line: SYS has become NAV
+        write_line(2, "2x MARK/WORK/NAV");
         write_line(3, "MED GIT GAME RGB");
         write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
@@ -4424,7 +4438,8 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MARK / BOOKMARKS");
         write_line(1, "SEL  WEB  APP");
         write_line(2, "SHOP AI   DEV");
-        write_line(3, "MAIL FILE SYS");
+        // Reflect that SYS is now NAV in the Mark layer help
+        write_line(3, "MAIL FILE NAV");
         write_line(4, "Tap actions TBD");
         write_line(5, "1x / 2x / Hold");
         write_line(6, "");
@@ -4445,11 +4460,12 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _SYS) {
-        write_line(0, "SYS / TOOLS");
-        write_line(1, "SEL  TERM TASK");
-        write_line(2, "QMK  GIT  USB");
-        write_line(3, "CONF LOG  LOCK");
-        write_line(4, "Danger keys later");
+        // Provide help for the NAV (formerly SYS) layer in the non-OLED build.
+        write_line(0, "NAV / ARROWS");
+        write_line(1, "SEL  UP  PGUP");
+        write_line(2, "LEFT ENT RGHT");
+        write_line(3, "HOME DN  PGDN");
+        write_line(4, "");
         write_line(5, "");
         write_line(6, "");
         write_line(7, "SEL: selector");
@@ -4462,7 +4478,9 @@ static void render_tap_view(uint8_t layer) {
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
     write_line(4, "GAME 2x = GAME+");
-    write_line(5, "VSC 2x = SYS");
+    // SYS has been repurposed to NAV; adjust this description accordingly.
+    // SYS has been repurposed to NAV; adjust this description accordingly.
+    write_line(5, "VSC 2x = NAV");
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
 }
