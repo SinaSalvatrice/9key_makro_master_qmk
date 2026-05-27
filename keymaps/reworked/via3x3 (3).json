@@ -931,7 +931,7 @@
               ]
             },
             {
-              "label": "GIT Color",
+              "label": "PROMPT Color",
               "type": "color",
               "content": [
                 "id_via_layer_color[7]",
@@ -941,7 +941,7 @@
               ]
             },
             {
-              "label": "GIT Brightness",
+              "label": "PROMPT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -955,7 +955,7 @@
               ]
             },
             {
-              "label": "GIT Effect",
+              "label": "PROMPT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -1043,7 +1043,7 @@
               ]
             },
             {
-              "label": "GIT Effect Speed",
+              "label": "PROMPT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -1949,7 +1949,7 @@
               ]
             },
             {
-"label": "GIT Color",
+              "label": "PROMPT Color",
               "type": "color",
               "content": [
                 "id_via_gap_color[7]",
@@ -1959,7 +1959,7 @@
               ]
             },
             {
-"label": "GIT Brightness",
+              "label": "PROMPT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -1973,7 +1973,7 @@
               ]
             },
             {
-"label": "GIT Effect",
+              "label": "PROMPT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -2061,7 +2061,7 @@
               ]
             },
             {
-"label": "GIT Effect Speed",
+              "label": "PROMPT Effect Speed",
               "type": "range",
               "options": [
                 1,
@@ -2967,7 +2967,7 @@
               ]
             },
             {
-              "label": "GIT Color",
+              "label": "PROMPT Color",
               "type": "color",
               "content": [
                 "id_via_frame_color[7]",
@@ -2977,7 +2977,7 @@
               ]
             },
             {
-              "label": "GIT Brightness",
+              "label": "PROMPT Brightness",
               "type": "range",
               "options": [
                 0,
@@ -2991,7 +2991,7 @@
               ]
             },
             {
-              "label": "GIT Effect",
+              "label": "PROMPT Effect",
               "type": "dropdown",
               "options": [
                 [
@@ -3079,7 +3079,7 @@
               ]
             },
             {
-              "label": "GIT Effect Speed",
+              "label": "PROMPT Effect Speed",
               "type": "range",
               "options": [
                 1,
