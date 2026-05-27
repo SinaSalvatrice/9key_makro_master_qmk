@@ -466,7 +466,7 @@ Because the firmware stores custom VIA RGB settings, the EEPROM config size must
 Recommended config values for the current expanded firmware:
 
 ```c
-#define DYNAMIC_KEYMAP_LAYER_COUNT 14
+#define DYNAMIC_KEYMAP_LAYER_COUNT 15
 #define VIA_EEPROM_CUSTOM_CONFIG_SIZE 128
 #define VIA_FIRMWARE_VERSION 0x0000000B
 ```
