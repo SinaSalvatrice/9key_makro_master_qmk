@@ -1842,7 +1842,7 @@ static int8_t sign_i16(int16_t v) {
     return 0;
 }
 
-static uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
+static MAYBE_UNUSED uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
     if (value < min) return min;
     if (value > max) return max;
     return (uint8_t)value;
@@ -2193,13 +2193,13 @@ static void adxl345_task(void) {
 #endif
 }
 
-static const char *adxl345_status_label(void) {
+static MAYBE_UNUSED const char *adxl345_status_label(void) {
     return adxl345_ready ? "ADXL:OK" : "ADXL:NO";
 }
 #else
 static void adxl345_init(void) {}
 static void adxl345_task(void) {}
-static const char *adxl345_status_label(void) { return "ADXL:OFF"; }
+static MAYBE_UNUSED const char *adxl345_status_label(void) { return "ADXL:OFF"; }
 #endif
 
 #ifdef RGBLIGHT_ENABLE
