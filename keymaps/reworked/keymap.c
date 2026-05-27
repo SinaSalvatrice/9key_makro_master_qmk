@@ -41,8 +41,8 @@
 #define OLED_DOUBLE_TAP_MS     320
 #define OLED_HOLD_MS           450
 #define CLEAR_EEPROM_HOLD_MS   3000
-#define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 8
+#define VIA_LAYER_SLOT_COUNT   9
+#define REWORKED_LAYOUT_VERSION 9
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 #define RGB_FRAME_WANDER_SHOW_MS 900
@@ -66,22 +66,22 @@
 #    define ADXL345_FLUID_ACCEL_DIV 9
 #    define ADXL345_FLUID_DAMP_NUM  2
 #    define ADXL345_FLUID_DAMP_DEN  3
-#    define ADXL345_GAME_TILT_ON    70
-#    define ADXL345_GAME_TILT_OFF   40
+#    define ADXL345_GAME_TILT_ON    58
+#    define ADXL345_GAME_TILT_OFF   34
 #    ifndef ADXL345_GAME_AXIS_DEBOUNCE_MS
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
 #    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
-#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 32
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 20
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_ON
-#        define ADXL345_MOUSE_TILT_ON 90
+#        define ADXL345_MOUSE_TILT_ON 52
 #    endif
 #    ifndef ADXL345_MOUSE_TILT_OFF
-#        define ADXL345_MOUSE_TILT_OFF 60
+#        define ADXL345_MOUSE_TILT_OFF 28
 #    endif
 #    ifndef ADXL345_MOUSE_BLEND_DIV
-#        define ADXL345_MOUSE_BLEND_DIV 3
+#        define ADXL345_MOUSE_BLEND_DIV 2
 #    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 5
@@ -457,10 +457,10 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 5, 6, 7, 8
+    0, 1, 2, 3, 5, 6, 7, 8, 4
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT, GIT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {128, 220, 108}, // BASE
     {176, 240, 112}, // WINDOW
@@ -470,6 +470,7 @@ static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 255, 118}, // VSC
     {210, 255, 124}, // RGB
     { 14, 255, 124}, // PROMPT
+    { 86, 220, 120}, // GIT
 };
 
 static const uint8_t via_default_layer_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -481,10 +482,11 @@ static const uint8_t via_default_layer_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_SOLID,
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
 };
 
 static const uint8_t via_default_layer_speed[VIA_LAYER_SLOT_COUNT] = {
-    88, 104, 96, 112, 112, 98, 124, 94,
+    88, 104, 96, 112, 112, 98, 124, 94, 108,
 };
 
 static const uint8_t via_default_gap_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -496,10 +498,11 @@ static const uint8_t via_default_gap_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_PACKET,
     RGB_EFFECT_RUNNING,
     RGB_EFFECT_PULSE,
+    RGB_EFFECT_TWINKLE,
 };
 
 static const uint8_t via_default_gap_speed[VIA_LAYER_SLOT_COUNT] = {
-    80, 104, 96, 108, 108, 110, 130, 92,
+    80, 104, 96, 108, 108, 110, 130, 92, 108,
 };
 
 static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
@@ -511,6 +514,7 @@ static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 255,  46},
     {210, 255,  56},
     { 14, 255,  44},
+    { 42, 255,  44},
 };
 
 static const uint8_t via_default_frame_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -522,10 +526,11 @@ static const uint8_t via_default_frame_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_BREATHING,
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_BLOOM,
+    RGB_EFFECT_BREATHING,
 };
 
 static const uint8_t via_default_frame_speed[VIA_LAYER_SLOT_COUNT] = {
-    92, 106, 94, 110, 108, 100, 130, 92,
+    92, 106, 94, 110, 108, 100, 130, 92, 108,
 };
 
 static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
@@ -537,6 +542,7 @@ static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 240,  90},
     {210, 255, 104},
     { 14, 240,  92},
+    {210,  96,  90},
 };
 
 static const char *const vsc_main_labels[6] = {"EXPL", "SRCH", "TERM", "SRC", "GIT", "RUN"};
@@ -1042,9 +1048,6 @@ static uint8_t via_palette_index_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_SOLID;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.layer_effect[index] < RGB_EFFECT_COUNT) {
@@ -1071,9 +1074,6 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
 }
 
 static hsv_config_t gap_palette_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return (hsv_config_t){42, 255, 44};
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -1084,9 +1084,6 @@ static hsv_config_t gap_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t gap_effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_TWINKLE;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.gap_effect[index] < RGB_EFFECT_COUNT) {
@@ -1116,9 +1113,6 @@ static uint16_t gap_effect_period_for_layer(uint8_t layer, uint16_t base_period)
 }
 
 static hsv_config_t frame_palette_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return (hsv_config_t){210, 96, 90};
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -1129,9 +1123,6 @@ static hsv_config_t frame_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t frame_effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_BREATHING;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_effect[index] < RGB_EFFECT_COUNT) {
@@ -1981,9 +1972,11 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 }
 
 static void update_game_tilt_arrows(void) {
-    bool tilt_active = adxl345_ready && game_tilt_enabled && active_layer_raw() == _DEV;
-    bool nav_tilt_active = tilt_active && game_mode == GAME_MODE_NAV;
-    bool mouse_tilt_active = tilt_active && game_mode == GAME_MODE_MOUSE;
+    uint8_t top_layer = active_layer_raw();
+    bool tilt_layer_active = top_layer == _DEV || top_layer == _GAME;
+    bool tilt_active = adxl345_ready && game_tilt_enabled && tilt_layer_active;
+    bool nav_tilt_active = tilt_active && top_layer == _DEV && game_mode == GAME_MODE_NAV;
+    bool mouse_tilt_active = tilt_active && (top_layer == _GAME || (top_layer == _DEV && game_mode == GAME_MODE_MOUSE));
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;

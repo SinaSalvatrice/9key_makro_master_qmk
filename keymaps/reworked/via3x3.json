@@ -552,6 +552,132 @@
               ]
             },
             {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_layer_color[8]",
+                1,
+                3,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[8]",
+                1,
+                4,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_rgb_effect[8]",
+                1,
+                5,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[8]",
+                1,
+                6,
+                8
+              ]
+            },
+            {
               "label": "GAME Color",
               "type": "color",
               "content": [
@@ -1570,6 +1696,132 @@
               ]
             },
             {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[8]",
+                1,
+                11,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[8]",
+                1,
+                12,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[8]",
+                1,
+                13,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[8]",
+                1,
+                14,
+                8
+              ]
+            },
+            {
               "label": "GAME Color",
               "type": "color",
               "content": [
@@ -2585,6 +2837,132 @@
                 1,
                 10,
                 3
+              ]
+            },
+            {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_frame_color[8]",
+                1,
+                7,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_frame_brightness[8]",
+                1,
+                8,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_frame_effect[8]",
+                1,
+                9,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_frame_effect_speed[8]",
+                1,
+                10,
+                8
               ]
             },
             {
