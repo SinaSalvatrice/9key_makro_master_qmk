@@ -1,8 +1,11 @@
 #pragma once
 
 #define ENCODER_BTN_PIN GP10
+// GP12 is a single physical button. Different keymaps use it under
+// different names: OLED_TOGGLE_BTN_PIN for page cycling in reworked,
+// SELECTOR_BTN_PIN for layer selection in via/simple/bringup.
 #define OLED_TOGGLE_BTN_PIN GP12
-#define SELECTOR_BTN_PIN GP12
+#define SELECTOR_BTN_PIN    GP12
 
 // Milliseconds of inactivity before OLED switches to eyes mode
 #define OLED_EYES_TIMEOUT_MS 20000
