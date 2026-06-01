@@ -1,4 +1,6 @@
 <resources>
     <string name="app_name">NineKey Configurator</string>
     <string name="status_template">Status: %1$s</string>
+    <string name="key_button_template">K%1$d%2$d\n0x%3$04X</string>
+    <string name="key_button_unused">K%1$d%2$d\nN/A</string>
 </resources>
