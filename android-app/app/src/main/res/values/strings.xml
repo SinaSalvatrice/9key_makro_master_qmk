@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">NineKey Configurator</string>
+    <string name="status_template">Status: %1$s</string>
+</resources>
