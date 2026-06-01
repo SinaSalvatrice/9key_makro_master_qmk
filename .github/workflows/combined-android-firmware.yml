@@ -1,25 +1,45 @@
-name: Build 9key_makro_master_qmk reworked
+name: Combined Android + Firmware Build
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-  push:
-    branches: [ main, oledworking, reworked_v2 ]
-    paths:
-      - "config.h"
-      - "keyboard.json"
-      - "README.md"
-      - "9key_makro_master.c"
-      - "9key_makro_master.h"
-      - "rules.mk"
-      - "keymaps/**"
-      - "protocol/**"
-      - "shared/**"
-      - ".github/workflows/reworked.yaml"
-  pull_request:
 
 jobs:
-  firmware:
+  android-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build debug APK
+        run: gradle -p android-app :app:assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ninekey-configurator-debug-apk
+          path: android-app/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  firmware-reworked:
+    name: Build Reworked Firmware UF2
     runs-on: ubuntu-latest
     container: ghcr.io/qmk/qmk_cli@sha256:2dc05fc9f32efebd6b05c2b8676ee548358bc7e151e9dbf4dac6b6eed4513b07
     permissions:
@@ -61,7 +81,7 @@ jobs:
           find "$QMK_HOME" -type f -name "${KEYBOARD}_${KEYMAP}.uf2" -exec cp {} "$GITHUB_WORKSPACE/artifacts/" \;
           test -f "$GITHUB_WORKSPACE/artifacts/${KEYBOARD}_${KEYMAP}.uf2"
 
-      - name: Upload firmware reworked
+      - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: 9key_makro_master_qmk_reworked_uf2
