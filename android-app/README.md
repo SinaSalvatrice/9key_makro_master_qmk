@@ -13,9 +13,10 @@ This folder now contains the initial native Android scaffold for the 9-Key Macro
 
 - Android Gradle project structure created
 - App module created with Kotlin + XML UI
-- Static 3x3 key grid placeholder screen added
-- Keyboard definition asset loading wired in `MainActivity`
-- HID protocol communication not implemented yet
+- USB device detection and permission flow implemented
+- Raw HID transport + `PING`/`GET_INFO` implemented
+- 3x3 key grid wired to `GET_KEY` and `SET_KEY` across layers
+- EEPROM save action wired to `SAVE_EEPROM`
 
 ## Structure
 
@@ -31,6 +32,8 @@ This folder now contains the initial native Android scaffold for the 9-Key Macro
 4. Replace placeholder buttons with dynamic per-layer key state.
 5. Add key edit flow backed by `GET_KEY` and `SET_KEY`.
 6. Add explicit save action for `SAVE_EEPROM`.
+7. Add robust retry and timeout strategy for noisy USB links.
+8. Add encoder read/write protocol commands and UI.
 
 ## Notes
 
