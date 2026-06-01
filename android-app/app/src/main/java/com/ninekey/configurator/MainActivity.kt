@@ -43,8 +43,14 @@ class MainActivity : AppCompatActivity() {
                 usbPermissionAction -> {
                     val device = intent.usbDeviceExtra()
                     val granted = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                    if (device != null && granted) {
-                        openAndInitialize(device)
+                    if (granted) {
+                        // Some Android versions/devices may not return EXTRA_DEVICE reliably.
+                        val target = device ?: findCandidateDevice()
+                        if (target != null && usbManager.hasPermission(target)) {
+                            openAndInitialize(target)
+                        } else {
+                            setStatus("USB permission granted, but no device available")
+                        }
                     } else {
                         setStatus("USB permission denied")
                     }
@@ -168,8 +174,12 @@ class MainActivity : AppCompatActivity() {
         val permissionIntent = PendingIntent.getBroadcast(
             this,
             0,
-            Intent(usbPermissionAction),
-            PendingIntent.FLAG_IMMUTABLE
+            Intent(usbPermissionAction).setPackage(packageName),
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_MUTABLE
+            } else {
+                0
+            }
         )
         usbManager.requestPermission(device, permissionIntent)
         setStatus("Waiting for USB permission")
