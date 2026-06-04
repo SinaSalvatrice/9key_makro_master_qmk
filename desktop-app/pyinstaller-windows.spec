@@ -6,10 +6,13 @@ from pathlib import Path
 
 block_cipher = None
 
-repo_root = Path(__file__).resolve().parents[1]
-entry = repo_root / "desktop-app" / "app.py"
+# NOTE: In PyInstaller's spec execution environment, __file__ may be undefined.
+# PyInstaller injects SPECPATH (directory containing this spec file).
+spec_dir = Path(globals().get("SPECPATH", ".")).resolve()
 
-resources = repo_root / "desktop-app" / "resources" / "keyboard-definition.json"
+entry = spec_dir / "app.py"
+
+resources = spec_dir / "resources" / "keyboard-definition.json"
 
 # Destination inside dist folder: resources/keyboard-definition.json
 added_files = [(str(resources), str(Path("resources") / "keyboard-definition.json"))]
@@ -17,7 +20,7 @@ added_files = [(str(resources), str(Path("resources") / "keyboard-definition.jso
 
 a = Analysis(
     [str(entry)],
-    pathex=[str(repo_root / "desktop-app")],
+    pathex=[str(spec_dir)],
     binaries=[],
     datas=added_files,
     hiddenimports=[],
