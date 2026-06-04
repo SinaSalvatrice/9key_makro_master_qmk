@@ -1,0 +1,48 @@
+name: Desktop App (Windows Portable EXE)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "desktop-app/**"
+      - ".github/workflows/desktop-app-windows.yml"
+  pull_request:
+    paths:
+      - "desktop-app/**"
+      - ".github/workflows/desktop-app-windows.yml"
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r desktop-app/requirements.txt
+
+      - name: Build portable app (PyInstaller)
+        run: |
+          pyinstaller desktop-app/pyinstaller-windows.spec
+
+      - name: Zip portable folder
+        shell: pwsh
+        run: |
+          if (!(Test-Path dist\ninekey-configurator)) { throw "dist\\ninekey-configurator not found" }
+          if (Test-Path dist\ninekey-configurator-windows-portable.zip) { Remove-Item dist\ninekey-configurator-windows-portable.zip }
+          Compress-Archive -Path dist\ninekey-configurator\* -DestinationPath dist\ninekey-configurator-windows-portable.zip
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ninekey-configurator-windows-portable
+          path: dist/ninekey-configurator-windows-portable.zip
+          if-no-files-found: error
