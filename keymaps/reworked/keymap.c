@@ -658,10 +658,10 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // the momentary switch into this NAV layer on other layers via LT().
     [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
+    [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "MCLK", "RGHT", "FREE", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "MOUSE", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -679,12 +679,12 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // descriptions mirror the legend above.
     [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
+    [_GAME]   = {"Select layer", "Mouse right click", "Mouse left click", "Mouse left", "Mouse middle click", "Mouse right", "Free", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
     // description accordingly since SYS has been repurposed as NAV.
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to GIT layer", "1x GAME / 2x GAME+", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to GIT layer", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -701,7 +701,7 @@ static const char *layer_name_short(uint8_t l) {
         case _WORK:   return "GIT";
         case _SYS:    return "NAV";
         case _DEV:    return "GAME";
-        case _GAME:   return "GAME+";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SEL";
@@ -723,7 +723,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _WORK:   return "WORK";
         case _SYS:    return "NAV";
         case _DEV:    return "GAME";
-        case _GAME:   return "GAME ALT";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
@@ -3357,9 +3357,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_GAME] = LAYOUT(
-     TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
-        MS_LEFT,             LT(_SYS, MS_UP),   MS_RGHT,
-        MS_BTN3,             MS_DOWN, GM_TILT
+        TD(TD_LAYER_SELECT), MS_BTN2, MS_BTN1,
+        MS_LEFT,             MS_BTN3, MS_RGHT,
+        KC_NO,               MS_DOWN, GM_TILT
     ),
 
     [_VSC] = LAYOUT(
@@ -4129,7 +4129,7 @@ static void render_header(uint8_t layer) {
     } else if (layer == _DEV) {
         snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "GAME+ TLT %s", game_tilt_enabled ? "ON" : "OFF");
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4195,7 +4195,7 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MODES");
         write_line(1, "WIN/TXT/MED/GAME 2x");
         // SYS has been repurposed to NAV; update the SELECT help to reflect this.
-        write_line(2, "MARK/MED+/GAME+/NAV");
+        write_line(2, "MARK/MED+/MOUSE/NAV");
         write_line(3, "GIT RGB VSC PROMPT");
         return;
     }
@@ -4230,7 +4230,7 @@ static void render_tap_view(uint8_t layer) {
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
     write_line(0, line);
     write_line(1, "SEL: hold selector");
-    write_line(2, "WIN/TXT/MED/GAME+");
+    write_line(2, "WIN/TXT/MED/MOUSE");
     write_line(3, "2x hidden layer");
 }
 
@@ -4351,7 +4351,7 @@ static void render_header(uint8_t layer) {
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "GIT");
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "GAME+ TLT %s", game_tilt_enabled ? "ON" : "OFF");
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4410,7 +4410,7 @@ static void render_legend_view(uint8_t layer) {
         const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "APP");
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "GAME+ TILT [%s]", game_tilt_enabled ? "ON" : "OFF");
+        snprintf(line, sizeof(line), "MOUSE TILT [%s]", game_tilt_enabled ? "ON" : "OFF");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP12: KEYS/MODES/RGB/STATUS");
@@ -4457,7 +4457,7 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MODES");
         write_line(1, "1x WIN/TXT/MED/GAME");
         // Update the second line: SYS has become NAV
-        write_line(2, "2x MARK/MED+/GAME+");
+        write_line(2, "2x MARK/MED+/MOUSE");
         write_line(3, "VSC->NAV / GIT RGB");
         write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
@@ -4510,7 +4510,7 @@ static void render_tap_view(uint8_t layer) {
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
     write_line(4, "MED 2x = MED+");
-    write_line(5, "GAME2x=GAME+ NAV");
+    write_line(5, "GAME2x=MOUSE NAV");
     // SYS has been repurposed to NAV; adjust this description accordingly.
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
