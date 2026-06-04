@@ -1929,9 +1929,9 @@ static void update_tilt_game_control(uint16_t keycode, bool *held, bool pressed)
     if (pressed == *held) return;
 
     if (pressed) {
-        register_code(keycode);
+        register_code16(keycode);
     } else {
-        unregister_code(keycode);
+        unregister_code16(keycode);
     }
 
     *held = pressed;
