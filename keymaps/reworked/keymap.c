@@ -344,6 +344,10 @@ static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
 static bool tilt_game_right_held          = false;
+static bool tilt_game_w_held              = false;
+static bool tilt_game_a_held              = false;
+static bool tilt_game_s_held              = false;
+static bool tilt_game_d_held              = false;
 static bool tilt_game_mouse_up_held       = false;
 static bool tilt_game_mouse_down_held     = false;
 static bool tilt_game_mouse_left_held     = false;
@@ -657,7 +661,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // center key retains its base-layer tap function (Enter) while acting as
     // the momentary switch into this NAV layer on other layers via LT().
     [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
-    [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
+    [_DEV]    = {"SEL",  "NAV",  "WASD",  "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
     [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "MCLK", "RGHT", "FREE", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
@@ -678,7 +682,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // Update function descriptions for the repurposed NAV layer.  The
     // descriptions mirror the legend above.
     [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
-    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
+    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to WASD controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
     [_GAME]   = {"Select layer", "Mouse right click", "Mouse left click", "Mouse left", "Mouse middle click", "Mouse right", "Free", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
@@ -907,7 +911,7 @@ static MAYBE_UNUSED const char *rgb_function_for(uint8_t index) { return rgb_fun
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "NAV";
-    if (index == 2) return "MOUSE";
+    if (index == 2) return "WASD";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_mouse_labels[slot];
@@ -918,7 +922,7 @@ static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
 static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Switch to menu navigation";
-    if (index == 2) return "Switch to tilt mouse controls";
+    if (index == 2) return "Switch to WASD controls";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_mouse_functions[slot];
@@ -930,7 +934,7 @@ static MAYBE_UNUSED const char *game_label_for(uint8_t index) { return game_labe
 static MAYBE_UNUSED const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
 
 static const char *game_mode_name(game_mode_t mode) {
-    return mode == GAME_MODE_NAV ? "NAV" : "MOUSE";
+    return mode == GAME_MODE_NAV ? "NAV" : "WASD";
 }
 
 static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
@@ -1973,10 +1977,14 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 
 static void update_game_tilt_arrows(void) {
     uint8_t top_layer = active_layer_raw();
-    bool tilt_layer_active = top_layer == _DEV || top_layer == _GAME;
+    // Tilt effects:
+    // - On GAME base layer (_DEV): only in WASD mode (GAME_MODE_MOUSE) and it should emit W/A/S/D.
+    // - On hidden MOUSE layer (_GAME): always emits mouse cursor movement.
+    bool tilt_layer_active = (top_layer == _GAME) || (top_layer == _DEV && game_mode == GAME_MODE_MOUSE);
     bool tilt_active = adxl345_ready && game_tilt_enabled && tilt_layer_active;
-    bool nav_tilt_active = tilt_active && top_layer == _DEV && game_mode == GAME_MODE_NAV;
-    bool mouse_tilt_active = tilt_active && (top_layer == _GAME || (top_layer == _DEV && game_mode == GAME_MODE_MOUSE));
+    bool nav_tilt_active = false;
+    bool wasd_tilt_active = tilt_active && top_layer == _DEV && game_mode == GAME_MODE_MOUSE;
+    bool mouse_tilt_active = tilt_active && top_layer == _GAME;
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;
@@ -2041,6 +2049,11 @@ static void update_game_tilt_arrows(void) {
     update_tilt_game_control(KC_DOWN, &tilt_game_down_held, nav_tilt_active && press_down);
     update_tilt_game_control(KC_LEFT, &tilt_game_left_held, nav_tilt_active && press_left);
     update_tilt_game_control(KC_RGHT, &tilt_game_right_held, nav_tilt_active && press_right);
+
+    update_tilt_game_control(KC_W, &tilt_game_w_held, wasd_tilt_active && press_up);
+    update_tilt_game_control(KC_S, &tilt_game_s_held, wasd_tilt_active && press_down);
+    update_tilt_game_control(KC_A, &tilt_game_a_held, wasd_tilt_active && press_left);
+    update_tilt_game_control(KC_D, &tilt_game_d_held, wasd_tilt_active && press_right);
 
     update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, mouse_tilt_active && press_up);
     update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, mouse_tilt_active && press_down);
