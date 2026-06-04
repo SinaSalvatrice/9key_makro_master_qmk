@@ -83,6 +83,12 @@
 #    ifndef ADXL345_MOUSE_BLEND_DIV
 #        define ADXL345_MOUSE_BLEND_DIV 2
 #    endif
+#    ifndef ADXL345_MOUSE_INVERT_Y
+// Mouse tilt uses the high-resolution "fluid" axis, which is intentionally kept in
+// raw sensor coordinates for RGB visualizations. For mouse movement we want the
+// same sign convention as the game axis mapping (so "tilt up" is consistent).
+#        define ADXL345_MOUSE_INVERT_Y 1
+#    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 5
 #    endif
@@ -2004,6 +2010,9 @@ static void update_game_tilt_arrows(void) {
             axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_x) / ADXL345_MOUSE_BLEND_DIV);
             axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_y) / ADXL345_MOUSE_BLEND_DIV);
 #endif
+    #if ADXL345_MOUSE_INVERT_Y
+            axis_y = (int16_t)-axis_y;
+    #endif
             debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
             on_threshold = ADXL345_MOUSE_TILT_ON;
             off_threshold = ADXL345_MOUSE_TILT_OFF;
