@@ -6,6 +6,11 @@
 #endif
 #include <stdio.h>
 
+#ifdef MOUSEKEY_ENABLE
+// QMK mousekey runtime parameters (defined in quantum/mousekey.c)
+extern uint8_t mk_max_speed;
+#endif
+
 #if defined(__GNUC__)
 #    define MAYBE_UNUSED __attribute__((unused))
 #else
@@ -354,6 +359,7 @@ static bool tilt_game_mouse_down_held     = false;
 static bool tilt_game_mouse_left_held     = false;
 static bool tilt_game_mouse_right_held    = false;
 static uint8_t mouse_dpi_level            = 0;
+static const uint8_t mouse_dpi_levels[]    = {2, 3, 4, 5, 6, 8, 10, 12};
 static int8_t tilt_game_x_state           = 0;
 static int8_t tilt_game_y_state           = 0;
 static int8_t tilt_game_x_pending         = 0;
@@ -3724,12 +3730,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case MOUSE_DPI:
             if (record->event.pressed) {
-                mouse_dpi_level = (uint8_t)((mouse_dpi_level + 1) % 3);
-                switch (mouse_dpi_level) {
-                    case 0: tap_code(KC_ACL0); break;
-                    case 1: tap_code(KC_ACL1); break;
-                    case 2: tap_code(KC_ACL2); break;
-                }
+                mouse_dpi_level = (uint8_t)((mouse_dpi_level + 1) % (sizeof(mouse_dpi_levels) / sizeof(mouse_dpi_levels[0])));
+#ifdef MOUSEKEY_ENABLE
+                mk_max_speed = mouse_dpi_levels[mouse_dpi_level];
+#else
+                tap_code(KC_ACL1);
+#endif
             }
             return false;
 
