@@ -6,11 +6,6 @@
 #endif
 #include <stdio.h>
 
-#ifdef MOUSEKEY_ENABLE
-// QMK mousekey runtime parameters (defined in quantum/mousekey.c)
-extern uint8_t mk_max_speed;
-#endif
-
 #if defined(__GNUC__)
 #    define MAYBE_UNUSED __attribute__((unused))
 #else
@@ -189,8 +184,7 @@ enum custom_keycodes {
     WRK_PUSH,
     WRK_BRANCH,
     WRK_PR,
-    WRK_SYNC,
-    MOUSE_DPI
+    WRK_SYNC
 };
 
 enum tap_dance_ids {
@@ -358,8 +352,6 @@ static bool tilt_game_mouse_up_held       = false;
 static bool tilt_game_mouse_down_held     = false;
 static bool tilt_game_mouse_left_held     = false;
 static bool tilt_game_mouse_right_held    = false;
-static uint8_t mouse_dpi_level            = 0;
-static const uint8_t mouse_dpi_levels[]    = {2, 3, 4, 5, 6, 8, 10, 12};
 static int8_t tilt_game_x_state           = 0;
 static int8_t tilt_game_y_state           = 0;
 static int8_t tilt_game_x_pending         = 0;
@@ -670,7 +662,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // the momentary switch into this NAV layer on other layers via LT().
     [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
     [_DEV]    = {"SEL",  "NAV",  "WASD",  "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "MCLK", "RGHT", "DPI",  "DOWN", "TILT"},
+    [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "MOUSE", "VSC+", "RGB", "PROMPT"},
@@ -691,7 +683,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // descriptions mirror the legend above.
     [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to WASD controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_GAME]   = {"Select layer", "Mouse right click", "Mouse left click", "Mouse left", "Mouse middle click", "Mouse right", "Cycle mouse DPI", "Mouse down", "Toggle tilt detection"},
+    [_GAME]   = {"Select layer", "Mouse right click", "Mouse left click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
@@ -3379,8 +3371,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_GAME] = LAYOUT(
         TD(TD_LAYER_SELECT), MS_BTN2, MS_BTN1,
-        MS_LEFT,             MS_BTN3, MS_RGHT,
-        MOUSE_DPI,           MS_DOWN, GM_TILT
+        MS_LEFT,             MS_UP,   MS_RGHT,
+        MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
     [_VSC] = LAYOUT(
@@ -3726,17 +3718,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 
         case GM_TILT:
             if (record->event.pressed) game_tilt_enabled = !game_tilt_enabled;
-            return false;
-
-        case MOUSE_DPI:
-            if (record->event.pressed) {
-                mouse_dpi_level = (uint8_t)((mouse_dpi_level + 1) % (sizeof(mouse_dpi_levels) / sizeof(mouse_dpi_levels[0])));
-#ifdef MOUSEKEY_ENABLE
-                mk_max_speed = mouse_dpi_levels[mouse_dpi_level];
-#else
-                tap_code(KC_ACL1);
-#endif
-            }
             return false;
 
         case GM_1:

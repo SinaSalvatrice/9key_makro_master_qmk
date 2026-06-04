@@ -3507,7 +3507,7 @@
     },
     {
       "name": "SEL_DEV",
-      "title": "Go to GAME layer (selector 2x gives GAME+)",
+      "title": "Go to GAME layer (selector 2x gives MOUSE)",
       "shortName": "GAME"
     },
     {
@@ -3537,12 +3537,12 @@
     },
     {
       "name": "GM_MOUSE",
-      "title": "GAME mouse mode",
-      "shortName": "MOUSE"
+      "title": "GAME WASD mode",
+      "shortName": "WASD"
     },
     {
       "name": "GM_TILT",
-      "title": "Toggle tilt detection (GAME and GAME+)",
+      "title": "Toggle tilt detection (GAME and MOUSE)",
       "shortName": "TILT"
     },
     {
