@@ -658,7 +658,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // the momentary switch into this NAV layer on other layers via LT().
     [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
     [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_GAME]   = {"SEL",  "LCLK", "RCLK",  "A",    "W",    "D",    "MCLK", "S",    "TILT"},
+    [_GAME]   = {"SEL",  "LCLK", "RCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
     [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "GAME+", "VSC+", "RGB", "PROMPT"},
@@ -679,7 +679,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     // descriptions mirror the legend above.
     [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
     [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "A", "W (hold NAV)", "D", "Mouse middle click", "S", "Toggle tilt detection"},
+    [_GAME]   = {"Select layer", "Mouse left click", "Mouse right click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
@@ -3358,8 +3358,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_GAME] = LAYOUT(
      TD(TD_LAYER_SELECT), MS_BTN1, MS_BTN2,
-        KC_A,                LT(_SYS, KC_W),   KC_D,
-        MS_BTN3,             KC_S,   GM_TILT
+        MS_LEFT,             LT(_SYS, MS_UP),   MS_RGHT,
+        MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
     [_VSC] = LAYOUT(
