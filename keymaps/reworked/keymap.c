@@ -83,12 +83,6 @@
 #    ifndef ADXL345_MOUSE_BLEND_DIV
 #        define ADXL345_MOUSE_BLEND_DIV 2
 #    endif
-#    ifndef ADXL345_MOUSE_INVERT_Y
-// Mouse tilt uses the high-resolution "fluid" axis, which is intentionally kept in
-// raw sensor coordinates for RGB visualizations. For mouse movement we want the
-// same sign convention as the game axis mapping (so "tilt up" is consistent).
-#        define ADXL345_MOUSE_INVERT_Y 1
-#    endif
 #    ifndef ADXL345_GAME_DEADZONE
 #        define ADXL345_GAME_DEADZONE 5
 #    endif
@@ -2003,16 +1997,32 @@ static void update_game_tilt_arrows(void) {
         uint16_t off_threshold = ADXL345_GAME_TILT_OFF;
 
         if (mouse_tilt_active) {
-#if ADXL345_MOUSE_BLEND_DIV <= 1
-            axis_x = adxl345_fluid_x;
-            axis_y = adxl345_fluid_y;
-#else
-            axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_x) / ADXL345_MOUSE_BLEND_DIV);
-            axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + adxl345_fluid_y) / ADXL345_MOUSE_BLEND_DIV);
+            // IMPORTANT: adxl345_game_x/y are mapped into "game space" (swap/invert).
+            // adxl345_fluid_x/y are kept in raw sensor space for smooth RGB visuals.
+            // For mouse tilt we blend the two, so we must first map the fluid axes
+            // into the same space to avoid sign/axis cancellation.
+            int16_t fluid_x = adxl345_fluid_x;
+            int16_t fluid_y = adxl345_fluid_y;
+
+#if ADXL345_GAME_SWAP_XY
+            int16_t tmp = fluid_x;
+            fluid_x = fluid_y;
+            fluid_y = tmp;
 #endif
-    #if ADXL345_MOUSE_INVERT_Y
-            axis_y = (int16_t)-axis_y;
-    #endif
+#if ADXL345_GAME_INVERT_X
+            fluid_x = (int16_t)-fluid_x;
+#endif
+#if ADXL345_GAME_INVERT_Y
+            fluid_y = (int16_t)-fluid_y;
+#endif
+
+#if ADXL345_MOUSE_BLEND_DIV <= 1
+            axis_x = fluid_x;
+            axis_y = fluid_y;
+#else
+            axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + fluid_x) / ADXL345_MOUSE_BLEND_DIV);
+            axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + fluid_y) / ADXL345_MOUSE_BLEND_DIV);
+#endif
             debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
             on_threshold = ADXL345_MOUSE_TILT_ON;
             off_threshold = ADXL345_MOUSE_TILT_OFF;
