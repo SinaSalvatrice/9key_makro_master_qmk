@@ -1,0 +1,287 @@
+{
+  "version": "1.0",
+  "comment": "QMK keycode catalog for 9-Key Macro Master. Codes are decimal integers (QMK 16-bit values).",
+  "categories": [
+    {
+      "id": "special",
+      "label": "Special",
+      "keycodes": [
+        { "code": 0,    "label": "KC_NO",    "display": "---",  "description": "No operation / empty" },
+        { "code": 1,    "label": "KC_TRNS",  "display": "▽",    "description": "Transparent – fall through to lower layer" }
+      ]
+    },
+    {
+      "id": "letters",
+      "label": "Letters",
+      "keycodes": [
+        { "code":  4, "label": "KC_A", "display": "A", "description": "Letter A" },
+        { "code":  5, "label": "KC_B", "display": "B", "description": "Letter B" },
+        { "code":  6, "label": "KC_C", "display": "C", "description": "Letter C" },
+        { "code":  7, "label": "KC_D", "display": "D", "description": "Letter D" },
+        { "code":  8, "label": "KC_E", "display": "E", "description": "Letter E" },
+        { "code":  9, "label": "KC_F", "display": "F", "description": "Letter F" },
+        { "code": 10, "label": "KC_G", "display": "G", "description": "Letter G" },
+        { "code": 11, "label": "KC_H", "display": "H", "description": "Letter H" },
+        { "code": 12, "label": "KC_I", "display": "I", "description": "Letter I" },
+        { "code": 13, "label": "KC_J", "display": "J", "description": "Letter J" },
+        { "code": 14, "label": "KC_K", "display": "K", "description": "Letter K" },
+        { "code": 15, "label": "KC_L", "display": "L", "description": "Letter L" },
+        { "code": 16, "label": "KC_M", "display": "M", "description": "Letter M" },
+        { "code": 17, "label": "KC_N", "display": "N", "description": "Letter N" },
+        { "code": 18, "label": "KC_O", "display": "O", "description": "Letter O" },
+        { "code": 19, "label": "KC_P", "display": "P", "description": "Letter P" },
+        { "code": 20, "label": "KC_Q", "display": "Q", "description": "Letter Q" },
+        { "code": 21, "label": "KC_R", "display": "R", "description": "Letter R" },
+        { "code": 22, "label": "KC_S", "display": "S", "description": "Letter S" },
+        { "code": 23, "label": "KC_T", "display": "T", "description": "Letter T" },
+        { "code": 24, "label": "KC_U", "display": "U", "description": "Letter U" },
+        { "code": 25, "label": "KC_V", "display": "V", "description": "Letter V" },
+        { "code": 26, "label": "KC_W", "display": "W", "description": "Letter W" },
+        { "code": 27, "label": "KC_X", "display": "X", "description": "Letter X" },
+        { "code": 28, "label": "KC_Y", "display": "Y", "description": "Letter Y" },
+        { "code": 29, "label": "KC_Z", "display": "Z", "description": "Letter Z" }
+      ]
+    },
+    {
+      "id": "numbers",
+      "label": "Numbers",
+      "keycodes": [
+        { "code": 30, "label": "KC_1", "display": "1", "description": "1 (Shift: !)" },
+        { "code": 31, "label": "KC_2", "display": "2", "description": "2 (Shift: @)" },
+        { "code": 32, "label": "KC_3", "display": "3", "description": "3 (Shift: #)" },
+        { "code": 33, "label": "KC_4", "display": "4", "description": "4 (Shift: $)" },
+        { "code": 34, "label": "KC_5", "display": "5", "description": "5 (Shift: %)" },
+        { "code": 35, "label": "KC_6", "display": "6", "description": "6 (Shift: ^)" },
+        { "code": 36, "label": "KC_7", "display": "7", "description": "7 (Shift: &)" },
+        { "code": 37, "label": "KC_8", "display": "8", "description": "8 (Shift: *)" },
+        { "code": 38, "label": "KC_9", "display": "9", "description": "9 (Shift: ()" },
+        { "code": 39, "label": "KC_0", "display": "0", "description": "0 (Shift: ))" }
+      ]
+    },
+    {
+      "id": "basic",
+      "label": "Basic",
+      "keycodes": [
+        { "code": 40, "label": "KC_ENT",  "display": "Enter",  "description": "Enter / Return" },
+        { "code": 41, "label": "KC_ESC",  "display": "Esc",    "description": "Escape" },
+        { "code": 42, "label": "KC_BSPC", "display": "⌫",      "description": "Backspace" },
+        { "code": 43, "label": "KC_TAB",  "display": "Tab",    "description": "Tab" },
+        { "code": 44, "label": "KC_SPC",  "display": "Space",  "description": "Spacebar" },
+        { "code": 45, "label": "KC_MINS", "display": "-/_",    "description": "Minus / Underscore" },
+        { "code": 46, "label": "KC_EQL",  "display": "=/+",    "description": "Equal / Plus" },
+        { "code": 47, "label": "KC_LBRC", "display": "[/{",    "description": "Left Bracket / Left Curly" },
+        { "code": 48, "label": "KC_RBRC", "display": "]/}",    "description": "Right Bracket / Right Curly" },
+        { "code": 49, "label": "KC_BSLS", "display": "\\|",    "description": "Backslash / Pipe" },
+        { "code": 51, "label": "KC_SCLN", "display": ";/:",    "description": "Semicolon / Colon" },
+        { "code": 52, "label": "KC_QUOT", "display": "'\"",    "description": "Quote / Double Quote" },
+        { "code": 53, "label": "KC_GRV",  "display": "`~",     "description": "Grave / Tilde" },
+        { "code": 54, "label": "KC_COMM", "display": ",/<",    "description": "Comma / Less Than" },
+        { "code": 55, "label": "KC_DOT",  "display": "./>",    "description": "Period / Greater Than" },
+        { "code": 56, "label": "KC_SLSH", "display": "/?",     "description": "Slash / Question Mark" },
+        { "code": 57, "label": "KC_CAPS", "display": "Caps",   "description": "Caps Lock" },
+        { "code": 76, "label": "KC_DEL",  "display": "Del",    "description": "Delete" },
+        { "code": 73, "label": "KC_INS",  "display": "Ins",    "description": "Insert" }
+      ]
+    },
+    {
+      "id": "function",
+      "label": "Function",
+      "keycodes": [
+        { "code": 58, "label": "KC_F1",  "display": "F1",  "description": "Function key F1" },
+        { "code": 59, "label": "KC_F2",  "display": "F2",  "description": "Function key F2" },
+        { "code": 60, "label": "KC_F3",  "display": "F3",  "description": "Function key F3" },
+        { "code": 61, "label": "KC_F4",  "display": "F4",  "description": "Function key F4" },
+        { "code": 62, "label": "KC_F5",  "display": "F5",  "description": "Function key F5" },
+        { "code": 63, "label": "KC_F6",  "display": "F6",  "description": "Function key F6" },
+        { "code": 64, "label": "KC_F7",  "display": "F7",  "description": "Function key F7" },
+        { "code": 65, "label": "KC_F8",  "display": "F8",  "description": "Function key F8" },
+        { "code": 66, "label": "KC_F9",  "display": "F9",  "description": "Function key F9" },
+        { "code": 67, "label": "KC_F10", "display": "F10", "description": "Function key F10" },
+        { "code": 68, "label": "KC_F11", "display": "F11", "description": "Function key F11" },
+        { "code": 69, "label": "KC_F12", "display": "F12", "description": "Function key F12" }
+      ]
+    },
+    {
+      "id": "navigation",
+      "label": "Navigation",
+      "keycodes": [
+        { "code": 79, "label": "KC_RGHT", "display": "→",    "description": "Right arrow" },
+        { "code": 80, "label": "KC_LEFT", "display": "←",    "description": "Left arrow" },
+        { "code": 81, "label": "KC_DOWN", "display": "↓",    "description": "Down arrow" },
+        { "code": 82, "label": "KC_UP",   "display": "↑",    "description": "Up arrow" },
+        { "code": 74, "label": "KC_HOME", "display": "Home", "description": "Home key" },
+        { "code": 77, "label": "KC_END",  "display": "End",  "description": "End key" },
+        { "code": 75, "label": "KC_PGUP", "display": "PgUp", "description": "Page Up" },
+        { "code": 78, "label": "KC_PGDN", "display": "PgDn", "description": "Page Down" }
+      ]
+    },
+    {
+      "id": "modifiers",
+      "label": "Modifiers",
+      "keycodes": [
+        { "code": 224, "label": "KC_LCTL", "display": "LCtrl",  "description": "Left Control (standalone)" },
+        { "code": 225, "label": "KC_LSFT", "display": "LShift", "description": "Left Shift (standalone)" },
+        { "code": 226, "label": "KC_LALT", "display": "LAlt",   "description": "Left Alt (standalone)" },
+        { "code": 227, "label": "KC_LGUI", "display": "LWin",   "description": "Left GUI / Windows / Cmd (standalone)" },
+        { "code": 228, "label": "KC_RCTL", "display": "RCtrl",  "description": "Right Control (standalone)" },
+        { "code": 229, "label": "KC_RSFT", "display": "RShift", "description": "Right Shift (standalone)" },
+        { "code": 230, "label": "KC_RALT", "display": "RAlt",   "description": "Right Alt / AltGr (standalone)" },
+        { "code": 231, "label": "KC_RGUI", "display": "RWin",   "description": "Right GUI / Windows / Cmd (standalone)" },
+        { "code": 261, "label": "LCTL(Z)", "display": "Ctrl+Z", "description": "Left Control + Z (Undo)" },
+        { "code": 260, "label": "LCTL(Y)", "display": "Ctrl+Y", "description": "Left Control + Y (Redo)" },
+        { "code": 259, "label": "LCTL(X)", "display": "Ctrl+X", "description": "Left Control + X (Cut)" },
+        { "code": 262, "label": "LCTL(C)", "display": "Ctrl+C", "description": "Left Control + C (Copy)" },
+        { "code": 263, "label": "LCTL(V)", "display": "Ctrl+V", "description": "Left Control + V (Paste)" },
+        { "code": 256, "label": "LCTL(A)", "display": "Ctrl+A", "description": "Left Control + A (Select All)" },
+        { "code": 257, "label": "LCTL(S)", "display": "Ctrl+S", "description": "Left Control + S (Save)" },
+        { "code": 264, "label": "LCTL(W)", "display": "Ctrl+W", "description": "Left Control + W (Close tab)" },
+        { "code": 265, "label": "LCTL(T)", "display": "Ctrl+T", "description": "Left Control + T (New tab)" },
+        { "code": 278, "label": "LALT(F4)", "display": "Alt+F4", "description": "Left Alt + F4 (Close window)" }
+      ]
+    },
+    {
+      "id": "media",
+      "label": "Media",
+      "keycodes": [
+        { "code": 160, "label": "KC_MUTE", "display": "Mute",  "description": "Audio Mute" },
+        { "code": 161, "label": "KC_VOLU", "display": "Vol+",  "description": "Volume Up" },
+        { "code": 162, "label": "KC_VOLD", "display": "Vol-",  "description": "Volume Down" },
+        { "code": 163, "label": "KC_MNXT", "display": "Next",  "description": "Next Track" },
+        { "code": 164, "label": "KC_MPRV", "display": "Prev",  "description": "Previous Track" },
+        { "code": 165, "label": "KC_MFFD", "display": "FF",    "description": "Fast Forward" },
+        { "code": 166, "label": "KC_MRWD", "display": "Rew",   "description": "Rewind" },
+        { "code": 167, "label": "KC_MPLY", "display": "Play",  "description": "Play/Pause" },
+        { "code": 168, "label": "KC_MSTP", "display": "Stop",  "description": "Media Stop" }
+      ]
+    },
+    {
+      "id": "mouse",
+      "label": "Mouse",
+      "keycodes": [
+        { "code": 23560, "label": "MS_BTN1", "display": "LClk",  "description": "Mouse left click (0x5C08)" },
+        { "code": 23561, "label": "MS_BTN2", "display": "RClk",  "description": "Mouse right click (0x5C09)" },
+        { "code": 23562, "label": "MS_BTN3", "display": "MClk",  "description": "Mouse middle click (0x5C0A)" },
+        { "code": 23563, "label": "MS_BTN4", "display": "Btn4",  "description": "Mouse button 4 (0x5C0B)" },
+        { "code": 23564, "label": "MS_BTN5", "display": "Btn5",  "description": "Mouse button 5 (0x5C0C)" },
+        { "code": 23552, "label": "MS_UP",   "display": "M↑",    "description": "Mouse cursor up (0x5C00)" },
+        { "code": 23553, "label": "MS_DOWN", "display": "M↓",    "description": "Mouse cursor down (0x5C01)" },
+        { "code": 23554, "label": "MS_LEFT", "display": "M←",    "description": "Mouse cursor left (0x5C02)" },
+        { "code": 23555, "label": "MS_RGHT", "display": "M→",    "description": "Mouse cursor right (0x5C03)" },
+        { "code": 23568, "label": "MS_WHLU", "display": "W↑",    "description": "Mouse wheel up (0x5C10)" },
+        { "code": 23569, "label": "MS_WHLD", "display": "W↓",    "description": "Mouse wheel down (0x5C11)" }
+      ]
+    },
+    {
+      "id": "layers",
+      "label": "Layers",
+      "comment": "Layer action keycodes. MO/TG/TO are generated dynamically; these are common examples.",
+      "keycodes": [
+        { "code": 20736, "label": "MO(0)",  "display": "MO(0)",  "description": "Momentarily activate layer 0" },
+        { "code": 20737, "label": "MO(1)",  "display": "MO(1)",  "description": "Momentarily activate layer 1" },
+        { "code": 20738, "label": "MO(2)",  "display": "MO(2)",  "description": "Momentarily activate layer 2" },
+        { "code": 20739, "label": "MO(3)",  "display": "MO(3)",  "description": "Momentarily activate layer 3" },
+        { "code": 20740, "label": "MO(4)",  "display": "MO(4)",  "description": "Momentarily activate layer 4" },
+        { "code": 20741, "label": "MO(5)",  "display": "MO(5)",  "description": "Momentarily activate layer 5" },
+        { "code": 20742, "label": "MO(6)",  "display": "MO(6)",  "description": "Momentarily activate layer 6" },
+        { "code": 20743, "label": "MO(7)",  "display": "MO(7)",  "description": "Momentarily activate layer 7" },
+        { "code": 20992, "label": "TG(0)",  "display": "TG(0)",  "description": "Toggle layer 0" },
+        { "code": 20993, "label": "TG(1)",  "display": "TG(1)",  "description": "Toggle layer 1" },
+        { "code": 20994, "label": "TG(2)",  "display": "TG(2)",  "description": "Toggle layer 2" },
+        { "code": 20995, "label": "TG(3)",  "display": "TG(3)",  "description": "Toggle layer 3" },
+        { "code": 20480, "label": "TO(0)",  "display": "TO(0)",  "description": "Activate only layer 0" },
+        { "code": 20481, "label": "TO(1)",  "display": "TO(1)",  "description": "Activate only layer 1" },
+        { "code": 20482, "label": "TO(2)",  "display": "TO(2)",  "description": "Activate only layer 2" },
+        { "code": 20483, "label": "TO(3)",  "display": "TO(3)",  "description": "Activate only layer 3" }
+      ]
+    },
+    {
+      "id": "custom",
+      "label": "Custom",
+      "comment": "Firmware-specific custom keycodes. SEL_* start at QK_KB_0 (0x7E40), then SAFE_RANGE (0x7E60).",
+      "keycodes": [
+        { "code": 32320, "label": "SEL_BASE",   "display": "BASE",   "description": "Go to BASE layer (0x7E40)" },
+        { "code": 32321, "label": "SEL_WIN",    "display": "WIN",    "description": "Go to WINDOW layer (0x7E41)" },
+        { "code": 32322, "label": "SEL_TXT",    "display": "TXT",    "description": "Go to TXT layer (0x7E42)" },
+        { "code": 32323, "label": "SEL_MED",    "display": "MED",    "description": "Go to MEDIA layer (0x7E43)" },
+        { "code": 32324, "label": "SEL_WORK",   "display": "GIT",    "description": "Go to GIT layer (0x7E44)" },
+        { "code": 32325, "label": "SEL_RGB",    "display": "RGB",    "description": "Go to RGB layer (0x7E45)" },
+        { "code": 32326, "label": "SEL_DEV",    "display": "GAME",   "description": "Go to GAME layer (0x7E46)" },
+        { "code": 32327, "label": "SEL_VSC",    "display": "VSC",    "description": "Go to VSC layer (0x7E47)" },
+        { "code": 32328, "label": "SEL_PROMPT", "display": "PRM",    "description": "Go to PROMPT layer (0x7E48)" },
+        { "code": 32329, "label": "PRM_PICS",   "display": "PICS",   "description": "Prompt picture mode (0x7E49)" },
+        { "code": 32330, "label": "PRM_ETSY",   "display": "ETSY",   "description": "Prompt Etsy mode (0x7E4A)" },
+        { "code": 32331, "label": "GM_NAV",     "display": "NAV",    "description": "GAME navigation mode (0x7E4B)" },
+        { "code": 32332, "label": "GM_MOUSE",   "display": "WASD",   "description": "GAME WASD mode (0x7E4C)" },
+        { "code": 32333, "label": "GM_TILT",    "display": "TILT",   "description": "Toggle tilt detection (0x7E4D)" },
+        { "code": 32334, "label": "GM_1",       "display": "G1",     "description": "GAME slot 1: ESC/SHFT (0x7E4E)" },
+        { "code": 32335, "label": "GM_2",       "display": "G2",     "description": "GAME slot 2: UP/W (0x7E4F)" },
+        { "code": 32336, "label": "GM_3",       "display": "G3",     "description": "GAME slot 3: ENT/SPC (0x7E50)" },
+        { "code": 32337, "label": "GM_4",       "display": "G4",     "description": "GAME slot 4: LEFT/A (0x7E51)" },
+        { "code": 32338, "label": "GM_5",       "display": "G5",     "description": "GAME slot 5: DOWN/S (0x7E52)" },
+        { "code": 32339, "label": "GM_6",       "display": "G6",     "description": "GAME slot 6: RGHT/D (0x7E53)" },
+        { "code": 32340, "label": "WIN_BRO",    "display": "M1",     "description": "Context mode key M1 (0x7E54)" },
+        { "code": 32341, "label": "WIN_AUX",    "display": "M2",     "description": "Context mode key M2 (0x7E55)" },
+        { "code": 32342, "label": "WIN_1",      "display": "S1",     "description": "Context slot S1 (0x7E56)" },
+        { "code": 32343, "label": "WIN_2",      "display": "S2",     "description": "Context slot S2 (0x7E57)" },
+        { "code": 32344, "label": "WIN_3",      "display": "S3",     "description": "Context slot S3 (0x7E58)" },
+        { "code": 32345, "label": "WIN_4",      "display": "S4",     "description": "Context slot S4 (0x7E59)" },
+        { "code": 32346, "label": "WIN_5",      "display": "S5",     "description": "Context slot S5 (0x7E5A)" },
+        { "code": 32347, "label": "WIN_6",      "display": "S6",     "description": "Context slot S6 (0x7E5B)" },
+        { "code": 32352, "label": "TXT_ACT",    "display": "ACT",    "description": "Toggle TXT actions (0x7E60)" },
+        { "code": 32353, "label": "TXT_EDT",    "display": "EDT",    "description": "Toggle TXT edit tools (0x7E61)" },
+        { "code": 32354, "label": "TXT_1",      "display": "T1",     "description": "TXT slot 1: HOME/COPY/WRD< (0x7E62)" },
+        { "code": 32355, "label": "TXT_2",      "display": "T2",     "description": "TXT slot 2: UP/CUT/DELW (0x7E63)" },
+        { "code": 32356, "label": "TXT_3",      "display": "T3",     "description": "TXT slot 3: END/PASTE/WRD> (0x7E64)" },
+        { "code": 32357, "label": "TXT_4",      "display": "T4",     "description": "TXT slot 4: LEFT/UNDO/LINE< (0x7E65)" },
+        { "code": 32358, "label": "TXT_5",      "display": "T5",     "description": "TXT slot 5: DOWN/REDO/DELL (0x7E66)" },
+        { "code": 32359, "label": "TXT_6",      "display": "T6",     "description": "TXT slot 6: RGHT/SAVE/LINE> (0x7E67)" },
+        { "code": 32360, "label": "VSC_BAR",    "display": "NAV",    "description": "Hold VSC navigation mode (0x7E68)" },
+        { "code": 32361, "label": "VSC_CHAT",   "display": "AI",     "description": "Hold VSC AI prompts (0x7E69)" },
+        { "code": 32362, "label": "VSC_1",      "display": "V1",     "description": "VSC slot 1: EXPL/FILE (0x7E6A)" },
+        { "code": 32363, "label": "VSC_2",      "display": "V2",     "description": "VSC slot 2: SRCH/SYMB/REVW (0x7E6B)" },
+        { "code": 32364, "label": "VSC_3",      "display": "V3",     "description": "VSC slot 3: TERM/FIX (0x7E6C)" },
+        { "code": 32365, "label": "VSC_4",      "display": "V4",     "description": "VSC slot 4: SRC/BACK/TEST (0x7E6D)" },
+        { "code": 32366, "label": "VSC_5",      "display": "V5",     "description": "VSC slot 5: GIT/CMD/DOCS (0x7E6E)" },
+        { "code": 32367, "label": "VSC_6",      "display": "V6",     "description": "VSC slot 6: RUN/FWD/COMMIT (0x7E6F)" },
+        { "code": 32368, "label": "RGB_PROFILE","display": "PROF",   "description": "Toggle RGB minimal/profile mode (0x7E70)" },
+        { "code": 32369, "label": "RGB_MODE",   "display": "ZONE",   "description": "Hold RGB zone controls (0x7E71)" },
+        { "code": 32370, "label": "RGB_TOG",    "display": "ANIM",   "description": "Cycle RGB animation / toggle zones (0x7E72)" },
+        { "code": 32371, "label": "RGB_HUEU",   "display": "HUE+",   "description": "Hue up or toggle frame LEDs (0x7E73)" },
+        { "code": 32372, "label": "RGB_HUED",   "display": "HUE-",   "description": "Hue down or toggle key LEDs (0x7E74)" },
+        { "code": 32373, "label": "RGB_VALU",   "display": "VAL+",   "description": "Brightness up or toggle gap LEDs (0x7E75)" },
+        { "code": 32374, "label": "RGB_VALD",   "display": "VAL-",   "description": "Brightness down (0x7E76)" },
+        { "code": 32375, "label": "RGB_SATU",   "display": "SAT+",   "description": "Saturation up (0x7E77)" },
+        { "code": 32376, "label": "RGB_SATD",   "display": "SAT-",   "description": "Saturation down (0x7E78)" },
+        { "code": 32377, "label": "WRK_APP",    "display": "APP",    "description": "WORK: app shortcut GitHub (0x7E79)" },
+        { "code": 32378, "label": "WRK_PULL",   "display": "PULL",   "description": "WORK: git pull (0x7E7A)" },
+        { "code": 32379, "label": "WRK_COMMIT", "display": "CMMT",   "description": "WORK: git add/commit prompt (0x7E7B)" },
+        { "code": 32380, "label": "WRK_PUSH",   "display": "PUSH",   "description": "WORK: git push (0x7E7C)" },
+        { "code": 32381, "label": "WRK_BRANCH", "display": "BRCH",   "description": "WORK: git checkout -b (0x7E7D)" },
+        { "code": 32382, "label": "WRK_PR",     "display": "PR",     "description": "WORK: create PR in browser (0x7E7E)" },
+        { "code": 32383, "label": "WRK_SYNC",   "display": "SYNC",   "description": "WORK: git status (0x7E7F)" }
+      ]
+    },
+    {
+      "id": "tapdance",
+      "label": "Tap Dance",
+      "comment": "Tap dance keycodes: 0x5700 + id. TD(0) is the layer select tap dance key.",
+      "keycodes": [
+        { "code": 22272, "label": "TD(0) Layer Select", "display": "SEL",  "description": "Tap: select layer. Hold: toggle. Double-tap: other function. (0x5700)" },
+        { "code": 22273, "label": "TD(1) Win/Mark",     "display": "WIN+", "description": "1x WINDOW / 2x MARK tap dance (0x5701)" },
+        { "code": 22274, "label": "TD(2) Med/Game",     "display": "MED+", "description": "1x MEDIA / 2x GAME tap dance (0x5702)" },
+        { "code": 22275, "label": "TD(3) Dev/Game",     "display": "DEV+", "description": "1x DEV / 2x GAME tap dance (0x5703)" },
+        { "code": 22276, "label": "TD(4) VSC/Nav",      "display": "VSC+", "description": "1x VSC / 2x NAV tap dance (0x5704)" }
+      ]
+    },
+    {
+      "id": "system",
+      "label": "System",
+      "keycodes": [
+        { "code": 70, "label": "KC_PSCR", "display": "PrtSc", "description": "Print Screen" },
+        { "code": 71, "label": "KC_SCRL", "display": "ScLk",  "description": "Scroll Lock" },
+        { "code": 72, "label": "KC_PAUS", "display": "Pause", "description": "Pause / Break" },
+        { "code": 83, "label": "KC_NUM",  "display": "NumLk", "description": "Num Lock" }
+      ]
+    }
+  ]
+}

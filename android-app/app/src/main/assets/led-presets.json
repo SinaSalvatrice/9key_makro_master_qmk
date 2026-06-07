@@ -1,0 +1,83 @@
+{
+  "version": "1.0",
+  "comment": "LED preset data extracted from via_default_* arrays in keymap.c. Slot order: BASE, WIN, TXT, MED, GAME, VSC, RGB, MOD, MED+",
+  "effects": [
+    { "id": 0,  "label": "Wild" },
+    { "id": 1,  "label": "Breathing" },
+    { "id": 2,  "label": "Running" },
+    { "id": 3,  "label": "Twinkle" },
+    { "id": 4,  "label": "Pulse" },
+    { "id": 5,  "label": "Solid" },
+    { "id": 6,  "label": "Comet" },
+    { "id": 7,  "label": "Scan" },
+    { "id": 8,  "label": "Rainbow" },
+    { "id": 9,  "label": "Stack" },
+    { "id": 10, "label": "Off" },
+    { "id": 11, "label": "Nav Blink" },
+    { "id": 12, "label": "Typewriter" },
+    { "id": 13, "label": "Visualizer" },
+    { "id": 14, "label": "Pong" },
+    { "id": 15, "label": "Packet" },
+    { "id": 16, "label": "Bloom" },
+    { "id": 17, "label": "Sweep" },
+    { "id": 18, "label": "Tilt" }
+  ],
+  "zones": ["key", "gap", "frame"],
+  "zoneLabels": { "key": "Key LEDs", "gap": "Gap LEDs", "frame": "Frame LEDs" },
+  "slots": [
+    {
+      "slot": 0, "layerId": 0, "layerName": "BASE",
+      "key":   { "effect": 5,  "speed": 88,  "hue": 128, "sat": 220, "val": 108 },
+      "gap":   { "effect": 10, "speed": 80,  "hue": 128, "sat": 180, "val": 28  },
+      "frame": { "effect": 1,  "speed": 92,  "hue": 128, "sat": 200, "val": 86  }
+    },
+    {
+      "slot": 1, "layerId": 1, "layerName": "WIN",
+      "key":   { "effect": 5,  "speed": 104, "hue": 176, "sat": 240, "val": 112 },
+      "gap":   { "effect": 7,  "speed": 104, "hue": 176, "sat": 220, "val": 42  },
+      "frame": { "effect": 6,  "speed": 106, "hue": 176, "sat": 220, "val": 90  }
+    },
+    {
+      "slot": 2, "layerId": 2, "layerName": "TXT",
+      "key":   { "effect": 5,  "speed": 96,  "hue": 90,  "sat": 230, "val": 112 },
+      "gap":   { "effect": 12, "speed": 96,  "hue": 90,  "sat": 220, "val": 48  },
+      "frame": { "effect": 17, "speed": 94,  "hue": 90,  "sat": 210, "val": 88  }
+    },
+    {
+      "slot": 3, "layerId": 3, "layerName": "MED",
+      "key":   { "effect": 5,  "speed": 112, "hue": 18,  "sat": 255, "val": 118 },
+      "gap":   { "effect": 4,  "speed": 108, "hue": 18,  "sat": 255, "val": 44  },
+      "frame": { "effect": 1,  "speed": 110, "hue": 18,  "sat": 255, "val": 92  }
+    },
+    {
+      "slot": 4, "layerId": 5, "layerName": "GAME",
+      "key":   { "effect": 5,  "speed": 112, "hue": 32,  "sat": 255, "val": 118 },
+      "gap":   { "effect": 7,  "speed": 108, "hue": 32,  "sat": 255, "val": 40  },
+      "frame": { "effect": 1,  "speed": 108, "hue": 32,  "sat": 255, "val": 90  }
+    },
+    {
+      "slot": 5, "layerId": 6, "layerName": "VSC",
+      "key":   { "effect": 5,  "speed": 98,  "hue": 166, "sat": 255, "val": 118 },
+      "gap":   { "effect": 15, "speed": 110, "hue": 166, "sat": 255, "val": 46  },
+      "frame": { "effect": 1,  "speed": 100, "hue": 166, "sat": 240, "val": 90  }
+    },
+    {
+      "slot": 6, "layerId": 7, "layerName": "RGB",
+      "key":   { "effect": 8,  "speed": 124, "hue": 210, "sat": 255, "val": 124 },
+      "gap":   { "effect": 2,  "speed": 130, "hue": 210, "sat": 255, "val": 56  },
+      "frame": { "effect": 8,  "speed": 130, "hue": 210, "sat": 255, "val": 104 }
+    },
+    {
+      "slot": 7, "layerId": 8, "layerName": "MOD",
+      "key":   { "effect": 5,  "speed": 94,  "hue": 14,  "sat": 255, "val": 124 },
+      "gap":   { "effect": 4,  "speed": 92,  "hue": 14,  "sat": 255, "val": 44  },
+      "frame": { "effect": 16, "speed": 92,  "hue": 14,  "sat": 240, "val": 92  }
+    },
+    {
+      "slot": 8, "layerId": 4, "layerName": "MED+",
+      "key":   { "effect": 5,  "speed": 108, "hue": 86,  "sat": 220, "val": 120 },
+      "gap":   { "effect": 3,  "speed": 108, "hue": 42,  "sat": 255, "val": 44  },
+      "frame": { "effect": 1,  "speed": 108, "hue": 210, "sat": 96,  "val": 90  }
+    }
+  ]
+}
