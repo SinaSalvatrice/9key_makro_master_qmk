@@ -6,102 +6,95 @@ import android.hardware.usb.UsbDeviceConnection
 import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
-import kotlin.random.Random
 
-private const val PROTOCOL_VERSION: Int = 1
-private const val STATUS_OK: Int = 0x00
+private const val VIA_PROTOCOL_VERSION: Int = 0x000C
+private const val VIA_ID_GET_PROTOCOL_VERSION: Int = 0x01
+private const val VIA_ID_GET_KEYBOARD_VALUE: Int = 0x02
+private const val VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE: Int = 0x04
+private const val VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE: Int = 0x05
+private const val VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT: Int = 0x11
+private const val VIA_ID_UNHANDLED: Int = 0xFF
 
-private const val CMD_PING: Int = 0x01
-private const val CMD_GET_INFO: Int = 0x02
-private const val CMD_GET_KEY: Int = 0x10
-private const val CMD_SET_KEY: Int = 0x11
-private const val CMD_SAVE_EEPROM: Int = 0x20
+private const val VIA_KEYBOARD_VALUE_FIRMWARE_VERSION: Int = 0x04
 
 class RawHidProtocolClient private constructor(
     private val transport: RawHidTransport,
     private val packetSize: Int
 ) {
-    private var nextRequestId: Int = 1
-
     fun ping(): Boolean {
-        val payload = ByteArray(packetSize)
-        val nonce = Random.nextInt()
-        payload[4] = (nonce and 0xFF).toByte()
-        payload[5] = ((nonce shr 8) and 0xFF).toByte()
-        payload[6] = ((nonce shr 16) and 0xFF).toByte()
-        payload[7] = ((nonce shr 24) and 0xFF).toByte()
-
-        val response = request(CMD_PING, payload) ?: return false
-        if (response[3].toUnsignedInt() != STATUS_OK) return false
-
-        val rNonce = response.readInt32(4)
-        val pong = String(response.copyOfRange(8, 12), Charsets.US_ASCII)
-        return rNonce == nonce && pong == "PONG"
+        val response = request(VIA_ID_GET_PROTOCOL_VERSION) ?: return false
+        return ((response[1].toUnsignedInt() shl 8) or response[2].toUnsignedInt()) == VIA_PROTOCOL_VERSION
     }
 
     fun getInfo(): KeyboardInfo? {
-        val response = request(CMD_GET_INFO, ByteArray(packetSize)) ?: return null
-        if (response[3].toUnsignedInt() != STATUS_OK) return null
+        val response = request(VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT) ?: return null
+        val firmwareVersion = getFirmwareVersion()
+        val keyboardId = if (firmwareVersion != null) {
+            String.format("VIA 0x%08X", firmwareVersion)
+        } else {
+            "VIA"
+        }
 
         return KeyboardInfo(
-            rows = response[4].toUnsignedInt(),
-            cols = response[5].toUnsignedInt(),
-            layers = response[6].toUnsignedInt(),
-            encoders = response[7].toUnsignedInt(),
-            packetSize = response[8].toUnsignedInt(),
-            keyboardId = response.copyOfRange(9, 25).toAsciiTrimmed()
+            rows = 0,
+            cols = 0,
+            layers = response[1].toUnsignedInt(),
+            encoders = 0,
+            packetSize = packetSize,
+            keyboardId = keyboardId
         )
     }
 
     fun getKey(layer: Int, row: Int, col: Int): Int? {
-        val payload = ByteArray(packetSize)
-        payload[4] = layer.toByte()
-        payload[5] = row.toByte()
-        payload[6] = col.toByte()
+        val response = request(
+            VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE,
+            byteArrayOf(layer.toByte(), row.toByte(), col.toByte())
+        ) ?: return null
 
-        val response = request(CMD_GET_KEY, payload) ?: return null
-        if (response[3].toUnsignedInt() != STATUS_OK) return null
-
-        return response.readUInt16(4)
+        return (response[4].toUnsignedInt() shl 8) or response[5].toUnsignedInt()
     }
 
     fun setKey(layer: Int, row: Int, col: Int, keycode: Int): Boolean {
-        val payload = ByteArray(packetSize)
-        payload[4] = layer.toByte()
-        payload[5] = row.toByte()
-        payload[6] = col.toByte()
-        payload[7] = (keycode and 0xFF).toByte()
-        payload[8] = ((keycode shr 8) and 0xFF).toByte()
-
-        val response = request(CMD_SET_KEY, payload) ?: return false
-        if (response[3].toUnsignedInt() != STATUS_OK) return false
-
-        return response[4].toUnsignedInt() == 1
+        return request(
+            VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE,
+            byteArrayOf(
+                layer.toByte(),
+                row.toByte(),
+                col.toByte(),
+                ((keycode shr 8) and 0xFF).toByte(),
+                (keycode and 0xFF).toByte()
+            )
+        ) != null
     }
 
     fun saveEeprom(): Boolean {
-        val response = request(CMD_SAVE_EEPROM, ByteArray(packetSize)) ?: return false
-        if (response[3].toUnsignedInt() != STATUS_OK) return false
-        return response[4].toUnsignedInt() == 1
+        return true
     }
 
     fun close() {
         transport.close()
     }
 
-    private fun request(command: Int, payload: ByteArray): ByteArray? {
-        if (payload.size != packetSize) {
+    private fun getFirmwareVersion(): Int? {
+        val response = request(
+            VIA_ID_GET_KEYBOARD_VALUE,
+            byteArrayOf(VIA_KEYBOARD_VALUE_FIRMWARE_VERSION.toByte())
+        ) ?: return null
+
+        return (response[2].toUnsignedInt() shl 24) or
+            (response[3].toUnsignedInt() shl 16) or
+            (response[4].toUnsignedInt() shl 8) or
+            response[5].toUnsignedInt()
+    }
+
+    private fun request(command: Int, payload: ByteArray = byteArrayOf()): ByteArray? {
+        if (payload.size > packetSize - 1) {
             return null
         }
 
-        val packet = payload.copyOf()
-        val requestId = nextRequestId and 0xFF
-        packet[0] = PROTOCOL_VERSION.toByte()
-        packet[1] = command.toByte()
-        packet[2] = requestId.toByte()
-        packet[3] = 0
-
-        nextRequestId = (nextRequestId + 1) and 0xFF
+        val packet = ByteArray(packetSize)
+        packet[0] = command.toByte()
+        System.arraycopy(payload, 0, packet, 1, payload.size)
 
         if (!transport.send(packet)) {
             return null
@@ -110,10 +103,11 @@ class RawHidProtocolClient private constructor(
         val response = transport.receive() ?: return null
         if (response.size != packetSize) return null
 
-        val responseCommand = response[1].toUnsignedInt()
-        val responseId = response[2].toUnsignedInt()
+        if (response[0].toUnsignedInt() == VIA_ID_UNHANDLED) {
+            return null
+        }
 
-        if (responseCommand != command || responseId != requestId) {
+        if (response[0].toUnsignedInt() != command) {
             return null
         }
 
@@ -225,21 +219,3 @@ private data class SelectedInterface(
 
 private fun Byte.toUnsignedInt(): Int = toInt() and 0xFF
 
-private fun ByteArray.readUInt16(offset: Int): Int {
-    val lo = this[offset].toUnsignedInt()
-    val hi = this[offset + 1].toUnsignedInt()
-    return lo or (hi shl 8)
-}
-
-private fun ByteArray.readInt32(offset: Int): Int {
-    val b0 = this[offset].toUnsignedInt()
-    val b1 = this[offset + 1].toUnsignedInt()
-    val b2 = this[offset + 2].toUnsignedInt()
-    val b3 = this[offset + 3].toUnsignedInt()
-    return b0 or (b1 shl 8) or (b2 shl 16) or (b3 shl 24)
-}
-
-private fun ByteArray.toAsciiTrimmed(): String {
-    val raw = String(this, Charsets.US_ASCII)
-    return raw.trim { it <= ' ' || it == '\u0000' }
-}

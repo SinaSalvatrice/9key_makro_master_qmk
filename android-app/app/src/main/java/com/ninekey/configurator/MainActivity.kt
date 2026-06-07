@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         setupLayerSpinner()
         setupButtons()
         registerUsbReceiver()
-        setStatus("Connect keyboard to start Raw HID session")
+        setStatus("Connect keyboard to start VIA session")
     }
 
     override fun onDestroy() {
@@ -208,7 +208,7 @@ class MainActivity : AppCompatActivity() {
         Thread {
             val client = RawHidProtocolClient.connect(usbManager, device, definition.packetSize)
             if (client == null) {
-                runOnUiThread { setStatus("Failed to open Raw HID interface") }
+                runOnUiThread { setStatus("Failed to open VIA Raw HID interface") }
                 return@Thread
             }
 
@@ -220,25 +220,25 @@ class MainActivity : AppCompatActivity() {
 
             runOnUiThread {
                 if (!pingOk) {
-                    setStatus("Connected but PING failed")
+                    setStatus("Connected but VIA handshake failed")
                     return@runOnUiThread
                 }
 
-                setStatus("Connected: PING OK")
+                setStatus("Connected: VIA OK")
                 if (info != null) {
                     binding.keyboardInfo.text = buildString {
                         append("Keyboard: ")
                         append(definition.displayName)
                         append("\n")
                         append("Matrix: ")
-                        append(info.rows)
+                        append(definition.rows)
                         append("x")
-                        append(info.cols)
+                        append(definition.cols)
                         append("\n")
                         append("Layers: ")
-                        append(info.layers)
+                        append(definition.layers)
                         append("\n")
-                        append("Transport: raw_hid")
+                        append("Transport: via/raw_hid")
                         append("\n")
                         append("ID: ")
                         append(info.keyboardId)

@@ -15,7 +15,7 @@ entry = spec_dir / "app.py"
 resources = spec_dir / "resources" / "keyboard-definition.json"
 
 # Destination inside dist folder: resources/keyboard-definition.json
-added_files = [(str(resources), str(Path("resources") / "keyboard-definition.json"))]
+added_files = [(str(resources), str(Path("resources")))]
 
 
 a = Analysis(

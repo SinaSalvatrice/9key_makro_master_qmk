@@ -65,9 +65,31 @@ class HidApiTransport(RawHidTransport):
         if not refs:
             return None
 
-        dev = hid.Device(path=refs[0].path)
-        dev.nonblocking = False
+        dev = cls._open_device(refs[0].path)
         return cls(dev, packet_size)
+
+    @staticmethod
+    def _open_device(path: bytes | str) -> Any:
+        device_ctor = getattr(hid, "Device", None)
+        if device_ctor is not None:
+            dev = device_ctor(path=path)
+            if hasattr(dev, "nonblocking"):
+                dev.nonblocking = False
+            elif hasattr(dev, "set_nonblocking"):
+                dev.set_nonblocking(0)
+            return dev
+
+        legacy_ctor = getattr(hid, "device", None)
+        if legacy_ctor is None:
+            raise RuntimeError("hid module exposes neither Device nor device")
+
+        dev = legacy_ctor()
+        dev.open_path(path)
+        if hasattr(dev, "set_nonblocking"):
+            dev.set_nonblocking(0)
+        elif hasattr(dev, "nonblocking"):
+            dev.nonblocking = False
+        return dev
 
     def send(self, packet: bytes) -> bool:
         if len(packet) != self._packet_size:
