@@ -20,6 +20,29 @@ def _resource_path(relative: str) -> Path:
     return Path(__file__).resolve().parents[1] / relative
 
 
+def _load_definition() -> KeyboardDefinition:
+    candidates: list[Path] = []
+
+    # Primary expected path in both dev and frozen one-folder layouts.
+    candidates.append(_resource_path("resources/keyboard-definition.json"))
+
+    # PyInstaller one-file extraction temp directory.
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(Path(meipass) / "resources" / "keyboard-definition.json")
+
+    # When the executable gets moved away from its dist folder, try nearby locations.
+    exe_dir = Path(sys.executable).resolve().parent if getattr(sys, "frozen", False) else None
+    if exe_dir is not None:
+        candidates.append(exe_dir / "keyboard-definition.json")
+
+    for p in candidates:
+        if p.exists():
+            return KeyboardDefinition.from_json_file(p)
+
+    return KeyboardDefinition.default()
+
+
 def _parse_keycode(text: str) -> int | None:
     t = text.strip()
     if not t:
@@ -62,7 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("9-Key Macro Master Configurator")
 
-        self._definition = KeyboardDefinition.from_json_file(_resource_path("resources/keyboard-definition.json"))
+        self._definition = _load_definition()
 
         self._transport: HidApiTransport | None = None
         self._client: RawHidProtocolClient | None = None

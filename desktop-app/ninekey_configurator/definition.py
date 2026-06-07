@@ -19,6 +19,22 @@ class KeyboardDefinition:
     vendor_id: int | None
     product_id: int | None
 
+    @classmethod
+    def default(cls) -> "KeyboardDefinition":
+        return cls(
+            keyboard="9key_makro_master",
+            display_name="9-Key Macro Master",
+            rows=3,
+            cols=3,
+            layers=4,
+            encoders=1,
+            transport="raw_hid",
+            packet_size=32,
+            firmware="qmk",
+            vendor_id=0xFEED,
+            product_id=0x9B01,
+        )
+
     @staticmethod
     def _parse_hex_or_int(value: object) -> int | None:
         if value is None:
