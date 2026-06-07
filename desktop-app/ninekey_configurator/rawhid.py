@@ -3,14 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
-PROTOCOL_VERSION = 1
-STATUS_OK = 0x00
+VIA_PROTOCOL_VERSION = 0x000C
+VIA_ID_GET_PROTOCOL_VERSION = 0x01
+VIA_ID_GET_KEYBOARD_VALUE = 0x02
+VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE = 0x04
+VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE = 0x05
+VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT = 0x11
+VIA_ID_UNHANDLED = 0xFF
 
-CMD_PING = 0x01
-CMD_GET_INFO = 0x02
-CMD_GET_KEY = 0x10
-CMD_SET_KEY = 0x11
-CMD_SAVE_EEPROM = 0x20
+VIA_KEYBOARD_VALUE_FIRMWARE_VERSION = 0x04
 
 
 class RawHidTransport:
@@ -63,86 +64,68 @@ class RawHidProtocolClient:
     def __init__(self, transport: RawHidTransport, packet_size: int):
         self._transport = transport
         self._packet_size = int(packet_size)
-        self._next_request_id = 1
 
     def close(self) -> None:
         self._transport.close()
 
     def ping(self) -> bool:
-        import random
-
-        payload = bytearray(self._packet_size)
-        nonce = random.randint(-2**31, 2**31 - 1)
-        payload[4:8] = int(nonce & 0xFFFFFFFF).to_bytes(4, "little", signed=False)
-
-        response = self._request(CMD_PING, payload)
-        if response is None or _u8(response[3]) != STATUS_OK:
-            return False
-
-        r_nonce = _read_i32_le(response, 4)
-        pong = _ascii_trimmed(response[8:12])
-
-        # Kotlin uses signed Int for nonce; compare on 32-bit wrap.
-        return (r_nonce & 0xFFFFFFFF) == (nonce & 0xFFFFFFFF) and pong == "PONG"
+        response = self._request(VIA_ID_GET_PROTOCOL_VERSION)
+        return response is not None
 
     def get_info(self) -> KeyboardInfo | None:
-        response = self._request(CMD_GET_INFO, bytearray(self._packet_size))
-        if response is None or _u8(response[3]) != STATUS_OK:
+        response = self._request(VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT)
+        if response is None:
             return None
 
+        firmware_version = self._get_firmware_version()
+        keyboard_id = f"VIA 0x{firmware_version:08X}" if firmware_version is not None else "VIA"
+
         return KeyboardInfo(
-            rows=_u8(response[4]),
-            cols=_u8(response[5]),
-            layers=_u8(response[6]),
-            encoders=_u8(response[7]),
-            packet_size=_u8(response[8]),
-            keyboard_id=_ascii_trimmed(response[9:25]),
+            rows=0,
+            cols=0,
+            layers=_u8(response[1]),
+            encoders=0,
+            packet_size=self._packet_size,
+            keyboard_id=keyboard_id,
         )
 
     def get_key(self, layer: int, row: int, col: int) -> int | None:
-        payload = bytearray(self._packet_size)
-        payload[4] = layer & 0xFF
-        payload[5] = row & 0xFF
-        payload[6] = col & 0xFF
-
-        response = self._request(CMD_GET_KEY, payload)
-        if response is None or _u8(response[3]) != STATUS_OK:
+        response = self._request(VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE, bytes([layer & 0xFF, row & 0xFF, col & 0xFF]))
+        if response is None or len(response) < 6:
             return None
 
-        return _read_u16_le(response, 4)
+        return (_u8(response[4]) << 8) | _u8(response[5])
 
     def set_key(self, layer: int, row: int, col: int, keycode: int) -> bool:
-        payload = bytearray(self._packet_size)
-        payload[4] = layer & 0xFF
-        payload[5] = row & 0xFF
-        payload[6] = col & 0xFF
-        payload[7] = keycode & 0xFF
-        payload[8] = (keycode >> 8) & 0xFF
-
-        response = self._request(CMD_SET_KEY, payload)
-        if response is None or _u8(response[3]) != STATUS_OK:
-            return False
-
-        return _u8(response[4]) == 1
+        response = self._request(
+            VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE,
+            bytes([
+                layer & 0xFF,
+                row & 0xFF,
+                col & 0xFF,
+                (keycode >> 8) & 0xFF,
+                keycode & 0xFF,
+            ]),
+        )
+        return response is not None
 
     def save_eeprom(self) -> bool:
-        response = self._request(CMD_SAVE_EEPROM, bytearray(self._packet_size))
-        if response is None or _u8(response[3]) != STATUS_OK:
-            return False
-        return _u8(response[4]) == 1
+        # VIA dynamic keymap writes are persisted by firmware; no separate save command is required.
+        return True
 
-    def _request(self, command: int, payload: bytearray) -> bytes | None:
-        if len(payload) != self._packet_size:
+    def _get_firmware_version(self) -> int | None:
+        response = self._request(VIA_ID_GET_KEYBOARD_VALUE, bytes([VIA_KEYBOARD_VALUE_FIRMWARE_VERSION]))
+        if response is None or len(response) < 6:
+            return None
+        return (_u8(response[2]) << 24) | (_u8(response[3]) << 16) | (_u8(response[4]) << 8) | _u8(response[5])
+
+    def _request(self, command: int, payload: bytes = b"") -> bytes | None:
+        if len(payload) > self._packet_size - 1:
             return None
 
-        packet = bytearray(payload)
-        request_id = self._next_request_id & 0xFF
-        packet[0] = PROTOCOL_VERSION
-        packet[1] = command & 0xFF
-        packet[2] = request_id
-        packet[3] = 0
-
-        self._next_request_id = (self._next_request_id + 1) & 0xFF
+        packet = bytearray(self._packet_size)
+        packet[0] = command & 0xFF
+        packet[1 : 1 + len(payload)] = payload
 
         if not self._transport.send(bytes(packet)):
             return None
@@ -151,7 +134,10 @@ class RawHidProtocolClient:
         if response is None or len(response) != self._packet_size:
             return None
 
-        if _u8(response[1]) != (command & 0xFF) or _u8(response[2]) != request_id:
+        if _u8(response[0]) == VIA_ID_UNHANDLED:
+            return None
+
+        if _u8(response[0]) != (command & 0xFF):
             return None
 
         return response

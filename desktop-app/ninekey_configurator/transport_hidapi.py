@@ -1,21 +1,29 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 import hid  # type: ignore
 
 from .rawhid import RawHidTransport
 
 
+QMK_RAW_USAGE_PAGE = 0xFF60
+QMK_RAW_USAGE = 0x61
+
+
 @dataclass(frozen=True)
 class HidDeviceRef:
-    path: bytes
+    path: bytes | str
     product_string: str | None = None
     manufacturer_string: str | None = None
+    interface_number: int | None = None
+    usage_page: int | None = None
+    usage: int | None = None
 
 
 class HidApiTransport(RawHidTransport):
-    def __init__(self, device: hid.device, packet_size: int):
+    def __init__(self, device: Any, packet_size: int):
         self._dev = device
         self._packet_size = int(packet_size)
 
@@ -29,15 +37,26 @@ class HidApiTransport(RawHidTransport):
         out: list[HidDeviceRef] = []
         for d in devices:
             path = d.get("path")
-            if not isinstance(path, (bytes, bytearray)):
+            if not isinstance(path, (bytes, bytearray, str)):
                 continue
             out.append(
                 HidDeviceRef(
-                    path=bytes(path),
+                    path=bytes(path) if isinstance(path, bytearray) else path,
                     product_string=d.get("product_string"),
                     manufacturer_string=d.get("manufacturer_string"),
+                    interface_number=d.get("interface_number"),
+                    usage_page=d.get("usage_page"),
+                    usage=d.get("usage"),
                 )
             )
+
+        def rank(ref: HidDeviceRef) -> tuple[int, int, int]:
+            is_qmk_raw = ref.usage_page == QMK_RAW_USAGE_PAGE and ref.usage == QMK_RAW_USAGE
+            is_vendor_defined = ref.usage_page is not None and 0xFF00 <= ref.usage_page <= 0xFFFF
+            interface_number = ref.interface_number if ref.interface_number is not None else 9999
+            return (0 if is_qmk_raw else 1 if is_vendor_defined else 2, interface_number, 0)
+
+        out.sort(key=rank)
         return out
 
     @classmethod
@@ -46,9 +65,8 @@ class HidApiTransport(RawHidTransport):
         if not refs:
             return None
 
-        dev = hid.device()
-        dev.open_path(refs[0].path)
-        dev.set_nonblocking(0)
+        dev = hid.Device(path=refs[0].path)
+        dev.nonblocking = False
         return cls(dev, packet_size)
 
     def send(self, packet: bytes) -> bool:

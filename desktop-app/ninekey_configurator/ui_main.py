@@ -230,15 +230,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     "\n".join(
                         [
                             f"Keyboard: {self._definition.display_name}",
-                            f"Matrix: {info.rows}x{info.cols}",
-                            f"Layers: {info.layers}",
-                            "Transport: raw_hid",
+                            f"Matrix: {self._definition.rows}x{self._definition.cols}",
+                            f"Layers: {self._definition.layers}",
+                            "Transport: via/raw_hid",
                             f"ID: {info.keyboard_id}",
                         ]
                     )
                 )
 
-            self._set_status("Connected: PING OK")
+            self._set_status("Connected: VIA OK")
             self._load_layer(self._current_layer)
 
         def on_err(exc):
