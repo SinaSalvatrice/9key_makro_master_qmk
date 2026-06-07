@@ -31,7 +31,7 @@ jobs:
 
       - name: Build portable app (PyInstaller)
         run: |
-          pyinstaller desktop-app/pyinstaller-windows.spec
+          pyinstaller -y desktop-app/pyinstaller-windows.spec
 
       - name: Zip portable folder
         shell: pwsh
