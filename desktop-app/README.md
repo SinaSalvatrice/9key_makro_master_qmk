@@ -2,7 +2,7 @@
 
 This is a minimal desktop counterpart to the Android configurator.
 
-It speaks the same Raw HID protocol (`PING`, `GET_INFO`, `GET_KEY`, `SET_KEY`, `SAVE_EEPROM`) and uses the same keyboard definition JSON.
+It speaks QMK VIA over Raw HID for dynamic keymap access and uses the same keyboard definition JSON.
 
 ## Run (dev)
 

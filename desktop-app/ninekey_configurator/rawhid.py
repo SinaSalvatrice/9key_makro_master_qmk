@@ -68,7 +68,7 @@ class RawHidProtocolClient:
     def close(self) -> None:
         self._transport.close()
 
-    def ping(self) -> bool:
+    def handshake(self) -> bool:
         response = self._request(VIA_ID_GET_PROTOCOL_VERSION)
         return response is not None
 

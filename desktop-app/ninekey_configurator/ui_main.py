@@ -205,11 +205,11 @@ class MainWindow(QtWidgets.QMainWindow):
             if transport is None:
                 return (False, "No compatible HID device found")
             client = RawHidProtocolClient(transport, self._definition.packet_size)
-            ping_ok = client.ping()
+            handshake_ok = client.handshake()
             info = client.get_info()
-            if not ping_ok:
+            if not handshake_ok:
                 client.close()
-                return (False, "Connected but PING failed")
+                return (False, "Connected but VIA handshake failed")
             return (True, transport, client, info)
 
         def on_ok(res):

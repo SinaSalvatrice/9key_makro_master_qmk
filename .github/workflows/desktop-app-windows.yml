@@ -25,9 +25,22 @@ jobs:
           python-version: "3.12"
 
       - name: Install dependencies
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install -r desktop-app/requirements.txt
+          python -m pip uninstall -y hid || true
+          python -m pip install --upgrade --force-reinstall -r desktop-app/requirements.txt
+
+      - name: Verify HID backend
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hid
+
+          print(hid.__file__)
+          if not (hasattr(hid, "Device") or hasattr(hid, "device")):
+              raise SystemExit("hid module does not expose a supported API")
+          PY
 
       - name: Build portable app (PyInstaller)
         run: |
