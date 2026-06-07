@@ -1,3 +1,3 @@
 PySide6>=6.7,<7
-hid>=1.0.6
+hidapi
 pyinstaller>=6.0

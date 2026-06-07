@@ -3,7 +3,6 @@
 #   pyinstaller desktop-app/pyinstaller-windows.spec
 
 from pathlib import Path
-from PyInstaller.utils.hooks import collect_dynamic_libs
 
 block_cipher = None
 
@@ -22,7 +21,7 @@ added_files = [(str(resources), str(Path("resources") / "keyboard-definition.jso
 a = Analysis(
     [str(entry)],
     pathex=[str(spec_dir)],
-    binaries=collect_dynamic_libs('hid'),
+    binaries=[],
     datas=added_files,
     hiddenimports=[],
     hookspath=[],
