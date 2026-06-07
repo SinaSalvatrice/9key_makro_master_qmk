@@ -38,7 +38,11 @@ def _load_definition() -> KeyboardDefinition:
 
     for p in candidates:
         if p.exists():
-            return KeyboardDefinition.from_json_file(p)
+            try:
+                return KeyboardDefinition.from_json_file(p)
+            except (OSError, ValueError):
+                # Skip unreadable/invalid files and continue fallback chain.
+                continue
 
     return KeyboardDefinition.default()
 
