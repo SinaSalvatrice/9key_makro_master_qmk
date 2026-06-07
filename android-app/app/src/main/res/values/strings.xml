@@ -3,4 +3,7 @@
     <string name="status_template">Status: %1$s</string>
     <string name="key_button_template">K%1$d%2$d\n0x%3$04X</string>
     <string name="key_button_unused">K%1$d%2$d\nN/A</string>
+    <string name="nav_led_settings">LED</string>
+    <string name="nav_oled_preview">OLED</string>
+    <string name="nav_import_export">JSON</string>
 </resources>
