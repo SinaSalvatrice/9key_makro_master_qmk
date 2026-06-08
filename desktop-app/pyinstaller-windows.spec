@@ -13,9 +13,16 @@ spec_dir = Path(globals().get("SPECPATH", ".")).resolve()
 entry = spec_dir / "app.py"
 
 resources = spec_dir / "resources" / "keyboard-definition.json"
+shared_dir = spec_dir.parent / "shared"
 
 # Destination inside dist folder: resources/keyboard-definition.json
-added_files = [(str(resources), str(Path("resources")))]
+added_files = [
+    (str(resources), str(Path("resources"))),
+    (str(shared_dir / "default-profile.json"), str(Path("resources"))),
+    (str(shared_dir / "keycode-catalog.json"), str(Path("resources"))),
+    (str(shared_dir / "layer-definitions.json"), str(Path("resources"))),
+    (str(shared_dir / "led-presets.json"), str(Path("resources"))),
+]
 
 
 a = Analysis(
