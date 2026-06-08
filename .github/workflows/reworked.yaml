@@ -13,6 +13,8 @@ on:
       - "9key_makro_master.h"
       - "rules.mk"
       - "keymaps/**"
+      - "protocol/**"
+      - "shared/**"
       - ".github/workflows/reworked.yaml"
   pull_request:
 

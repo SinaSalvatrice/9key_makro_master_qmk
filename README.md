@@ -8,6 +8,26 @@ This firmware is built around one idea: **nine keys, many contexts, no chaos**.
 
 ---
 
+## Repository Structure (Firmware + Future Configurator)
+
+This repository now includes a forward-looking layout for a **keyboard-specific Android configurator** alongside the existing QMK firmware.
+
+- Existing QMK firmware source remains intact.
+- No full VIA reimplementation is introduced here.
+- The Android configurator is intentionally not implemented yet; only structure and docs are added.
+
+Top-level addition overview:
+
+- `firmware/` for firmware-side integration notes and bridge planning.
+- `android-app/` reserved for the future custom Android app.
+- `shared/` for common definitions used by firmware/protocol/app.
+- `protocol/` for custom Raw HID protocol documentation.
+- `docs/` for roadmap and development constraints.
+
+The shared definition currently lives in `shared/keyboard-definition.json` and establishes a fixed 3x3, 4-layer, 1-encoder baseline for the 9-Key Macro Master using Raw HID transport.
+
+---
+
 ## Highlights
 
 - 3×3 macro pad layout
