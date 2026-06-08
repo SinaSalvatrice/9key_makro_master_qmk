@@ -119,9 +119,6 @@ class KeycodeCatalog private constructor(
     /** Returns all categories for the keycode picker UI. */
     fun getCategories(): List<KeycodeCategory> = categories
 
-    /** Returns all layer infos. */
-    fun getLayers(): List<LayerInfo> = layers
-
     /** Returns all visible layers. */
     fun getVisibleLayers(): List<LayerInfo> = layers.filter { it.visible }
 
