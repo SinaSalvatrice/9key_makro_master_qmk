@@ -13,10 +13,17 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.EditText
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.ninekey.configurator.databinding.ActivityMainBinding
+import com.ninekey.configurator.model.AppProfile
+import com.ninekey.configurator.model.KeyAssignment
+import com.ninekey.configurator.model.KeycodeCatalog
+import com.ninekey.configurator.model.LayerInfo
+import com.ninekey.configurator.model.ProfileRepository
+import com.ninekey.configurator.ui.ImportExportActivity
+import com.ninekey.configurator.ui.KeyEditorSheet
+import com.ninekey.configurator.ui.LedSettingsActivity
+import com.ninekey.configurator.ui.OledPreviewActivity
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
@@ -27,6 +34,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var usbManager: UsbManager
     private lateinit var definition: KeyboardDefinition
     private lateinit var keyButtons: List<Button>
+
+    private lateinit var catalog: KeycodeCatalog
+    private lateinit var repo: ProfileRepository
+    private lateinit var viaLayers: List<LayerInfo>
+    private var activeProfile: AppProfile = AppProfile()
 
     private var protocolClient: RawHidProtocolClient? = null
     private var connectedDevice: UsbDevice? = null
@@ -82,6 +94,11 @@ class MainActivity : AppCompatActivity() {
             Array(definition.rows.coerceAtLeast(1)) { IntArray(definition.cols.coerceAtLeast(1)) }
         }
 
+        catalog = KeycodeCatalog.load(this)
+        repo = ProfileRepository(this)
+        activeProfile = repo.loadProfile()
+        viaLayers = catalog.layers.filter { it.viaSlot >= 0 }.sortedBy { it.viaSlot }
+
         keyButtons = listOf(
             binding.key00,
             binding.key01,
@@ -101,6 +118,13 @@ class MainActivity : AppCompatActivity() {
         setStatus("Connect keyboard to start VIA session")
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Re-render with potentially updated profile (e.g. after returning from OLED/LED editor)
+        activeProfile = repo.loadProfile()
+        renderLayer(currentLayer)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         closeConnection()
@@ -115,6 +139,18 @@ class MainActivity : AppCompatActivity() {
         binding.refreshButton.setOnClickListener { loadLayer(currentLayer) }
         binding.saveButton.setOnClickListener { saveToEeprom() }
 
+        binding.ledSettingsButton.setOnClickListener {
+            val firmwareId = viaLayers.getOrNull(currentLayer)?.id ?: currentLayer
+            LedSettingsActivity.start(this, firmwareId)
+        }
+        binding.oledPreviewButton.setOnClickListener {
+            val firmwareId = viaLayers.getOrNull(currentLayer)?.id ?: currentLayer
+            OledPreviewActivity.start(this, firmwareId)
+        }
+        binding.importExportButton.setOnClickListener {
+            ImportExportActivity.start(this)
+        }
+
         for (row in 0 until 3) {
             for (col in 0 until 3) {
                 val index = row * 3 + col
@@ -126,8 +162,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupLayerSpinner() {
-        val layers = (0 until definition.layers.coerceAtLeast(1)).map { "Layer $it" }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, layers)
+        val layerNames = if (viaLayers.isNotEmpty()) {
+            viaLayers.map { "${it.displayName} [${it.shortLabel}]" }
+        } else {
+            (0 until definition.layers.coerceAtLeast(1)).map { "Layer $it" }
+        }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, layerNames)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.layerSpinner.adapter = adapter
         binding.layerSpinner.setSelection(0)
@@ -271,6 +311,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             runOnUiThread {
+                if (ok) {
+                    // Merge device keycodes into local profile, preserving custom labels
+                    val rawKeycodes = IntArray(9) { i -> keycodes[layer][i / 3][i % 3] }
+                    val layerInfo = viaLayers.getOrNull(layer)
+                    if (layerInfo != null) {
+                        activeProfile = repo.mergeDeviceKeycodes(activeProfile, layerInfo.id, rawKeycodes, catalog)
+                        repo.saveProfile(activeProfile)
+                    }
+                }
                 renderLayer(layer)
                 setStatus(if (ok) "Layer $layer loaded" else "Layer $layer loaded with errors")
             }
@@ -278,12 +327,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderLayer(layer: Int) {
+        val layerInfo = viaLayers.getOrNull(layer)
+        val firmwareId = layerInfo?.id ?: layer
+        val layerProfile = activeProfile.layers.firstOrNull { it.id == firmwareId }
+
         for (row in 0 until 3) {
             for (col in 0 until 3) {
                 val button = keyButtons[row * 3 + col]
                 if (row < definition.rows && col < definition.cols && layer < keycodes.size) {
                     val keycode = keycodes[layer][row][col]
-                    button.text = getString(R.string.key_button_template, row, col, keycode)
+                    val keyIndex = row * 3 + col
+                    val assignment = layerProfile?.keys?.getOrNull(keyIndex)
+                    val displayText = when {
+                        assignment != null && assignment.label.isNotBlank() && assignment.label != "---" ->
+                            assignment.label
+                        keycode != 0 -> catalog.displayLabel(keycode)
+                        else -> {
+                            val legend = layerInfo?.keyLegends?.getOrNull(keyIndex)
+                            legend?.takeIf { it.isNotBlank() } ?: "---"
+                        }
+                    }
+                    button.text = displayText
                     button.isEnabled = true
                 } else {
                     button.text = getString(R.string.key_button_unused, row, col)
@@ -294,29 +358,33 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showKeyEditDialog(row: Int, col: Int) {
-        if (protocolClient == null) {
-            setStatus("Connect keyboard first")
-            return
-        }
+        val keyIndex = row * 3 + col
+        val layerInfo = viaLayers.getOrNull(currentLayer)
+        val firmwareId = layerInfo?.id ?: currentLayer
+        val layerProfile = activeProfile.layers.firstOrNull { it.id == firmwareId }
+        val currentAssignment = layerProfile?.keys?.getOrNull(keyIndex)
+            ?: KeyAssignment(
+                code = if (currentLayer < keycodes.size) keycodes[currentLayer][row][col] else 0,
+                label = catalog.displayLabel(if (currentLayer < keycodes.size) keycodes[currentLayer][row][col] else 0)
+            )
 
-        val input = EditText(this)
-        input.setSingleLine()
-        input.hint = "0x0000"
-        input.setText(String.format("0x%04X", keycodes[currentLayer][row][col]))
+        val sheet = KeyEditorSheet.newInstance(
+            layerId = firmwareId,
+            keyIndex = keyIndex,
+            current = currentAssignment,
+            catalog = catalog
+        ) { assignment ->
+            // Update local profile
+            activeProfile = repo.updateKey(activeProfile, firmwareId, keyIndex, assignment)
+            repo.saveProfile(activeProfile)
+            renderLayer(currentLayer)
 
-        AlertDialog.Builder(this)
-            .setTitle("Set key L$currentLayer R$row C$col")
-            .setView(input)
-            .setPositiveButton("Apply") { _, _ ->
-                val parsed = parseKeycode(input.text.toString())
-                if (parsed == null) {
-                    setStatus("Invalid keycode format")
-                    return@setPositiveButton
-                }
-                applyKeycode(currentLayer, row, col, parsed)
+            // Push to device if connected
+            if (protocolClient != null) {
+                applyKeycode(currentLayer, row, col, assignment.code)
             }
-            .setNegativeButton("Cancel", null)
-            .show()
+        }
+        sheet.show(supportFragmentManager, "key_editor")
     }
 
     private fun applyKeycode(layer: Int, row: Int, col: Int, keycode: Int) {
@@ -366,17 +434,6 @@ class MainActivity : AppCompatActivity() {
             append("Transport: ")
             append(definition.transport)
         }
-    }
-
-    private fun parseKeycode(text: String): Int? {
-        val normalized = text.trim()
-        if (normalized.isEmpty()) return null
-        val value = if (normalized.startsWith("0x", ignoreCase = true)) {
-            normalized.substring(2).toIntOrNull(16)
-        } else {
-            normalized.toIntOrNull()
-        }
-        return value?.takeIf { it in 0..0xFFFF }
     }
 
     private fun closeConnection() {

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <!-- ═══════ KEY LEDs ═══════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:id="@+id/ledKeyLabel"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:text="Key LEDs" android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+                    <View android:id="@+id/ledKeyPreview" android:layout_width="48dp" android:layout_height="28dp" android:background="#888" />
+                </LinearLayout>
+
+                <Spinner android:id="@+id/ledKeyEffect" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Hue" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledKeyHue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledKeyHueVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="128" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Sat" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledKeySat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledKeySatVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="200" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Bright" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledKeyVal" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledKeyValVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="100" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Speed" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledKeySpeed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledKeySpeedVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="88" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ═══════ GAP LEDs ═══════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:id="@+id/ledGapLabel"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:text="Gap LEDs" android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+                    <View android:id="@+id/ledGapPreview" android:layout_width="48dp" android:layout_height="28dp" android:background="#888" />
+                </LinearLayout>
+
+                <Spinner android:id="@+id/ledGapEffect" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Hue" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledGapHue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledGapHueVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="128" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Sat" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledGapSat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledGapSatVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="180" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Bright" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledGapVal" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledGapValVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="28" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Speed" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledGapSpeed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledGapSpeedVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="80" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ═══════ FRAME LEDs ═══════ -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="12dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:id="@+id/ledFrameLabel"
+                        android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                        android:text="Frame LEDs" android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+                    <View android:id="@+id/ledFramePreview" android:layout_width="48dp" android:layout_height="28dp" android:background="#888" />
+                </LinearLayout>
+
+                <Spinner android:id="@+id/ledFrameEffect" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginTop="4dp">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Hue" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledFrameHue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledFrameHueVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="128" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Sat" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledFrameSat" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledFrameSatVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="200" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Bright" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledFrameVal" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledFrameValVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="86" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <TextView android:layout_width="48dp" android:layout_height="wrap_content" android:text="Speed" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                    <SeekBar android:id="@+id/ledFrameSpeed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:max="255" />
+                    <TextView android:id="@+id/ledFrameSpeedVal" android:layout_width="36dp" android:layout_height="wrap_content" android:text="92" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Save / Reset buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/ledResetButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Reset to Defaults"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/ledSaveButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Save Settings" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

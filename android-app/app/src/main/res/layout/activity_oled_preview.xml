@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- OLED ASCII preview -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="12dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="OLED Preview"
+                    android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1" />
+                <TextView
+                    android:id="@+id/oledPreviewText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:fontFamily="monospace"
+                    android:textSize="14sp"
+                    android:text="Loading…" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 0 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 1" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc0" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 1 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 2" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc1" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 2 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 3" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc2" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 3 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 4" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc3" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 4 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 5" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc4" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 5 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 6" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc5" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 6 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel6" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 7" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput6" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc6" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 7 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel7" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 8" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput7" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc7" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Key 8 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:padding="10dp">
+                <TextView android:id="@+id/oledKeyLabel8" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="Key 9" android:textAppearance="@style/TextAppearance.MaterialComponents.Caption" />
+                <EditText android:id="@+id/oledInput8" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="OLED label (5 chars)" android:maxLength="5" android:inputType="text|textNoSuggestions" />
+                <EditText android:id="@+id/oledDesc8" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="Description" android:inputType="text|textCapSentences" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Save / Reset -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/oledResetButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:text="Reset to Firmware"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/oledSaveButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Save Labels" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
