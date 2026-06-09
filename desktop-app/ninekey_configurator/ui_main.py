@@ -7,8 +7,11 @@ import sys
 from PySide6 import QtCore, QtWidgets
 
 from .definition import KeyboardDefinition
-from .rawhid import RawHidProtocolClient
+from .rawhid import RawHidProtocolClient, VIA_CUSTOM_CHANNEL_ID
 from .transport_hidapi import HidApiTransport
+
+
+VIA_ID_VIA_OLED_VIEW = 0x01
 
 
 def _resource_path(relative: str) -> Path:
@@ -140,6 +143,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_btn.clicked.connect(self._save_clicked)
         row2.addWidget(self.save_btn)
 
+        self.oled_btn = QtWidgets.QPushButton("OLED View")
+        self.oled_btn.clicked.connect(self._oled_clicked)
+        row2.addWidget(self.oled_btn)
+
         self.grid = QtWidgets.QGridLayout()
         layout.addLayout(self.grid)
 
@@ -258,6 +265,69 @@ class MainWindow(QtWidgets.QMainWindow):
     def _refresh_clicked(self) -> None:
         self._load_layer(self._current_layer)
 
+    def _oled_clicked(self) -> None:
+        client = self._client
+        if client is None:
+            self._set_status("Not connected")
+            return
+
+        options = ["Keys", "Tap Dance", "RGB Help", "System Help"]
+        current = 0
+        current_data = client.custom_get_value(VIA_CUSTOM_CHANNEL_ID, VIA_ID_VIA_OLED_VIEW)
+        if current_data is not None and len(current_data) > 0:
+            current = int(current_data[0])
+            if current < 0 or current >= len(options):
+                current = 0
+
+        selection, ok = QtWidgets.QInputDialog.getItem(
+            self,
+            "OLED View",
+            "Default legend page:",
+            options,
+            current,
+            False,
+        )
+        if not ok:
+            return
+
+        selected_index = options.index(selection)
+        self._set_status("Applying OLED view...")
+
+        class Ok(QtCore.QObject):
+            sig = QtCore.Signal(object)
+
+        class Err(QtCore.QObject):
+            sig = QtCore.Signal(object)
+
+        ok_sig = Ok()
+        err_sig = Err()
+
+        def work():
+            payload = bytes([selected_index & 0xFF])
+            if not client.custom_set_value(VIA_CUSTOM_CHANNEL_ID, VIA_ID_VIA_OLED_VIEW, payload):
+                raise RuntimeError("OLED set failed")
+
+            verify = client.custom_get_value(VIA_CUSTOM_CHANNEL_ID, VIA_ID_VIA_OLED_VIEW)
+            if verify is None or len(verify) < 1:
+                raise RuntimeError("OLED verify failed")
+            if int(verify[0]) != selected_index:
+                raise RuntimeError(f"OLED verify mismatch: expected {selected_index}, got {int(verify[0])}")
+
+            if not client.custom_save(VIA_CUSTOM_CHANNEL_ID):
+                raise RuntimeError("OLED save failed")
+
+            return options[selected_index]
+
+        def on_ok(label):
+            self._set_status(f"OLED applied: {label}")
+
+        def on_err(exc):
+            self._set_status(f"OLED apply failed: {exc}")
+
+        ok_sig.sig.connect(on_ok)
+        err_sig.sig.connect(on_err)
+        self._pool.start(_Worker(work, ok_sig.sig, err_sig.sig))
+
     def _save_clicked(self) -> None:
         client = self._client
         if client is None:
@@ -337,6 +407,25 @@ class MainWindow(QtWidgets.QMainWindow):
             for c in range(cols):
                 v = self._keycodes[layer][r][c]
                 self.key_buttons[r][c].setText(f"0x{v:04X}")
+
+    def _layer_profile(self, layer_id: int):
+        """Compatibility helper for profile-apply flows.
+
+        Some builds call this during apply operations. Return a matching
+        profile-layer object when available, otherwise None instead of raising.
+        """
+        profile = getattr(self, "_profile", None)
+        if profile is None:
+            return None
+
+        layers = getattr(profile, "layers", None)
+        if not isinstance(layers, list):
+            return None
+
+        for layer in layers:
+            if getattr(layer, "id", None) == layer_id:
+                return layer
+        return None
 
     def _edit_key(self, row: int, col: int) -> None:
         client = self._client

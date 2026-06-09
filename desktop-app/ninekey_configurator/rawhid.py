@@ -8,10 +8,14 @@ VIA_ID_GET_PROTOCOL_VERSION = 0x01
 VIA_ID_GET_KEYBOARD_VALUE = 0x02
 VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE = 0x04
 VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE = 0x05
+VIA_ID_CUSTOM_SET_VALUE = 0x07
+VIA_ID_CUSTOM_GET_VALUE = 0x08
+VIA_ID_CUSTOM_SAVE = 0x09
 VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT = 0x11
 VIA_ID_UNHANDLED = 0xFF
 
 VIA_KEYBOARD_VALUE_FIRMWARE_VERSION = 0x04
+VIA_CUSTOM_CHANNEL_ID = 0x01
 
 
 class RawHidTransport:
@@ -109,6 +113,20 @@ class RawHidProtocolClient:
         )
         return response is not None
 
+    def custom_set_value(self, channel_id: int, value_id: int, value_data: bytes = b"") -> bool:
+        response = self._custom_request(VIA_ID_CUSTOM_SET_VALUE, channel_id, value_id, value_data)
+        return response is not None
+
+    def custom_get_value(self, channel_id: int, value_id: int, value_data: bytes = b"") -> bytes | None:
+        response = self._custom_request(VIA_ID_CUSTOM_GET_VALUE, channel_id, value_id, value_data)
+        if response is None:
+            return None
+        return response[3:]
+
+    def custom_save(self, channel_id: int) -> bool:
+        response = self._custom_request(VIA_ID_CUSTOM_SAVE, channel_id, 0x00, b"")
+        return response is not None
+
     def save_eeprom(self) -> bool:
         # VIA dynamic keymap writes are persisted by firmware; no separate save command is required.
         return True
@@ -141,3 +159,10 @@ class RawHidProtocolClient:
             return None
 
         return response
+
+    def _custom_request(self, command: int, channel_id: int, value_id: int, value_data: bytes = b"") -> bytes | None:
+        if len(value_data) > self._packet_size - 3:
+            return None
+
+        payload = bytes([channel_id & 0xFF, value_id & 0xFF]) + value_data
+        return self._request(command, payload)
