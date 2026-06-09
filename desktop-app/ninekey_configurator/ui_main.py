@@ -61,20 +61,23 @@ def _parse_keycode(text: str) -> int | None:
 
 
 class _Worker(QtCore.QRunnable):
-    def __init__(self, fn, on_ok, on_err):
+    class Signals(QtCore.QObject):
+        ok = QtCore.Signal(object)
+        err = QtCore.Signal(object)
+
+    def __init__(self, fn):
         super().__init__()
         self.fn = fn
-        self.on_ok = on_ok
-        self.on_err = on_err
+        self.signals = _Worker.Signals()
 
     @QtCore.Slot()
     def run(self):
         try:
             res = self.fn()
         except Exception as e:  # noqa: BLE001
-            QtCore.QMetaObject.invokeMethod(self.on_err, "emit", QtCore.Qt.QueuedConnection, QtCore.Q_ARG(object, e))
+            self.signals.err.emit(e)
             return
-        QtCore.QMetaObject.invokeMethod(self.on_ok, "emit", QtCore.Qt.QueuedConnection, QtCore.Q_ARG(object, res))
+        self.signals.ok.emit(res)
 
 
 class KeyEditorDialog(QtWidgets.QDialog):
@@ -459,6 +462,7 @@ class MainWindow(QtWidgets.QMainWindow):
         ]
 
         self._pool = QtCore.QThreadPool.globalInstance()
+        self._active_workers: set[_Worker] = set()
 
         central = QtWidgets.QWidget()
         self.setCentralWidget(central)
@@ -520,6 +524,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self._update_layer_combo()
         self._update_keyboard_info_text()
         self._render_layer(0)
+
+    def _start_worker(self, work_fn, on_ok, on_err) -> None:
+        worker = _Worker(work_fn)
+        self._active_workers.add(worker)
+
+        def done_ok(res):
+            self._active_workers.discard(worker)
+            on_ok(res)
+
+        def done_err(exc):
+            self._active_workers.discard(worker)
+            on_err(exc)
+
+        worker.signals.ok.connect(done_ok)
+        worker.signals.err.connect(done_err)
+        self._pool.start(worker)
 
     def closeEvent(self, event):  # noqa: N802
         self._close_connection()
@@ -587,15 +607,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self._close_connection()
         self._set_status("Connecting...")
 
-        class Ok(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        class Err(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        ok = Ok()
-        err = Err()
-
         def work():
             refs = HidApiTransport.enumerate(self._definition.vendor_id, self._definition.product_id)
             if not refs:
@@ -649,9 +660,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def on_err(exc):
             self._set_status(f"Error: {exc}")
 
-        ok.sig.connect(on_ok)
-        err.sig.connect(on_err)
-        self._pool.start(_Worker(work, ok.sig, err.sig))
+        self._start_worker(work, on_ok, on_err)
 
     def _layer_changed(self, index: int) -> None:
         if index < 0:
@@ -671,15 +680,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._set_status("Saving EEPROM...")
 
-        class Ok(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        class Err(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        ok = Ok()
-        err = Err()
-
         def work():
             return client.save_eeprom()
 
@@ -689,9 +689,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def on_err(exc):
             self._set_status(f"Error: {exc}")
 
-        ok.sig.connect(on_ok)
-        err.sig.connect(on_err)
-        self._pool.start(_Worker(work, ok.sig, err.sig))
+        self._start_worker(work, on_ok, on_err)
 
     def _load_layer(self, layer: int) -> None:
         client = self._client
@@ -701,15 +699,6 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         self._set_status(f"Loading layer {layer}...")
-
-        class Ok(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        class Err(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        ok = Ok()
-        err = Err()
 
         def work():
             rows = self._definition.rows
@@ -735,9 +724,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def on_err(exc):
             self._set_status(f"Error: {exc}")
 
-        ok.sig.connect(on_ok)
-        err.sig.connect(on_err)
-        self._pool.start(_Worker(work, ok.sig, err.sig))
+        self._start_worker(work, on_ok, on_err)
 
     def _render_layer(self, layer: int) -> None:
         info = self._current_layer_info()
@@ -795,15 +782,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._set_status("Setting key...")
 
-        class Ok(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        class Err(QtCore.QObject):
-            sig = QtCore.Signal(object)
-
-        ok_sig = Ok()
-        err_sig = Err()
-
         def work():
             return client.set_key(layer, row, col, keycode)
 
@@ -818,9 +796,7 @@ class MainWindow(QtWidgets.QMainWindow):
         def on_err(exc):
             self._set_status(f"Error: {exc}")
 
-        ok_sig.sig.connect(on_ok)
-        err_sig.sig.connect(on_err)
-        self._pool.start(_Worker(work, ok_sig.sig, err_sig.sig))
+        self._start_worker(work, on_ok, on_err)
 
     def _import_export_clicked(self) -> None:
         dlg = ImportExportDialog(self, self._repo, self._profile)
