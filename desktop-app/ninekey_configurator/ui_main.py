@@ -492,6 +492,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.save_btn = QtWidgets.QPushButton("Save EEPROM")
         self.save_btn.clicked.connect(self._save_clicked)
         row2.addWidget(self.save_btn)
+        self.apply_profile_btn = QtWidgets.QPushButton("Apply Profile To Keyboard")
+        self.apply_profile_btn.clicked.connect(self._apply_profile_clicked)
+        row2.addWidget(self.apply_profile_btn)
 
         row3 = QtWidgets.QHBoxLayout()
         layout.addLayout(row3)
@@ -802,8 +805,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def _import_export_clicked(self) -> None:
         dlg = ImportExportDialog(self, self._repo, self._profile)
         dlg.exec()
+        previous = self._profile
         self._profile = dlg.profile()
         self._render_layer(self._current_layer)
+        if self._client is not None and self._profile is not previous:
+            self._apply_profile_clicked()
 
     def _oled_clicked(self) -> None:
         firmware_layer = self._current_firmware_layer_id()
@@ -841,5 +847,43 @@ class MainWindow(QtWidgets.QMainWindow):
         except Exception as exc:  # noqa: BLE001
             self._set_status(f"LED settings error: {exc}")
             QtWidgets.QMessageBox.critical(self, "LED Settings", f"Failed to open LED settings: {exc}")
+
+    def _apply_profile_clicked(self) -> None:
+        client = self._client
+        if client is None:
+            self._set_status("Not connected")
+            return
+
+        self._set_status("Applying profile to keyboard...")
+
+        def work():
+            writes = 0
+            for via_slot, layer in enumerate(self._via_layers):
+                assignments = self._layer_assignments(layer.id)
+                for r in range(self._definition.rows):
+                    for c in range(self._definition.cols):
+                        idx = r * self._definition.cols + c
+                        code = assignments[idx].code if idx < len(assignments) else 0
+                        ok = client.set_key(via_slot, r, c, code)
+                        if not ok:
+                            raise RuntimeError(f"SET_KEY failed at via_slot={via_slot} r={r} c={c}")
+                        reads = client.get_key(via_slot, r, c)
+                        if reads is None:
+                            raise RuntimeError(f"GET_KEY verify failed at via_slot={via_slot} r={r} c={c}")
+                        if reads != code:
+                            raise RuntimeError(
+                                f"Verify mismatch at via_slot={via_slot} r={r} c={c}: expected 0x{code:04X}, got 0x{reads:04X}"
+                            )
+                        writes += 1
+            return writes
+
+        def on_ok(count):
+            self._load_layer(self._current_layer)
+            self._set_status(f"Applied {count} key assignments")
+
+        def on_err(exc):
+            self._set_status(f"Apply failed: {exc}")
+
+        self._start_worker(work, on_ok, on_err)
 
 
