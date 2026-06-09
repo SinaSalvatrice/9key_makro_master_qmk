@@ -62,10 +62,20 @@ class HidApiTransport(RawHidTransport):
     @classmethod
     def open_first(cls, vid: int | None, pid: int | None, packet_size: int) -> "HidApiTransport | None":
         refs = cls.enumerate(vid, pid)
-        if not refs:
-            return None
+        for ref in refs:
+            try:
+                dev = cls._open_device(ref.path)
+                return cls(dev, packet_size)
+            except Exception:
+                continue
+        return None
 
-        dev = cls._open_device(refs[0].path)
+    @classmethod
+    def open_from_ref(cls, ref: HidDeviceRef, packet_size: int) -> "HidApiTransport | None":
+        try:
+            dev = cls._open_device(ref.path)
+        except Exception:
+            return None
         return cls(dev, packet_size)
 
     @staticmethod

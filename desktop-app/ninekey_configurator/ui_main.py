@@ -583,6 +583,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self._transport = None
 
     def _connect_clicked(self) -> None:
+        # Drop any stale handle before attempting a new HID session.
+        self._close_connection()
         self._set_status("Connecting...")
 
         class Ok(QtCore.QObject):
@@ -595,16 +597,26 @@ class MainWindow(QtWidgets.QMainWindow):
         err = Err()
 
         def work():
-            transport = HidApiTransport.open_first(self._definition.vendor_id, self._definition.product_id, self._definition.packet_size)
-            if transport is None:
+            refs = HidApiTransport.enumerate(self._definition.vendor_id, self._definition.product_id)
+            if not refs:
                 return (False, "No compatible HID device found")
-            client = RawHidProtocolClient(transport, self._definition.packet_size)
-            handshake_ok = client.handshake()
-            info = client.get_info()
-            if not handshake_ok:
+
+            last_error = "Connected but VIA handshake failed"
+            for idx, ref in enumerate(refs):
+                transport = HidApiTransport.open_from_ref(ref, self._definition.packet_size)
+                if transport is None:
+                    continue
+
+                client = RawHidProtocolClient(transport, self._definition.packet_size)
+                handshake_ok = client.handshake()
+                info = client.get_info() if handshake_ok else None
+                if handshake_ok:
+                    return (True, transport, client, info)
+
+                last_error = f"VIA handshake failed on HID interface {idx}"
                 client.close()
-                return (False, "Connected but VIA handshake failed")
-            return (True, transport, client, info)
+
+            return (False, last_error)
 
         def on_ok(res):
             if not isinstance(res, tuple) or not res:
