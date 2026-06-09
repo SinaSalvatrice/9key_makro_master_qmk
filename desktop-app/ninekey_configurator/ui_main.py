@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import colorsys
 import sys
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -827,16 +828,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self._render_layer(self._current_layer)
 
     def _led_clicked(self) -> None:
-        firmware_layer = self._current_firmware_layer_id()
-        led = self._layer_led(firmware_layer)
-        effects = [e.label for e in self._catalog.effects]
-        dlg = LedDialog(self, effects, led)
-        if dlg.exec() != QtWidgets.QDialog.Accepted:
-            return
-        self._profile = self._repo.update_led(self._profile, firmware_layer, dlg.settings())
-        self._repo.save_profile(self._profile)
-        self._set_status("LED settings saved to profile")
+        try:
+            firmware_layer = self._current_firmware_layer_id()
+            led = self._layer_led(firmware_layer)
+            effects = [e.label for e in self._catalog.effects]
+            dlg = LedDialog(self, effects, led)
+            if dlg.exec() != QtWidgets.QDialog.Accepted:
+                return
+            self._profile = self._repo.update_led(self._profile, firmware_layer, dlg.settings())
+            self._repo.save_profile(self._profile)
+            self._set_status("LED settings saved to profile")
+        except Exception as exc:  # noqa: BLE001
+            self._set_status(f"LED settings error: {exc}")
+            QtWidgets.QMessageBox.critical(self, "LED Settings", f"Failed to open LED settings: {exc}")
 
 
-# Imported lazily at file end to avoid a circular import warning in some PySide builds.
-from PySide6 import QtGui  # noqa: E402
