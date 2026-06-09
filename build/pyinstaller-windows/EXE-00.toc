@@ -64,7 +64,7 @@
  [],
  False,
  False,
- 1781024980,
+ 1781028092,
  [('runw.exe',
    'C:\\qmk_firmware\\keyboards\\9key_makro_master_qmk\\.venv-1\\Lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\runw.exe',
    'EXECUTABLE')],

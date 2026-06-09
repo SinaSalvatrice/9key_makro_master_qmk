@@ -12,8 +12,13 @@ private const val VIA_ID_GET_PROTOCOL_VERSION: Int = 0x01
 private const val VIA_ID_GET_KEYBOARD_VALUE: Int = 0x02
 private const val VIA_ID_DYNAMIC_KEYMAP_GET_KEYCODE: Int = 0x04
 private const val VIA_ID_DYNAMIC_KEYMAP_SET_KEYCODE: Int = 0x05
+private const val VIA_ID_CUSTOM_SET_VALUE: Int = 0x07
+private const val VIA_ID_CUSTOM_GET_VALUE: Int = 0x08
+private const val VIA_ID_CUSTOM_SAVE: Int = 0x09
 private const val VIA_ID_DYNAMIC_KEYMAP_GET_LAYER_COUNT: Int = 0x11
 private const val VIA_ID_UNHANDLED: Int = 0xFF
+
+const val VIA_CUSTOM_CHANNEL_ID: Int = 0x01
 
 private const val VIA_KEYBOARD_VALUE_FIRMWARE_VERSION: Int = 0x04
 
@@ -67,6 +72,19 @@ class RawHidProtocolClient private constructor(
         ) != null
     }
 
+    fun customSetValue(channelId: Int, valueId: Int, valueData: ByteArray = byteArrayOf()): Boolean {
+        return customRequest(VIA_ID_CUSTOM_SET_VALUE, channelId, valueId, valueData) != null
+    }
+
+    fun customGetValue(channelId: Int, valueId: Int, valueData: ByteArray = byteArrayOf()): ByteArray? {
+        val response = customRequest(VIA_ID_CUSTOM_GET_VALUE, channelId, valueId, valueData) ?: return null
+        return response.copyOfRange(3, response.size)
+    }
+
+    fun customSave(channelId: Int): Boolean {
+        return customRequest(VIA_ID_CUSTOM_SAVE, channelId, 0x00, byteArrayOf()) != null
+    }
+
     fun saveEeprom(): Boolean {
         return true
     }
@@ -112,6 +130,18 @@ class RawHidProtocolClient private constructor(
         }
 
         return response
+    }
+
+    private fun customRequest(command: Int, channelId: Int, valueId: Int, valueData: ByteArray = byteArrayOf()): ByteArray? {
+        if (valueData.size > packetSize - 3) {
+            return null
+        }
+
+        val payload = ByteArray(2 + valueData.size)
+        payload[0] = channelId.toByte()
+        payload[1] = valueId.toByte()
+        System.arraycopy(valueData, 0, payload, 2, valueData.size)
+        return request(command, payload)
     }
 
     companion object {

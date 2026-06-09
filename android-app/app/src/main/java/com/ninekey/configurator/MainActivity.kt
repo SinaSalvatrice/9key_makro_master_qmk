@@ -18,6 +18,7 @@ import com.ninekey.configurator.databinding.ActivityMainBinding
 import com.ninekey.configurator.model.AppProfile
 import com.ninekey.configurator.model.KeyAssignment
 import com.ninekey.configurator.model.KeycodeCatalog
+import com.ninekey.configurator.model.LedLayerSettings
 import com.ninekey.configurator.model.LayerInfo
 import com.ninekey.configurator.model.ProfileRepository
 import com.ninekey.configurator.ui.ImportExportActivity
@@ -27,6 +28,21 @@ import com.ninekey.configurator.ui.OledPreviewActivity
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity() {
+
+    private companion object {
+        const val VIA_ID_LAYER_COLOR = 3
+        const val VIA_ID_LAYER_BRIGHTNESS = 4
+        const val VIA_ID_RGB_EFFECT = 5
+        const val VIA_ID_LAYER_EFFECT_SPEED = 6
+        const val VIA_ID_FRAME_COLOR = 7
+        const val VIA_ID_FRAME_BRIGHTNESS = 8
+        const val VIA_ID_FRAME_EFFECT = 9
+        const val VIA_ID_FRAME_EFFECT_SPEED = 10
+        const val VIA_ID_GAP_COLOR = 11
+        const val VIA_ID_GAP_BRIGHTNESS = 12
+        const val VIA_ID_GAP_EFFECT = 13
+        const val VIA_ID_GAP_EFFECT_SPEED = 14
+    }
 
     private val usbPermissionAction = "com.ninekey.configurator.USB_PERMISSION"
 
@@ -121,8 +137,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         // Re-render with potentially updated profile (e.g. after returning from OLED/LED editor)
+        val previousProfile = activeProfile
         activeProfile = repo.loadProfile()
         renderLayer(currentLayer)
+        syncProfileChanges(previousProfile, activeProfile)
     }
 
     override fun onDestroy() {
@@ -484,7 +502,133 @@ class MainActivity : AppCompatActivity() {
             value.toIntOrNull()
         }
     }
+
+    private fun syncProfileChanges(previousProfile: AppProfile, updatedProfile: AppProfile) {
+        val client = protocolClient ?: return
+        val keymapChanged = viaLayers.any { layer ->
+            val before = previousProfile.layers.firstOrNull { it.id == layer.id }?.keys
+            val after = updatedProfile.layers.firstOrNull { it.id == layer.id }?.keys
+            before != null && after != null && !before.contentEquals(after)
+        }
+
+        val changedLedLayers = viaLayers.filter { layer ->
+            val before = previousProfile.layers.firstOrNull { it.id == layer.id }?.led
+            val after = updatedProfile.layers.firstOrNull { it.id == layer.id }?.led
+            before != null && after != null && before != after
+        }
+
+        if (!keymapChanged && changedLedLayers.isEmpty()) {
+            return
+        }
+
+        Thread {
+            val success = if (keymapChanged) {
+                applyProfileToDevice(client, updatedProfile)
+            } else {
+                changedLedLayers.all { layer ->
+                    val settings = updatedProfile.layers.firstOrNull { it.id == layer.id }?.led ?: return@all false
+                    applyLedSettingsToDevice(client, layer.id, settings)
+                }
+            }
+            runOnUiThread {
+                setStatus(
+                    if (success) {
+                        if (keymapChanged) {
+                            "Profile synced to keyboard"
+                        } else {
+                            "LED settings synced to keyboard"
+                        }
+                    } else {
+                        if (keymapChanged) {
+                            "Profile saved locally; keyboard sync failed"
+                        } else {
+                            "LED settings saved locally; keyboard sync failed"
+                        }
+                    }
+                )
+            }
+        }.start()
+    }
+
+    private fun applyProfileToDevice(client: RawHidProtocolClient, profile: AppProfile): Boolean {
+        for ((viaSlot, layerInfo) in viaLayers.withIndex()) {
+            val layerProfile = profile.layers.firstOrNull { it.id == layerInfo.id } ?: continue
+            for (row in 0 until definition.rows) {
+                for (col in 0 until definition.cols) {
+                    val keyIndex = row * definition.cols + col
+                    val code = layerProfile.keys.getOrNull(keyIndex)?.code ?: 0
+                    if (!client.setKey(viaSlot, row, col, code)) {
+                        return false
+                    }
+
+                    val verified = client.getKey(viaSlot, row, col) ?: return false
+                    if (verified != code) {
+                        return false
+                    }
+
+                    keycodes[viaSlot][row][col] = code
+                }
+            }
+
+            if (!applyLedSettingsToDevice(client, layerInfo.id, layerProfile.led)) {
+                return false
+            }
+        }
+
+        return true
+    }
+
+    private fun applyLedSettingsToDevice(client: RawHidProtocolClient, firmwareLayerId: Int, settings: LedLayerSettings): Boolean {
+        val viaSlot = viaLayers.indexOfFirst { it.id == firmwareLayerId }
+        if (viaSlot < 0) {
+            return false
+        }
+
+        val zoneWrites = listOf(
+            ZoneWrite(settings.key, VIA_ID_LAYER_COLOR, VIA_ID_LAYER_BRIGHTNESS, VIA_ID_RGB_EFFECT, VIA_ID_LAYER_EFFECT_SPEED),
+            ZoneWrite(settings.frame, VIA_ID_FRAME_COLOR, VIA_ID_FRAME_BRIGHTNESS, VIA_ID_FRAME_EFFECT, VIA_ID_FRAME_EFFECT_SPEED),
+            ZoneWrite(settings.gap, VIA_ID_GAP_COLOR, VIA_ID_GAP_BRIGHTNESS, VIA_ID_GAP_EFFECT, VIA_ID_GAP_EFFECT_SPEED)
+        )
+
+        for (write in zoneWrites) {
+            val writes = listOf(
+                write.colorId to byteArrayOf(viaSlot.toByte(), write.zone.hue.toByte(), write.zone.sat.toByte()),
+                write.brightnessId to byteArrayOf(viaSlot.toByte(), write.zone.value.toByte()),
+                write.effectId to byteArrayOf(viaSlot.toByte(), write.zone.effect.toByte()),
+                write.speedId to byteArrayOf(viaSlot.toByte(), write.zone.speed.toByte())
+            )
+
+            for ((valueId, payload) in writes) {
+                if (!client.customSetValue(VIA_CUSTOM_CHANNEL_ID, valueId, payload)) {
+                    return false
+                }
+
+                val verify = client.customGetValue(VIA_CUSTOM_CHANNEL_ID, valueId, byteArrayOf(viaSlot.toByte())) ?: return false
+                if (verify.size < payload.size) {
+                    return false
+                }
+
+                for (index in payload.indices) {
+                    if (verify[index] != payload[index]) {
+                        return false
+                    }
+                }
+            }
+        }
+
+        return client.customSave(VIA_CUSTOM_CHANNEL_ID)
+    }
 }
+
+private data class ZoneWrite(
+    val zone: LedLayerSettingsZone,
+    val colorId: Int,
+    val brightnessId: Int,
+    val effectId: Int,
+    val speedId: Int
+)
+
+private typealias LedLayerSettingsZone = com.ninekey.configurator.model.LedZoneSettings
 
 data class KeyboardDefinition(
     val keyboard: String,

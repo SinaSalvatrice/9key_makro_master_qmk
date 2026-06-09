@@ -17,7 +17,7 @@ from .models import (
     LedZoneSettings,
     ProfileRepository,
 )
-from .rawhid import RawHidProtocolClient
+from .rawhid import RawHidProtocolClient, VIA_CUSTOM_CHANNEL_ID
 from .transport_hidapi import HidApiTransport
 
 
@@ -841,12 +841,68 @@ class MainWindow(QtWidgets.QMainWindow):
             dlg = LedDialog(self, effects, led)
             if dlg.exec() != QtWidgets.QDialog.Accepted:
                 return
-            self._profile = self._repo.update_led(self._profile, firmware_layer, dlg.settings())
+            settings = dlg.settings()
+            self._profile = self._repo.update_led(self._profile, firmware_layer, settings)
             self._repo.save_profile(self._profile)
-            self._set_status("LED settings saved to profile")
+            if self._client is not None:
+                self._apply_led_settings_to_device(firmware_layer, settings)
+            self._set_status("LED settings saved to profile and applied to firmware")
         except Exception as exc:  # noqa: BLE001
             self._set_status(f"LED settings error: {exc}")
             QtWidgets.QMessageBox.critical(self, "LED Settings", f"Failed to open LED settings: {exc}")
+
+    def _apply_led_settings_to_device(self, firmware_layer_id: int, settings: LedLayerSettings) -> None:
+        client = self._client
+        if client is None:
+            return
+
+        slot = None
+        for idx, layer in enumerate(self._via_layers):
+            if layer.id == firmware_layer_id:
+                slot = idx
+                break
+        if slot is None:
+            raise RuntimeError(f"No VIA slot mapped for layer {firmware_layer_id}")
+
+        zone_map = [
+            (settings.key, 3, 4, 5, 6),
+            (settings.frame, 7, 8, 9, 10),
+            (settings.gap, 11, 12, 13, 14),
+        ]
+
+        def pack_color(zone: LedZoneSettings) -> bytes:
+            return bytes([slot, zone.hue & 0xFF, zone.sat & 0xFF])
+
+        def pack_single(zone: LedZoneSettings, mode: str) -> bytes:
+            value = zone.effect if mode == "effect" else zone.speed if mode == "speed" else zone.value
+            return bytes([slot, value & 0xFF])
+
+        for zone, color_id, brightness_id, effect_id, speed_id in zone_map:
+            writes = [
+                (color_id, pack_color(zone)),
+                (brightness_id, pack_single(zone, "value")),
+                (effect_id, pack_single(zone, "effect")),
+                (speed_id, pack_single(zone, "speed")),
+            ]
+            for value_id, payload in writes:
+                if not client.custom_set_value(VIA_CUSTOM_CHANNEL_ID, value_id, payload):
+                    raise RuntimeError(f"LED set failed for value {value_id}")
+
+                verify = client.custom_get_value(VIA_CUSTOM_CHANNEL_ID, value_id, bytes([slot]))
+                if verify is None or len(verify) < len(payload):
+                    raise RuntimeError(f"LED verify failed for value {value_id}")
+
+                if verify[0] != slot:
+                    raise RuntimeError(f"LED verify slot mismatch for value {value_id}")
+
+                if verify[: len(payload)] != payload:
+                    raise RuntimeError(
+                        f"LED verify mismatch for value {value_id}: expected {payload.hex()}, got {verify[:len(payload)].hex()}"
+                    )
+
+        if not client.custom_save(VIA_CUSTOM_CHANNEL_ID):
+            raise RuntimeError("LED custom save failed")
+        return
 
     def _apply_profile_clicked(self) -> None:
         client = self._client
@@ -875,11 +931,15 @@ class MainWindow(QtWidgets.QMainWindow):
                                 f"Verify mismatch at via_slot={via_slot} r={r} c={c}: expected 0x{code:04X}, got 0x{reads:04X}"
                             )
                         writes += 1
+
+                layer_profile = self._layer_profile(layer.id)
+                if layer_profile is not None:
+                    self._apply_led_settings_to_device(layer.id, layer_profile.led)
             return writes
 
         def on_ok(count):
             self._load_layer(self._current_layer)
-            self._set_status(f"Applied {count} key assignments")
+            self._set_status(f"Applied {count} key assignments and LED settings to keyboard")
 
         def on_err(exc):
             self._set_status(f"Apply failed: {exc}")
