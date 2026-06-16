@@ -1,0 +1,37 @@
+#include <dt-bindings/gpio/gpio.h>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,kscan-sensors = &encoder0;
+        zmk,underglow = &underglow;
+    };
+
+    kscan0: kscan0 {
+        compatible = "zmk,kscan-gpio-matrix";
+        diode-direction = "row2col";
+        wakeup-source;
+
+        row-gpios = <&gpio0 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,
+                    <&gpio0 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,
+                    <&gpio0 4 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        col-gpios = <&gpio0 5 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,
+                    <&gpio0 6 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>,
+                    <&gpio0 7 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+    };
+
+    encoder0: encoder0 {
+        compatible = "alps,ec11";
+        a-gpios = <&gpio0 8 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 9 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>;
+        resolution = <4>;
+        status = "okay";
+    };
+
+    underglow: underglow {
+        compatible = "worldsemi,ws2812-gpio";
+        out-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
+        chain-length = <65>;
+        status = "okay";
+    };
+};
