@@ -3,8 +3,8 @@
  *
  * 3×3 key grid + Alps EC11 encoder
  *
- * Layer 0 — BASE  : numpad 1-9, encoder = volume
- * Layer 1 — FN    : F1-F8, encoder = page up/down
+ * Layer 0 — BASE  : numpad 1-8 + FN hold, encoder = volume
+ * Layer 1 — FN    : F1-F8 + SYS hold, encoder = page up/down
  * Layer 2 — SYS   : RGB controls + bootloader, encoder = brightness
  */
 
