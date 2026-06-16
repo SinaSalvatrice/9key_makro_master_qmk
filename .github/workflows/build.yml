@@ -7,4 +7,4 @@ on:
 
 jobs:
   build:
-    uses: https://github.com/zmkfirmware/zmk/releases/tag/v0.3.0
+    uses: /zmkfirmware/zmk/blob/main/.github/workflows/build-user-config.yml
