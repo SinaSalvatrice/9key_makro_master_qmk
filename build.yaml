@@ -1,0 +1,5 @@
+---
+include:
+  - board: nice_nano
+    shield: 9key_makro_master
+    cmake-args: -DBOARD_REVISION=2.0.0
