@@ -1,50 +1,404 @@
-/*
- * 9key_makro_master ZMK keymap
- *
- * 3×3 key grid + Alps EC11 encoder
- *
- * Layer 0 — BASE  : numpad 1-8 + FN hold, encoder = volume
- * Layer 1 — FN    : F1-F8 + SYS hold, encoder = page up/down
- * Layer 2 — SYS   : RGB controls + bootloader, encoder = brightness
- */
-
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
-#include <dt-bindings/zmk/rgb.h>
 #include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/rgb.h>
 
 / {
+    behaviors {
+        hm: homerow_mods {
+            compatible = "zmk,behavior-hold-tap";
+            label = "HOMEROW_MODS";
+            #binding-cells = <2>;
+            tapping-term-ms = <220>;
+            quick-tap-ms = <150>;
+            flavor = "tap-preferred";
+            bindings = <&kp>, <&kp>;
+        };
+    };
+
+    macros {
+        git_pull: git_pull {
+            compatible = "zmk,behavior-macro";
+            label = "GIT_PULL";
+            #binding-cells = <0>;
+            wait-ms = <30>;
+            tap-ms = <30>;
+            bindings =
+                <&kp G &kp I &kp T &kp SPACE &kp P &kp U &kp L &kp L &kp ENTER>;
+        };
+
+        git_status: git_status {
+            compatible = "zmk,behavior-macro";
+            label = "GIT_STATUS";
+            #binding-cells = <0>;
+            wait-ms = <30>;
+            tap-ms = <30>;
+            bindings =
+                <&kp G &kp I &kp T &kp SPACE &kp S &kp T &kp A &kp T &kp U &kp S &kp ENTER>;
+        };
+
+        git_push: git_push {
+            compatible = "zmk,behavior-macro";
+            label = "GIT_PUSH";
+            #binding-cells = <0>;
+            wait-ms = <30>;
+            tap-ms = <30>;
+            bindings =
+                <&kp G &kp I &kp T &kp SPACE &kp P &kp U &kp S &kp H &kp ENTER>;
+        };
+
+        git_commit: git_commit {
+            compatible = "zmk,behavior-macro";
+            label = "GIT_COMMIT";
+            #binding-cells = <0>;
+            wait-ms = <30>;
+            tap-ms = <30>;
+            bindings =
+                <&kp G &kp I &kp T &kp SPACE &kp A &kp D &kp D &kp SPACE &kp DOT &kp ENTER
+                 &kp G &kp I &kp T &kp SPACE &kp C &kp O &kp M &kp M &kp I &kp T &kp SPACE &kp MINUS &kp M &kp SPACE>;
+        };
+
+        gh_pr_create: gh_pr_create {
+            compatible = "zmk,behavior-macro";
+            label = "GH_PR_CREATE";
+            #binding-cells = <0>;
+            wait-ms = <30>;
+            tap-ms = <30>;
+            bindings =
+                <&kp G &kp H &kp SPACE &kp P &kp R &kp SPACE &kp C &kp R &kp E &kp A &kp T &kp E &kp SPACE &kp MINUS &kp MINUS &kp W &kp E &kp B &kp ENTER>;
+        };
+
+        prompt_review: prompt_review {
+            compatible = "zmk,behavior-macro";
+            label = "PROMPT_REVIEW";
+            #binding-cells = <0>;
+            wait-ms = <25>;
+            tap-ms = <25>;
+            bindings =
+                <&kp R &kp E &kp V &kp I &kp E &kp W &kp SPACE
+                 &kp T &kp H &kp I &kp S &kp SPACE
+                 &kp C &kp O &kp D &kp E &kp SPACE
+                 &kp F &kp O &kp R &kp SPACE
+                 &kp B &kp U &kp G &kp S &kp PERIOD>;
+        };
+
+        prompt_fix: prompt_fix {
+            compatible = "zmk,behavior-macro";
+            label = "PROMPT_FIX";
+            #binding-cells = <0>;
+            wait-ms = <25>;
+            tap-ms = <25>;
+            bindings =
+                <&kp S &kp U &kp G &kp G &kp E &kp S &kp T &kp SPACE
+                 &kp A &kp SPACE
+                 &kp M &kp I &kp N &kp I &kp M &kp A &kp L &kp SPACE
+                 &kp S &kp A &kp F &kp E &kp SPACE
+                 &kp F &kp I &kp X &kp PERIOD>;
+        };
+
+        prompt_explain: prompt_explain {
+            compatible = "zmk,behavior-macro";
+            label = "PROMPT_EXPLAIN";
+            #binding-cells = <0>;
+            wait-ms = <25>;
+            tap-ms = <25>;
+            bindings =
+                <&kp E &kp X &kp P &kp L &kp A &kp I &kp N &kp SPACE
+                 &kp T &kp H &kp I &kp S &kp SPACE
+                 &kp C &kp O &kp D &kp E &kp SPACE
+                 &kp C &kp L &kp E &kp A &kp R &kp L &kp Y &kp PERIOD>;
+        };
+
+        prompt_etsy_tags: prompt_etsy_tags {
+            compatible = "zmk,behavior-macro";
+            label = "PROMPT_ETSY_TAGS";
+            #binding-cells = <0>;
+            wait-ms = <25>;
+            tap-ms = <25>;
+            bindings =
+                <&kp G &kp E &kp N &kp E &kp R &kp A &kp T &kp E &kp SPACE
+                 &kp E &kp T &kp S &kp Y &kp SPACE
+                 &kp T &kp A &kp G &kp S &kp SPACE
+                 &kp I &kp N &kp SPACE
+                 &kp O &kp N &kp E &kp SPACE
+                 &kp R &kp O &kp W &kp PERIOD>;
+        };
+    };
+
     keymap {
         compatible = "zmk,keymap";
 
+        /*
+         * Layer index:
+         * 0 BASE
+         * 1 WINDOW
+         * 2 TEXT
+         * 3 MEDIA
+         * 4 GIT
+         * 5 GAME
+         * 6 VSC
+         * 7 RGB
+         * 8 PROMPT
+         * 9 SELECT
+         * 10 NAV
+         * 11 MOUSE
+         * 12 BT/SYS
+         */
+
         base_layer {
-            label = "BASE";
+            display-name = "BASE";
             bindings = <
-                &kp N1   &kp N2   &kp N3
-                &kp N4   &kp N5   &kp N6
-                &kp N7   &kp N8   &mo 1
+                &mo 9       &kp HOME        &kp BSPC
+                &kp LEFT    &lt 10 ENTER    &kp RIGHT
+                &kp LC(Z)   &kp END         &kp LC(Y)
             >;
+
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
         };
 
-        fn_layer {
-            label = "FN";
+        window_layer {
+            display-name = "WIN";
             bindings = <
-                &kp F1   &kp F2   &kp F3
-                &kp F4   &kp F5   &kp F6
-                &kp F7   &kp F8   &mo 2
+                &mo 9           &mo 13          &mo 14
+                &kp LG(LC(LEFT)) &kp LG(TAB)     &kp LG(LC(RIGHT))
+                &kp LA(LS(TAB)) &kp LG(D)       &kp LA(TAB)
             >;
-            sensor-bindings = <&inc_dec_kp PG_UP PG_DN>;
+
+            sensor-bindings = <&inc_dec_kp LA(TAB) LA(LS(TAB))>;
         };
 
-        sys_layer {
-            label = "SYS";
+        text_layer {
+            display-name = "TEXT";
             bindings = <
-                &rgb_ug RGB_TOG   &rgb_ug RGB_HUI   &rgb_ug RGB_SAI
-                &rgb_ug RGB_BRI   &rgb_ug RGB_SPI   &rgb_ug RGB_EFF
-                &bootloader       &sys_reset        &trans
+                &mo 9         &mo 15          &mo 16
+                &kp HOME      &lt 10 ENTER    &kp END
+                &kp LEFT      &kp DOWN        &kp RIGHT
             >;
-            sensor-bindings = <&inc_dec_kp C_BRI_UP C_BRI_DN>;
+
+            sensor-bindings = <&inc_dec_kp RIGHT LEFT>;
+        };
+
+        media_layer {
+            display-name = "MEDIA";
+            bindings = <
+                &mo 9          &kp C_PREV        &kp C_NEXT
+                &kp C_VOL_DN   &kp C_PLAY_PAUSE  &kp C_VOL_UP
+                &kp C_RW       &kp C_MUTE        &kp C_FF
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        git_layer {
+            display-name = "GIT";
+            bindings = <
+                &mo 9        &to 6          &kp F13
+                &git_pull    &git_commit    &git_push
+                &kp F14      &gh_pr_create  &git_status
+            >;
+
+            sensor-bindings = <&inc_dec_kp RIGHT LEFT>;
+        };
+
+        game_layer {
+            display-name = "GAME";
+            bindings = <
+                &mo 9      &to 10     &to 11
+                &kp ESC    &kp W      &kp ENTER
+                &kp A      &kp S      &kp D
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        vsc_layer {
+            display-name = "VSC";
+            bindings = <
+                &mo 9             &mo 17           &mo 18
+                &kp LC(LS(E))     &kp LC(LS(F))    &kp LC(GRAVE)
+                &kp LC(LS(G))     &kp LC(LS(P))    &kp LC(LS(B))
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        rgb_layer {
+            display-name = "RGB";
+            bindings = <
+                &mo 9             &rgb_ug RGB_EFF  &rgb_ug RGB_TOG
+                &rgb_ug RGB_HUI   &rgb_ug RGB_HUD  &rgb_ug RGB_BRI
+                &rgb_ug RGB_SAI   &rgb_ug RGB_SAD  &rgb_ug RGB_BRD
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        prompt_layer {
+            display-name = "PROMPT";
+            bindings = <
+                &mo 9            &mo 19            &mo 20
+                &prompt_review   &prompt_fix       &kp F15
+                &kp F16          &prompt_explain   &kp F17
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        select_layer {
+            display-name = "SELECT";
+            bindings = <
+                &to 0    &to 1    &to 2
+                &to 3    &to 4    &to 5
+                &to 6    &to 7    &to 8
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        nav_layer {
+            display-name = "NAV";
+            bindings = <
+                &mo 9       &kp UP      &kp PG_UP
+                &kp LEFT    &kp ENTER   &kp RIGHT
+                &kp HOME    &kp DOWN    &kp PG_DN
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        mouse_layer {
+            display-name = "MOUSE";
+            bindings = <
+                &mo 9      &mkp RCLK     &mkp LCLK
+                &mmv MOVE_LEFT &mmv MOVE_UP &mmv MOVE_RIGHT
+                &mkp MCLK  &mmv MOVE_DOWN &kp SPACE
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        bt_sys_layer {
+            display-name = "BT/SYS";
+            bindings = <
+                &bt BT_SEL 0    &bt BT_SEL 1    &bt BT_SEL 2
+                &bt BT_SEL 3    &bt BT_SEL 4    &bt BT_CLR
+                &bootloader     &sys_reset      &to 0
+            >;
+
+            sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
+        };
+
+        /*
+         * WINDOW sublayer: Browser
+         */
+        window_browser_layer {
+            display-name = "BRO";
+            bindings = <
+                &mo 9        &trans       &trans
+                &kp C_PREV   &kp F5       &kp C_NEXT
+                &kp LC(PG_UP)&kp LC(T)    &kp LC(PG_DN)
+            >;
+
+            sensor-bindings = <&inc_dec_kp LC(PG_DN) LC(PG_UP)>;
+        };
+
+        /*
+         * WINDOW sublayer: Snap / Window placement
+         */
+        window_snap_layer {
+            display-name = "SNAP";
+            bindings = <
+                &mo 9        &trans        &trans
+                &kp LG(UP)   &kp LG(UP)    &kp LG(DOWN)
+                &kp LG(LEFT) &kp LG(DOWN)  &kp LG(RIGHT)
+            >;
+
+            sensor-bindings = <&inc_dec_kp LG(RIGHT) LG(LEFT)>;
+        };
+
+        /*
+         * TEXT sublayer: Actions
+         */
+        text_actions_layer {
+            display-name = "TXT-ACT";
+            bindings = <
+                &mo 9       &trans      &trans
+                &kp LC(C)   &kp LC(X)   &kp LC(V)
+                &kp LC(Z)   &kp LC(Y)   &kp LC(S)
+            >;
+
+            sensor-bindings = <&inc_dec_kp RIGHT LEFT>;
+        };
+
+        /*
+         * TEXT sublayer: Editing
+         */
+        text_edit_layer {
+            display-name = "TXT-EDIT";
+            bindings = <
+                &mo 9          &trans           &trans
+                &kp LC(LEFT)   &kp LC(BSPC)     &kp LC(RIGHT)
+                &kp HOME       &kp LS(HOME)     &kp END
+            >;
+
+            sensor-bindings = <&inc_dec_kp LS(RIGHT) LS(LEFT)>;
+        };
+
+        /*
+         * VSC sublayer: Navigation
+         */
+        vsc_nav_layer {
+            display-name = "VSC-NAV";
+            bindings = <
+                &mo 9             &trans           &trans
+                &kp LC(P)         &kp LC(LS(O))    &kp LC(GRAVE)
+                &kp LA(LEFT)      &kp LC(LS(P))    &kp LA(RIGHT)
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        /*
+         * VSC sublayer: AI / Chat / Prompt triggers
+         * Hier besser F13-F18 an Host-Automation hängen.
+         */
+        vsc_ai_layer {
+            display-name = "VSC-AI";
+            bindings = <
+                &mo 9             &trans            &trans
+                &prompt_explain   &prompt_review    &prompt_fix
+                &kp F18           &kp F19           &kp F20
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        /*
+         * PROMPT sublayer: Picture prompts
+         */
+        prompt_pics_layer {
+            display-name = "PICS";
+            bindings = <
+                &mo 9       &trans      &trans
+                &kp F21     &kp F22     &kp F23
+                &kp F24     &kp F13     &kp F14
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
+        };
+
+        /*
+         * PROMPT sublayer: Etsy prompts
+         */
+        prompt_etsy_layer {
+            display-name = "ETSY";
+            bindings = <
+                &mo 9             &trans       &trans
+                &prompt_etsy_tags &kp F15      &kp F16
+                &kp F17           &kp F18      &kp F19
+            >;
+
+            sensor-bindings = <&inc_dec_kp PG_DN PG_UP>;
         };
     };
 };
