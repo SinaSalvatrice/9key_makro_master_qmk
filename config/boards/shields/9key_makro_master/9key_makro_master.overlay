@@ -13,7 +13,7 @@
  *   Row 2 → D6  (P0.24)    Col 2 → D9  (P1.04)
  *   Enc A → D2  (P0.15)    Enc B → D3  (P0.17)
  *   RGB   → D1  (P0.06)    SPI MOSI
- *   SDA   → D18 (P0.02)    SCL → D14 (P0.03)
+ *   sda-pin = <0.17>;      scl-pin = <0.20>;
  */
 
 #include <dt-bindings/zmk/matrix_transform.h>
