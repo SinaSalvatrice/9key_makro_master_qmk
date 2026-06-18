@@ -1,39 +1,18 @@
-/*
- * 9key_makro_master — ZMK shield overlay for nice!nano v2
- *
- * Hardware (original QMK board was RP2040/QMK_BLOK):
- *   Matrix:  3 rows × 3 cols, ROW2COL
- *   Encoder: Alps EC11
- *   RGB:     WS2812 strip, 65 LEDs
- *   OLED:    SSD1306, 128×32, I2C @ 0x3C
- *
- * Pin mapping on nice!nano (nRF52840 pro_micro header):
- *   Row 0 → D4  (P0.20)    Col 0 → D7  (P1.00)
- *   Row 1 → D5  (P0.22)    Col 1 → D8  (P0.11)
- *   Row 2 → D6  (P0.24)    Col 2 → D9  (P1.04)
- *   Enc A → D2  (P0.15)    Enc B → D3  (P0.17)
- *   RGB   → D1  (P0.06)    SPI MOSI
- *   sda-pin = <0.17>;      scl-pin = <0.20>;
- */
-
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <dt-bindings/led/led.h>
 
 / {
-    model = "9key_makro_master";
-    compatible = "sina,9key-makro-master";
-
     chosen {
-        zmk,kscan            = &kscan0;
+        zmk,kscan = &kscan0;
         zmk,matrix-transform = &default_transform;
-        zmk,underglow        = &led_strip;
-        zephyr,display       = &ssd1306;
+        zmk,underglow = &led_strip;
     };
 
     default_transform: keymap_transform_0 {
         compatible = "zmk,matrix-transform";
         columns = <3>;
-        rows    = <3>;
+        rows = <3>;
+
         map = <
             RC(0,0) RC(0,1) RC(0,2)
             RC(1,0) RC(1,1) RC(1,2)
@@ -43,78 +22,53 @@
 
     kscan0: kscan {
         compatible = "zmk,kscan-gpio-matrix";
-        wakeup-source;
-        diode-direction = "row2col";
+
+        diode-direction = "col2row";
 
         row-gpios
-            = <&pro_micro 4 GPIO_ACTIVE_HIGH>   /* row 0 — D4 / P0.20 */
-            , <&pro_micro 5 GPIO_ACTIVE_HIGH>   /* row 1 — D5 / P0.22 */
-            , <&pro_micro 6 GPIO_ACTIVE_HIGH>   /* row 2 — D6 / P0.24 */
+            = <&gpio0 6  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&gpio0 9  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
             ;
 
         col-gpios
-            = <&pro_micro 7  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  /* col 0 — D7  / P1.00 */
-            , <&pro_micro 8  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  /* col 1 — D8  / P0.11 */
-            , <&pro_micro 9  (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>  /* col 2 — D9  / P1.04 */
+            = <&gpio0 10 GPIO_ACTIVE_HIGH>
+            , <&gpio0 11 GPIO_ACTIVE_HIGH>
+            , <&gpio0 12 GPIO_ACTIVE_HIGH>
             ;
     };
 
     encoder: encoder {
         compatible = "alps,ec11";
-        a-gpios = <&pro_micro 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* D2 / P0.15 */
-        b-gpios = <&pro_micro 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_UP)>; /* D3 / P0.17 */
+        a-gpios = <&gpio0 14 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+        b-gpios = <&gpio0 15 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
         steps = <80>;
         status = "okay";
     };
 
-    sensors: sensors {
+    sensors {
         compatible = "zmk,keymap-sensors";
         sensors = <&encoder>;
-        triggers-per-rotation = <20>;
+    };
+
+    led_strip: ws2812 {
+        compatible = "worldsemi,ws2812-gpio";
+        label = "WS2812";
+
+        chain-length = <9>;
+        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
+
+        in-gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
     };
 };
 
-/* ── Pinctrl ──────────────────────────────────────────────────────────── */
-&pinctrl {
-    /* I2C0: SDA = P0.02 (D18/A4), SCL = P0.03 (D14/A0) */
-    i2c0_default: i2c0_default {
-        group1 {
-            psels = <NRF_PSEL(TWIM_SDA, 0, 2)>,
-                    <NRF_PSEL(TWIM_SCL, 0, 3)>;
-        };
-    };
-
-    i2c0_sleep: i2c0_sleep {
-        group1 {
-            psels = <NRF_PSEL(TWIM_SDA, 0, 2)>,
-                    <NRF_PSEL(TWIM_SCL, 0, 3)>;
-            low-power-enable;
-        };
-    };
-
-    /* SPI3: MOSI = P0.06 (D1) — WS2812 data line */
-    spi3_default: spi3_default {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 6)>;
-        };
-    };
-
-    spi3_sleep: spi3_sleep {
-        group1 {
-            psels = <NRF_PSEL(SPIM_MOSI, 0, 6)>;
-            low-power-enable;
-        };
-    };
-};
-
-/* ── OLED — SSD1306 128×32 via I2C ───────────────────────────────────── */
 &i2c0 {
     status = "okay";
-    pinctrl-0 = <&i2c0_default>;
-    pinctrl-1 = <&i2c0_sleep>;
-    pinctrl-names = "default", "sleep";
 
-    ssd1306: ssd1306@3c {
+    sda-pin = <17>;
+    scl-pin = <20>;
+
+    oled: ssd1306@3c {
         compatible = "solomon,ssd1306fb";
         reg = <0x3c>;
         width = <128>;
@@ -123,25 +77,9 @@
         page-offset = <0>;
         display-offset = <0>;
         multiplex-ratio = <31>;
+        segment-remap;
+        com-invdir;
+        com-sequential;
         prechargep = <0x22>;
-    };
-};
-
-/* ── RGB underglow — WS2812 × 65 via SPI3 ───────────────────────────── */
-&spi3 {
-    compatible = "nordic,nrf-spim";
-    status = "okay";
-    pinctrl-0 = <&spi3_default>;
-    pinctrl-1 = <&spi3_sleep>;
-    pinctrl-names = "default", "sleep";
-
-    led_strip: ws2812@0 {
-        compatible = "worldsemi,ws2812-spi";
-        reg = <0>;
-        spi-max-frequency = <4000000>;
-        chain-length = <65>;
-        spi-one-frame = <0x70>;
-        spi-zero-frame = <0x40>;
-        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
     };
 };
