@@ -183,7 +183,7 @@
             bindings = <
                 &mo 9          &kp C_PREV        &kp C_NEXT
                 &kp C_VOL_DN   &kp C_PLAY_PAUSE  &kp C_VOL_UP
-                &kp C_RW       &kp C_MUTE        &kp C_FF
+                &kp F13        &kp C_MUTE        &kp F14
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
@@ -269,9 +269,9 @@
         mouse_layer {
             display-name = "MOUSE";
             bindings = <
-                &mo 9      &mkp RCLK     &mkp LCLK
-                &mmv MOVE_LEFT &mmv MOVE_UP &mmv MOVE_RIGHT
-                &mkp MCLK  &mmv MOVE_DOWN &kp SPACE
+                &mo 9      &kp ESC    &kp ENTER
+                &kp LEFT   &kp UP     &kp RIGHT
+                &kp TAB    &kp DOWN   &kp SPACE
             >;
 
             sensor-bindings = <&inc_dec_kp C_VOL_UP C_VOL_DN>;
