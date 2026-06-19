@@ -1,0 +1,6 @@
+if SHIELD_9KEY_MAKRO_MASTER
+
+config ZMK_KEYBOARD_NAME
+    default "9key Makro Master"
+
+endif
