@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 /*
  * 9key_makro_master — ZMK shield overlay for nice!nano v2
  *
@@ -18,7 +17,7 @@
  *   SDA   → D18 (P0.02)    SCL → D14 (P0.03)
  */
 
->>>>>>> parent of ab6a75e (Update 9key_makro_master.overlay)
+
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <dt-bindings/led/led.h>
 
