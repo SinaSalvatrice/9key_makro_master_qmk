@@ -1,3 +1,38 @@
+/*
+ * Pinbelegung / Wiring Info
+ * Board: nice!nano / nRF52840
+ * Shield: nicenano_3x3
+ *
+ * Matrix: 3 rows x 3 columns
+ * Diode direction: COL -> ROW (col2row)
+ *
+ * Rows:
+ *   ROW0 = GPIO P0.06
+ *   ROW1 = GPIO P0.08
+ *   ROW2 = GPIO P0.09
+ *
+ * Columns:
+ *   COL0 = GPIO P0.10
+ *   COL1 = GPIO P0.11
+ *   COL2 = GPIO P0.12
+ *
+ * Encoder:
+ *   ENC_A = GPIO P0.14
+ *   ENC_B = GPIO P0.15
+ *   Pull-up enabled, active low
+ *
+ * RGB / WS2812:
+ *   DATA  = GPIO P0.22
+ *   LEDs  = 9
+ *   Color mapping: GRB
+ *
+ * OLED / I2C0:
+ *   SDA   = GPIO P0.17
+ *   SCL   = GPIO P0.20
+ *   Addr  = 0x3C
+ *   Size  = 128x32
+ */
+
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <dt-bindings/led/led.h>
 
