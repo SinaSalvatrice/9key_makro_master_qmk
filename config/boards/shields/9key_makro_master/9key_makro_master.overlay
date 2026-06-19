@@ -1,37 +1,22 @@
+
 /*
  * 9key_makro_master — ZMK shield overlay for nice!nano v2
  *
- * Pinbelegung / wiring used here:
+ * Hardware (original QMK board was RP2040/QMK_BLOK):
+ *   Matrix:  3 rows × 3 cols, ROW2COL
+ *   Encoder: Alps EC11
+ *   RGB:     WS2812 strip, 65 LEDs
+ *   OLED:    SSD1306, 128×32, I2C @ 0x3C
  *
- * Matrix: 3 rows x 3 columns
- * Diode direction: COL -> ROW (col2row)
- *
- * Rows:
- *   ROW0 = GPIO P0.06
- *   ROW1 = GPIO P0.08
- *   ROW2 = GPIO P0.09
- *
- * Columns:
- *   COL0 = GPIO P0.10
- *   COL1 = GPIO P0.11
- *   COL2 = GPIO P0.12
- *
- * Encoder:
- *   ENC_A = GPIO P0.14
- *   ENC_B = GPIO P0.15
- *   Pull-up enabled, active low
- *
- * RGB / WS2812:
- *   DATA  = GPIO P0.22
- *   LEDs  = 9
- *   Color mapping: GRB
- *
- * OLED / I2C0:
- *   SDA   = GPIO P0.17
- *   SCL   = GPIO P0.20
- *   Addr  = 0x3C
- *   Size  = 128x32
+ * Pin mapping currently used in this overlay:
+ *   Row 0 → P0.06    Col 0 → P0.10
+ *   Row 1 → P0.08    Col 1 → P0.11
+ *   Row 2 → P0.09    Col 2 → P0.12
+ *   Enc A → P0.14    Enc B → P0.15
+ *   RGB   → P0.22
+ *   SDA   → P0.17    SCL → P0.20
  */
+
 
 #include <dt-bindings/zmk/matrix_transform.h>
 #include <dt-bindings/led/led.h>
