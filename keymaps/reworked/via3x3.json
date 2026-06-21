@@ -4,7 +4,6 @@
   "productId": "9B01",
   "firmwareVersion": 11,
   "menus": [
-    "qmk_rgblight",
     {
       "label": "Display",
       "content": [
@@ -34,7 +33,7 @@
               ],
               "content": [
                 "id_via_oled_view",
-                0,
+                1,
                 1
               ]
             }
@@ -53,7 +52,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[0]",
-                0,
+                1,
                 3,
                 0
               ]
@@ -67,7 +66,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[0]",
-                0,
+                1,
                 4,
                 0
               ]
@@ -155,7 +154,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[0]",
-                0,
+                1,
                 5,
                 0
               ]
@@ -169,7 +168,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[0]",
-                0,
+                1,
                 6,
                 0
               ]
@@ -179,7 +178,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[1]",
-                0,
+                1,
                 3,
                 1
               ]
@@ -193,7 +192,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[1]",
-                0,
+                1,
                 4,
                 1
               ]
@@ -281,7 +280,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[1]",
-                0,
+                1,
                 5,
                 1
               ]
@@ -295,7 +294,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[1]",
-                0,
+                1,
                 6,
                 1
               ]
@@ -305,7 +304,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[2]",
-                0,
+                1,
                 3,
                 2
               ]
@@ -319,7 +318,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[2]",
-                0,
+                1,
                 4,
                 2
               ]
@@ -407,7 +406,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[2]",
-                0,
+                1,
                 5,
                 2
               ]
@@ -421,7 +420,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[2]",
-                0,
+                1,
                 6,
                 2
               ]
@@ -431,7 +430,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[3]",
-                0,
+                1,
                 3,
                 3
               ]
@@ -445,7 +444,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[3]",
-                0,
+                1,
                 4,
                 3
               ]
@@ -533,7 +532,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[3]",
-                0,
+                1,
                 5,
                 3
               ]
@@ -547,9 +546,135 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[3]",
-                0,
+                1,
                 6,
                 3
+              ]
+            },
+            {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_layer_color[8]",
+                1,
+                3,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_layer_brightness[8]",
+                1,
+                4,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_rgb_effect[8]",
+                1,
+                5,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_layer_effect_speed[8]",
+                1,
+                6,
+                8
               ]
             },
             {
@@ -557,7 +682,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[4]",
-                0,
+                1,
                 3,
                 4
               ]
@@ -571,7 +696,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[4]",
-                0,
+                1,
                 4,
                 4
               ]
@@ -659,7 +784,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[4]",
-                0,
+                1,
                 5,
                 4
               ]
@@ -673,7 +798,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[4]",
-                0,
+                1,
                 6,
                 4
               ]
@@ -683,7 +808,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[5]",
-                0,
+                1,
                 3,
                 5
               ]
@@ -697,7 +822,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[5]",
-                0,
+                1,
                 4,
                 5
               ]
@@ -785,7 +910,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[5]",
-                0,
+                1,
                 5,
                 5
               ]
@@ -799,7 +924,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[5]",
-                0,
+                1,
                 6,
                 5
               ]
@@ -809,7 +934,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[6]",
-                0,
+                1,
                 3,
                 6
               ]
@@ -823,7 +948,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[6]",
-                0,
+                1,
                 4,
                 6
               ]
@@ -911,7 +1036,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[6]",
-                0,
+                1,
                 5,
                 6
               ]
@@ -925,7 +1050,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[6]",
-                0,
+                1,
                 6,
                 6
               ]
@@ -935,7 +1060,7 @@
               "type": "color",
               "content": [
                 "id_via_layer_color[7]",
-                0,
+                1,
                 3,
                 7
               ]
@@ -949,7 +1074,7 @@
               ],
               "content": [
                 "id_via_layer_brightness[7]",
-                0,
+                1,
                 4,
                 7
               ]
@@ -1037,7 +1162,7 @@
               ],
               "content": [
                 "id_via_rgb_effect[7]",
-                0,
+                1,
                 5,
                 7
               ]
@@ -1051,7 +1176,7 @@
               ],
               "content": [
                 "id_via_layer_effect_speed[7]",
-                0,
+                1,
                 6,
                 7
               ]
@@ -1071,7 +1196,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[0]",
-                0,
+                1,
                 11,
                 0
               ]
@@ -1085,7 +1210,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[0]",
-                0,
+                1,
                 12,
                 0
               ]
@@ -1173,7 +1298,7 @@
               ],
               "content": [
                 "id_via_gap_effect[0]",
-                0,
+                1,
                 13,
                 0
               ]
@@ -1187,7 +1312,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[0]",
-                0,
+                1,
                 14,
                 0
               ]
@@ -1197,7 +1322,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[1]",
-                0,
+                1,
                 11,
                 1
               ]
@@ -1211,7 +1336,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[1]",
-                0,
+                1,
                 12,
                 1
               ]
@@ -1299,7 +1424,7 @@
               ],
               "content": [
                 "id_via_gap_effect[1]",
-                0,
+                1,
                 13,
                 1
               ]
@@ -1313,7 +1438,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[1]",
-                0,
+                1,
                 14,
                 1
               ]
@@ -1323,7 +1448,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[2]",
-                0,
+                1,
                 11,
                 2
               ]
@@ -1337,7 +1462,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[2]",
-                0,
+                1,
                 12,
                 2
               ]
@@ -1425,7 +1550,7 @@
               ],
               "content": [
                 "id_via_gap_effect[2]",
-                0,
+                1,
                 13,
                 2
               ]
@@ -1439,7 +1564,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[2]",
-                0,
+                1,
                 14,
                 2
               ]
@@ -1449,7 +1574,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[3]",
-                0,
+                1,
                 11,
                 3
               ]
@@ -1463,7 +1588,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[3]",
-                0,
+                1,
                 12,
                 3
               ]
@@ -1551,7 +1676,7 @@
               ],
               "content": [
                 "id_via_gap_effect[3]",
-                0,
+                1,
                 13,
                 3
               ]
@@ -1565,9 +1690,135 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[3]",
-                0,
+                1,
                 14,
                 3
+              ]
+            },
+            {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_gap_color[8]",
+                1,
+                11,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_gap_brightness[8]",
+                1,
+                12,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_gap_effect[8]",
+                1,
+                13,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_gap_effect_speed[8]",
+                1,
+                14,
+                8
               ]
             },
             {
@@ -1575,7 +1826,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[4]",
-                0,
+                1,
                 11,
                 4
               ]
@@ -1589,7 +1840,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[4]",
-                0,
+                1,
                 12,
                 4
               ]
@@ -1677,7 +1928,7 @@
               ],
               "content": [
                 "id_via_gap_effect[4]",
-                0,
+                1,
                 13,
                 4
               ]
@@ -1691,7 +1942,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[4]",
-                0,
+                1,
                 14,
                 4
               ]
@@ -1701,7 +1952,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[5]",
-                0,
+                1,
                 11,
                 5
               ]
@@ -1715,7 +1966,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[5]",
-                0,
+                1,
                 12,
                 5
               ]
@@ -1803,7 +2054,7 @@
               ],
               "content": [
                 "id_via_gap_effect[5]",
-                0,
+                1,
                 13,
                 5
               ]
@@ -1817,7 +2068,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[5]",
-                0,
+                1,
                 14,
                 5
               ]
@@ -1827,7 +2078,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[6]",
-                0,
+                1,
                 11,
                 6
               ]
@@ -1841,7 +2092,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[6]",
-                0,
+                1,
                 12,
                 6
               ]
@@ -1929,7 +2180,7 @@
               ],
               "content": [
                 "id_via_gap_effect[6]",
-                0,
+                1,
                 13,
                 6
               ]
@@ -1943,7 +2194,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[6]",
-                0,
+                1,
                 14,
                 6
               ]
@@ -1953,7 +2204,7 @@
               "type": "color",
               "content": [
                 "id_via_gap_color[7]",
-                0,
+                1,
                 11,
                 7
               ]
@@ -1967,7 +2218,7 @@
               ],
               "content": [
                 "id_via_gap_brightness[7]",
-                0,
+                1,
                 12,
                 7
               ]
@@ -2055,7 +2306,7 @@
               ],
               "content": [
                 "id_via_gap_effect[7]",
-                0,
+                1,
                 13,
                 7
               ]
@@ -2069,7 +2320,7 @@
               ],
               "content": [
                 "id_via_gap_effect_speed[7]",
-                0,
+                1,
                 14,
                 7
               ]
@@ -2089,7 +2340,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[0]",
-                0,
+                1,
                 7,
                 0
               ]
@@ -2103,7 +2354,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[0]",
-                0,
+                1,
                 8,
                 0
               ]
@@ -2191,7 +2442,7 @@
               ],
               "content": [
                 "id_via_frame_effect[0]",
-                0,
+                1,
                 9,
                 0
               ]
@@ -2205,7 +2456,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[0]",
-                0,
+                1,
                 10,
                 0
               ]
@@ -2215,7 +2466,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[1]",
-                0,
+                1,
                 7,
                 1
               ]
@@ -2229,7 +2480,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[1]",
-                0,
+                1,
                 8,
                 1
               ]
@@ -2317,7 +2568,7 @@
               ],
               "content": [
                 "id_via_frame_effect[1]",
-                0,
+                1,
                 9,
                 1
               ]
@@ -2331,7 +2582,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[1]",
-                0,
+                1,
                 10,
                 1
               ]
@@ -2341,7 +2592,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[2]",
-                0,
+                1,
                 7,
                 2
               ]
@@ -2355,7 +2606,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[2]",
-                0,
+                1,
                 8,
                 2
               ]
@@ -2443,7 +2694,7 @@
               ],
               "content": [
                 "id_via_frame_effect[2]",
-                0,
+                1,
                 9,
                 2
               ]
@@ -2457,7 +2708,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[2]",
-                0,
+                1,
                 10,
                 2
               ]
@@ -2467,7 +2718,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[3]",
-                0,
+                1,
                 7,
                 3
               ]
@@ -2481,7 +2732,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[3]",
-                0,
+                1,
                 8,
                 3
               ]
@@ -2569,7 +2820,7 @@
               ],
               "content": [
                 "id_via_frame_effect[3]",
-                0,
+                1,
                 9,
                 3
               ]
@@ -2583,9 +2834,135 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[3]",
-                0,
+                1,
                 10,
                 3
+              ]
+            },
+            {
+              "label": "GIT Color",
+              "type": "color",
+              "content": [
+                "id_via_frame_color[8]",
+                1,
+                7,
+                8
+              ]
+            },
+            {
+              "label": "GIT Brightness",
+              "type": "range",
+              "options": [
+                0,
+                255
+              ],
+              "content": [
+                "id_via_frame_brightness[8]",
+                1,
+                8,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect",
+              "type": "dropdown",
+              "options": [
+                [
+                  "Wild",
+                  0
+                ],
+                [
+                  "Breathing",
+                  1
+                ],
+                [
+                  "Running",
+                  2
+                ],
+                [
+                  "Twinkle",
+                  3
+                ],
+                [
+                  "Pulse",
+                  4
+                ],
+                [
+                  "Solid",
+                  5
+                ],
+                [
+                  "Comet",
+                  6
+                ],
+                [
+                  "Scan",
+                  7
+                ],
+                [
+                  "Rainbow",
+                  8
+                ],
+                [
+                  "Stack",
+                  9
+                ],
+                [
+                  "Off",
+                  10
+                ],
+                [
+                  "Nav Blink",
+                  11
+                ],
+                [
+                  "Typewriter",
+                  12
+                ],
+                [
+                  "Visualizer",
+                  13
+                ],
+                [
+                  "Pong",
+                  14
+                ],
+                [
+                  "Packet",
+                  15
+                ],
+                [
+                  "Bloom",
+                  16
+                ],
+                [
+                  "Sweep",
+                  17
+                ],
+                [
+                  "Tilt",
+                  18
+                ]
+              ],
+              "content": [
+                "id_via_frame_effect[8]",
+                1,
+                9,
+                8
+              ]
+            },
+            {
+              "label": "GIT Effect Speed",
+              "type": "range",
+              "options": [
+                1,
+                255
+              ],
+              "content": [
+                "id_via_frame_effect_speed[8]",
+                1,
+                10,
+                8
               ]
             },
             {
@@ -2593,7 +2970,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[4]",
-                0,
+                1,
                 7,
                 4
               ]
@@ -2607,7 +2984,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[4]",
-                0,
+                1,
                 8,
                 4
               ]
@@ -2695,7 +3072,7 @@
               ],
               "content": [
                 "id_via_frame_effect[4]",
-                0,
+                1,
                 9,
                 4
               ]
@@ -2709,7 +3086,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[4]",
-                0,
+                1,
                 10,
                 4
               ]
@@ -2719,7 +3096,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[5]",
-                0,
+                1,
                 7,
                 5
               ]
@@ -2733,7 +3110,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[5]",
-                0,
+                1,
                 8,
                 5
               ]
@@ -2821,7 +3198,7 @@
               ],
               "content": [
                 "id_via_frame_effect[5]",
-                0,
+                1,
                 9,
                 5
               ]
@@ -2835,7 +3212,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[5]",
-                0,
+                1,
                 10,
                 5
               ]
@@ -2845,7 +3222,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[6]",
-                0,
+                1,
                 7,
                 6
               ]
@@ -2859,7 +3236,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[6]",
-                0,
+                1,
                 8,
                 6
               ]
@@ -2947,7 +3324,7 @@
               ],
               "content": [
                 "id_via_frame_effect[6]",
-                0,
+                1,
                 9,
                 6
               ]
@@ -2961,7 +3338,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[6]",
-                0,
+                1,
                 10,
                 6
               ]
@@ -2971,7 +3348,7 @@
               "type": "color",
               "content": [
                 "id_via_frame_color[7]",
-                0,
+                1,
                 7,
                 7
               ]
@@ -2985,7 +3362,7 @@
               ],
               "content": [
                 "id_via_frame_brightness[7]",
-                0,
+                1,
                 8,
                 7
               ]
@@ -3073,7 +3450,7 @@
               ],
               "content": [
                 "id_via_frame_effect[7]",
-                0,
+                1,
                 9,
                 7
               ]
@@ -3087,7 +3464,7 @@
               ],
               "content": [
                 "id_via_frame_effect_speed[7]",
-                0,
+                1,
                 10,
                 7
               ]
@@ -3130,7 +3507,7 @@
     },
     {
       "name": "SEL_DEV",
-      "title": "Go to GAME layer",
+      "title": "Go to GAME layer (selector 2x gives MOUSE)",
       "shortName": "GAME"
     },
     {
@@ -3160,83 +3537,83 @@
     },
     {
       "name": "GM_MOUSE",
-      "title": "GAME mouse mode",
-      "shortName": "MOUSE"
+      "title": "GAME WASD mode",
+      "shortName": "WASD"
     },
     {
       "name": "GM_TILT",
-      "title": "Toggle GAME tilt",
+      "title": "Toggle tilt detection (GAME and MOUSE)",
       "shortName": "TILT"
     },
     {
       "name": "GM_1",
-      "title": "GAME target 1",
+      "title": "GAME slot 1 (ESC or SHFT)",
       "shortName": "G1"
     },
     {
       "name": "GM_2",
-      "title": "GAME target 2",
+      "title": "GAME slot 2 (UP or W)",
       "shortName": "G2"
     },
     {
       "name": "GM_3",
-      "title": "GAME target 3",
+      "title": "GAME slot 3 (ENT or SPC)",
       "shortName": "G3"
     },
     {
       "name": "GM_4",
-      "title": "GAME target 4",
+      "title": "GAME slot 4 (LEFT or A)",
       "shortName": "G4"
     },
     {
       "name": "GM_5",
-      "title": "GAME target 5",
+      "title": "GAME slot 5 (DOWN or S)",
       "shortName": "G5"
     },
     {
       "name": "GM_6",
-      "title": "GAME target 6",
+      "title": "GAME slot 6 (RGHT or D)",
       "shortName": "G6"
     },
     {
       "name": "WIN_BRO",
-      "title": "Toggle WINDOW browser mode",
-      "shortName": "BRO"
+      "title": "Context mode key M1 (WINDOW=BRO, TEXT=ACT, VSC=NAV, RGB=ZONE, WORK=VSC, PROMPT=PICS)",
+      "shortName": "M1"
     },
     {
       "name": "WIN_AUX",
-      "title": "Toggle WINDOW snap mode",
-      "shortName": "SNAP"
+      "title": "Context mode key M2 (WINDOW=SNAP, TEXT=EDIT, VSC=AI, RGB=ANIM, WORK=APP, PROMPT=ETSY)",
+      "shortName": "M2"
     },
     {
       "name": "WIN_1",
-      "title": "Window target 1",
-      "shortName": "W1"
+      "title": "Context slot S1 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S1"
     },
     {
       "name": "WIN_2",
-      "title": "Window target 2",
-      "shortName": "W2"
+      "title": "Context slot S2 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S2"
     },
     {
       "name": "WIN_3",
-      "title": "Window target 3",
-      "shortName": "W3"
+      "title": "Context slot S3 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S3"
     },
     {
       "name": "WIN_4",
-      "title": "Window target 4",
-      "shortName": "W4"
+      "title": "Context slot S4 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S4"
     },
     {
       "name": "WIN_5",
-      "title": "Window target 5",
-      "shortName": "W5"
+      "title": "Context slot S5 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S5"
     },
     {
       "name": "WIN_6",
-      "title": "Window target 6",
-      "shortName": "W6"
+      "title": "Context slot S6 (WINDOW/TEXT/VSC/PROMPT/RGB/WORK)",
+      "shortName": "S6"
     },
     {
       "name": "TXT_ACT",
@@ -3250,32 +3627,32 @@
     },
     {
       "name": "TXT_1",
-      "title": "TXT target 1",
+      "title": "TXT slot 1 (HOME / COPY / WRD<)",
       "shortName": "T1"
     },
     {
       "name": "TXT_2",
-      "title": "TXT target 2",
+      "title": "TXT slot 2 (UP / CUT / DELW)",
       "shortName": "T2"
     },
     {
       "name": "TXT_3",
-      "title": "TXT target 3",
+      "title": "TXT slot 3 (END / PASTE / WRD>)",
       "shortName": "T3"
     },
     {
       "name": "TXT_4",
-      "title": "TXT target 4",
+      "title": "TXT slot 4 (LEFT / UNDO / LINE<)",
       "shortName": "T4"
     },
     {
       "name": "TXT_5",
-      "title": "TXT target 5",
+      "title": "TXT slot 5 (DOWN / REDO / DELL)",
       "shortName": "T5"
     },
     {
       "name": "TXT_6",
-      "title": "TXT target 6",
+      "title": "TXT slot 6 (RGHT / SAVE / LINE>)",
       "shortName": "T6"
     },
     {
@@ -3290,32 +3667,32 @@
     },
     {
       "name": "VSC_1",
-      "title": "VSC target 1",
+      "title": "VSC slot 1 (EXPL / FILE)",
       "shortName": "V1"
     },
     {
       "name": "VSC_2",
-      "title": "VSC target 2",
+      "title": "VSC slot 2 (SRCH / SYMB / REVW)",
       "shortName": "V2"
     },
     {
       "name": "VSC_3",
-      "title": "VSC target 3",
+      "title": "VSC slot 3 (TERM / TERM / FIX)",
       "shortName": "V3"
     },
     {
       "name": "VSC_4",
-      "title": "VSC target 4",
+      "title": "VSC slot 4 (SRC / BACK / TEST)",
       "shortName": "V4"
     },
     {
       "name": "VSC_5",
-      "title": "VSC target 5",
+      "title": "VSC slot 5 (GIT / CMD / DOCS)",
       "shortName": "V5"
     },
     {
       "name": "VSC_6",
-      "title": "VSC target 6",
+      "title": "VSC slot 6 (RUN / FWD / COMMIT)",
       "shortName": "V6"
     },
     {
@@ -3362,6 +3739,41 @@
       "name": "RGB_SATD",
       "title": "Saturation down",
       "shortName": "SAT-"
+    },
+    {
+      "name": "WRK_APP",
+      "title": "WORK app shortcut (GitHub)",
+      "shortName": "APP"
+    },
+    {
+      "name": "WRK_PULL",
+      "title": "WORK: run git pull",
+      "shortName": "PULL"
+    },
+    {
+      "name": "WRK_COMMIT",
+      "title": "WORK: start git add/commit command",
+      "shortName": "CMMT"
+    },
+    {
+      "name": "WRK_PUSH",
+      "title": "WORK: run git push",
+      "shortName": "PUSH"
+    },
+    {
+      "name": "WRK_BRANCH",
+      "title": "WORK: start git checkout -b",
+      "shortName": "BRCH"
+    },
+    {
+      "name": "WRK_PR",
+      "title": "WORK: create PR in browser",
+      "shortName": "PR"
+    },
+    {
+      "name": "WRK_SYNC",
+      "title": "WORK: run git status",
+      "shortName": "SYNC"
     }
   ],
   "matrix": {

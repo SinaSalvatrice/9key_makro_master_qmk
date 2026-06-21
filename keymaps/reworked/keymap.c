@@ -41,8 +41,8 @@
 #define OLED_DOUBLE_TAP_MS     320
 #define OLED_HOLD_MS           450
 #define CLEAR_EEPROM_HOLD_MS   3000
-#define VIA_LAYER_SLOT_COUNT   8
-#define REWORKED_LAYOUT_VERSION 8
+#define VIA_LAYER_SLOT_COUNT   9
+#define REWORKED_LAYOUT_VERSION 9
 #define ENCODER_HELP_HOLD_MS   700
 #define ENCODER_HELP_SHOW_MS   2500
 #define RGB_FRAME_WANDER_SHOW_MS 900
@@ -66,16 +66,25 @@
 #    define ADXL345_FLUID_ACCEL_DIV 9
 #    define ADXL345_FLUID_DAMP_NUM  2
 #    define ADXL345_FLUID_DAMP_DEN  3
-#    define ADXL345_GAME_TILT_ON    70
-#    define ADXL345_GAME_TILT_OFF   40
+#    define ADXL345_GAME_TILT_ON    58
+#    define ADXL345_GAME_TILT_OFF   34
 #    ifndef ADXL345_GAME_AXIS_DEBOUNCE_MS
 #        define ADXL345_GAME_AXIS_DEBOUNCE_MS 60
 #    endif
 #    ifndef ADXL345_MOUSE_AXIS_DEBOUNCE_MS
-#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 18
+#        define ADXL345_MOUSE_AXIS_DEBOUNCE_MS 20
+#    endif
+#    ifndef ADXL345_MOUSE_TILT_ON
+#        define ADXL345_MOUSE_TILT_ON 52
+#    endif
+#    ifndef ADXL345_MOUSE_TILT_OFF
+#        define ADXL345_MOUSE_TILT_OFF 28
+#    endif
+#    ifndef ADXL345_MOUSE_BLEND_DIV
+#        define ADXL345_MOUSE_BLEND_DIV 2
 #    endif
 #    ifndef ADXL345_GAME_DEADZONE
-#        define ADXL345_GAME_DEADZONE 6
+#        define ADXL345_GAME_DEADZONE 5
 #    endif
 #    ifndef ADXL345_GAME_FILTER_DIV
 #        define ADXL345_GAME_FILTER_DIV 4
@@ -97,6 +106,7 @@ enum layers {
     _WINDOW,
     _TEXT,
     _MEDIA,
+    _MEDIA_GAME,
     _DEV,
     _VSC,
     _RGB,
@@ -104,7 +114,7 @@ enum layers {
     _RGBADJ,
     _MARK,
     _WORK,
-    _SYS,
+    _SYS, // repurposed as NAV layer
     _PROMPT,
     _SELECT,
     _GAME,
@@ -180,7 +190,7 @@ enum custom_keycodes {
 enum tap_dance_ids {
     TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
-    TD_SEL_TXT_WORK,
+    TD_SEL_MEDIA_GAME,
     TD_SEL_DEV_GAME,
     TD_SEL_VSC_SYS,
 };
@@ -334,6 +344,10 @@ static bool tilt_game_up_held             = false;
 static bool tilt_game_down_held           = false;
 static bool tilt_game_left_held           = false;
 static bool tilt_game_right_held          = false;
+static bool tilt_game_w_held              = false;
+static bool tilt_game_a_held              = false;
+static bool tilt_game_s_held              = false;
+static bool tilt_game_d_held              = false;
 static bool tilt_game_mouse_up_held       = false;
 static bool tilt_game_mouse_down_held     = false;
 static bool tilt_game_mouse_left_held     = false;
@@ -411,6 +425,8 @@ enum via_custom_value {
     id_via_gap_effect_speed   = 14,
 };
 
+#define VIA_CUSTOM_CHANNEL_ID 1
+
 typedef struct {
     uint8_t      signature;
     uint8_t      layout_version;
@@ -445,10 +461,10 @@ static select_slot_t select_slots[PAD_KEY_COUNT] = {
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 5, 6, 7, 8
+    0, 1, 2, 3, 5, 6, 7, 8, 4
 };
 
-// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT.
+// Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT, GIT.
 static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {128, 220, 108}, // BASE
     {176, 240, 112}, // WINDOW
@@ -458,6 +474,7 @@ static const hsv_config_t via_default_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 255, 118}, // VSC
     {210, 255, 124}, // RGB
     { 14, 255, 124}, // PROMPT
+    { 86, 220, 120}, // GIT
 };
 
 static const uint8_t via_default_layer_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -469,10 +486,11 @@ static const uint8_t via_default_layer_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_SOLID,
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_SOLID,
+    RGB_EFFECT_SOLID,
 };
 
 static const uint8_t via_default_layer_speed[VIA_LAYER_SLOT_COUNT] = {
-    88, 104, 96, 112, 112, 98, 124, 94,
+    88, 104, 96, 112, 112, 98, 124, 94, 108,
 };
 
 static const uint8_t via_default_gap_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -484,10 +502,11 @@ static const uint8_t via_default_gap_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_PACKET,
     RGB_EFFECT_RUNNING,
     RGB_EFFECT_PULSE,
+    RGB_EFFECT_TWINKLE,
 };
 
 static const uint8_t via_default_gap_speed[VIA_LAYER_SLOT_COUNT] = {
-    80, 104, 96, 108, 108, 110, 130, 92,
+    80, 104, 96, 108, 108, 110, 130, 92, 108,
 };
 
 static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
@@ -499,6 +518,7 @@ static const hsv_config_t via_default_gap_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 255,  46},
     {210, 255,  56},
     { 14, 255,  44},
+    { 42, 255,  44},
 };
 
 static const uint8_t via_default_frame_effect[VIA_LAYER_SLOT_COUNT] = {
@@ -510,10 +530,11 @@ static const uint8_t via_default_frame_effect[VIA_LAYER_SLOT_COUNT] = {
     RGB_EFFECT_BREATHING,
     RGB_EFFECT_RAINBOW,
     RGB_EFFECT_BLOOM,
+    RGB_EFFECT_BREATHING,
 };
 
 static const uint8_t via_default_frame_speed[VIA_LAYER_SLOT_COUNT] = {
-    92, 106, 94, 110, 108, 100, 130, 92,
+    92, 106, 94, 110, 108, 100, 130, 92, 108,
 };
 
 static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
@@ -525,6 +546,7 @@ static const hsv_config_t via_default_frame_palette[VIA_LAYER_SLOT_COUNT] = {
     {166, 240,  90},
     {210, 255, 104},
     { 14, 240,  92},
+    {210,  96,  90},
 };
 
 static const char *const vsc_main_labels[6] = {"EXPL", "SRCH", "TERM", "SRC", "GIT", "RUN"};
@@ -618,37 +640,32 @@ static const char *const window_snap_functions[6]    = {"Maximize window", "Snap
 
 static const char *const game_nav_labels[6]   = {"ESC", "UP", "ENT", "LEFT", "DOWN", "RGHT"};
 static const char *const game_mouse_labels[6] = {"SHFT", "W", "SPC", "A", "S", "D"};
-static const char *const game_hidden_labels[8] = {"SEL", "X", "Y", "LSTK", "R", "L", "RT", "LT"};
 
 static const char *const game_nav_functions[6]   = {"Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"};
 static const char *const game_mouse_functions[6] = {"One-shot sprint or crouch", "Move forward", "Jump or confirm", "Move left", "Move back", "Move right"};
-static const char *const game_hidden_functions[8] = {
-    "Select layer",
-    "Game face button X",
-    "Game face button Y",
-    "Switch to left-stick movement",
-    "Game shoulder button R",
-    "Game shoulder button L",
-    "Game right trigger",
-    "Game left trigger"
-};
 
 static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_BASE]   = {"SEL",  "UP",   "BSPC", "LEFT", "ENT",  "RGHT", "UNDO", "DOWN", "REDO"},
     [_WINDOW] = {"SEL",  "BRO",  "SNAP", "DESK<","TASK", "DESK>","WIN<", "SHOW", "WIN>"},
     [_TEXT]   = {"SEL",  "ACT",  "EDIT", "HOME", "UP",   "END",  "LEFT", "DOWN", "RGHT"},
     [_MEDIA]  = {"SEL",  "PREV", "NEXT", "VOL-", "PLAY", "VOL+", "RWND", "MUTE", "FFWD"},
+    [_MEDIA_GAME] = {"SEL", "L", "K", "I", "U", "H", "J", "O", "ESC"},
     [_RGB]    = {"SEL",  "ZONE", "ANIM",  "HUE+",  "HUE-",  "VAL+",  "SAT+",  "SAT-",  "VAL-"},
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
-    [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "SYS"},
+    [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "NAV"},
     [_WORK]   = {"SEL",  "VSC",  "DESK", "PULL", "COMMIT", "PUSH", "BRCH", "PR", "SYNC"},
-    [_SYS]    = {"SEL",  "TERM", "TASK",  "QMK",  "GIT",  "USB",  "CONF", "LOG",  "LOCK"},
-    [_DEV]    = {"SEL",  "NAV",  "MOUSE", "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
-    [_GAME]   = {"SEL",  "X",    "Y",     "LSTK", "R",    "L",    "RT",   "LT",   "TILT"},
+    // Repurpose the SYS layer as a global navigation (NAV) layer.  The
+    // legend strings reflect the new key assignments: arrow keys on the
+    // middle row/column plus Page Up/Down and Home/End on the corners.  The
+    // center key retains its base-layer tap function (Enter) while acting as
+    // the momentary switch into this NAV layer on other layers via LT().
+    [_SYS]    = {"SEL",  "UP",   "PGUP",  "LEFT", "ENT", "RGHT", "HOME", "DOWN", "PGDN"},
+    [_DEV]    = {"SEL",  "NAV",  "WASD",  "ESC",  "UP",   "ENT",  "LEFT", "DOWN", "RGHT"},
+    [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN",  "TXT", "MED",  "GIT", "GAME", "VSC", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "MOUSE", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -656,17 +673,22 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_WINDOW] = {"Select layer", "Hold browser controls", "Hold snap controls", "Prev desktop", "Task view", "Next desktop", "Prev window", "Show desktop", "Next window"},
     [_TEXT]   = {"Select layer", "Hold text actions", "Hold edit tools", "Line start", "Cursor up", "Line end", "Cursor left", "Cursor down", "Cursor right"},
     [_MEDIA]  = {"Select layer", "Previous track", "Next track", "Volume down", "Play/Pause", "Volume up", "Rewind", "Mute", "Fast forward"},
+    [_MEDIA_GAME] = {"Select layer", "Type L", "Type K", "Type I", "Type U", "Type H", "Type J", "Type O", "Escape"},
     [_RGB]    = {"Select layer", "Hold RGB zone controls", "Cycle RGB animation mode", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down", "Brightness down"},
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
-    [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "System shortcuts"},
+    [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "Nav shortcuts"},
     [_WORK]   = {"Select layer", "Go to VSC layer", "Open GitHub Desktop or app", "git pull", "git add/commit prompt", "git push", "Create branch", "Create PR in browser", "git status"},
-    [_SYS]    = {"Select layer", "Terminal", "Task tools", "QMK tools", "Git tools", "USB tools", "Config files", "Logs/actions", "Lock/sleep"},
-    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to movement controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
-    [_GAME]   = {"Select layer", "Game face button X", "Game face button Y", "Switch to left-stick movement", "Game shoulder button R", "Game shoulder button L", "Game right trigger", "Game left trigger", "Toggle tilt detection"},
+    // Update function descriptions for the repurposed NAV layer.  The
+    // descriptions mirror the legend above.
+    [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
+    [_DEV]    = {"Select layer", "Switch to menu navigation", "Switch to WASD controls", "Back out of menu", "Menu up", "Confirm or interact", "Menu left", "Menu down", "Menu right"},
+    [_GAME]   = {"Select layer", "Mouse right click", "Mouse left click", "Mouse left", "Mouse up", "Mouse right", "Mouse middle click", "Mouse down", "Toggle tilt detection"},
     [_VSC]    = {"Select layer", "Hold VSC nav mode", "Hold AI prompts", "Explorer", "Search", "Terminal", "Source control", "Git or command palette", "Run task"},
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "1x TEXT / 2x WORK", "Go to MEDIA layer", "Go to GIT layer", "Go to GAME layer", "1x VSC / 2x SYS", "Go to RGB layer", "Go to PROMPT layer"},
+    // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
+    // description accordingly since SYS has been repurposed as NAV.
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to GIT layer", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -675,14 +697,15 @@ static const char *layer_name_short(uint8_t l) {
         case _WINDOW: return "WIN";
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MED";
+        case _MEDIA_GAME: return "MED+";
         case _RGB:    return "RGB";
         case _RGBMOD: return "MOD";
         case _RGBADJ: return "ADJ";
         case _MARK:   return "MARK";
         case _WORK:   return "GIT";
-        case _SYS:    return "SYS";
+        case _SYS:    return "NAV";
         case _DEV:    return "GAME";
-        case _GAME:   return "GAME+";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SEL";
@@ -696,14 +719,15 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _WINDOW: return "WINDOW";
         case _TEXT:   return "TXT";
         case _MEDIA:  return "MEDIA";
+        case _MEDIA_GAME: return "MEDIA ALT";
         case _RGB:    return "RGB";
         case _RGBMOD: return "RGB MOD";
         case _RGBADJ: return "ADJST";
         case _MARK:   return "BOOKMARK";
         case _WORK:   return "WORK";
-        case _SYS:    return "SYSTEM";
+        case _SYS:    return "NAV";
         case _DEV:    return "GAME";
-        case _GAME:   return "GAME ALT";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
@@ -713,6 +737,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
 
 static uint8_t canonical_rgb_layer(uint8_t layer) {
     if (layer == _RGBMOD || layer == _RGBADJ) return _RGB;
+    if (layer == _MEDIA_GAME) return _MEDIA;
     if (layer == _GAME) return _DEV;
     return layer;
 }
@@ -748,10 +773,12 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _WINDOW: return window_browser_held ? "Browser page prev/next" : (window_snap_held ? "Snap left/right" : (encoder_btn_pressed ? "Desktop prev/next" : "Alt-Tab window switch"));
         case _TEXT:   return encoder_btn_pressed ? "Select text left/right" : "Move cursor left/right";
         case _MEDIA:  return "Volume up/down";
+        case _MEDIA_GAME: return "Volume up/down";
         case _RGB:    return "RGB brightness +/-";
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
         case _DEV:    return "Weapon or inventory scroll";
+        case _GAME:   return "Mouse wheel up/down";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
@@ -884,7 +911,7 @@ static MAYBE_UNUSED const char *rgb_function_for(uint8_t index) { return rgb_fun
 static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "SEL";
     if (index == 1) return "NAV";
-    if (index == 2) return "MOUSE";
+    if (index == 2) return "WASD";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_labels[slot] : game_mouse_labels[slot];
@@ -895,7 +922,7 @@ static const char *game_label_for_mode(game_mode_t mode, uint8_t index) {
 static const char *game_function_for_mode(game_mode_t mode, uint8_t index) {
     if (index == 0) return "Select layer";
     if (index == 1) return "Switch to menu navigation";
-    if (index == 2) return "Switch to tilt mouse controls";
+    if (index == 2) return "Switch to WASD controls";
     if (index >= 3 && index < 9) {
         uint8_t slot = index - 3;
         return mode == GAME_MODE_NAV ? game_nav_functions[slot] : game_mouse_functions[slot];
@@ -907,7 +934,7 @@ static MAYBE_UNUSED const char *game_label_for(uint8_t index) { return game_labe
 static MAYBE_UNUSED const char *game_function_for(uint8_t index) { return game_function_for_mode(current_game_preview_mode(), index); }
 
 static const char *game_mode_name(game_mode_t mode) {
-    return mode == GAME_MODE_NAV ? "NAV" : "MOUSE";
+    return mode == GAME_MODE_NAV ? "NAV" : "WASD";
 }
 
 static const char *prompt_label_for_mode(prompt_mode_t mode, uint8_t index) {
@@ -1025,9 +1052,6 @@ static uint8_t via_palette_index_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_SOLID;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.layer_effect[index] < RGB_EFFECT_COUNT) {
@@ -1054,9 +1078,6 @@ static uint8_t effect_speed_for_layer(uint8_t layer) {
 }
 
 static hsv_config_t gap_palette_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return (hsv_config_t){42, 255, 44};
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -1067,9 +1088,6 @@ static hsv_config_t gap_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t gap_effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_TWINKLE;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.gap_effect[index] < RGB_EFFECT_COUNT) {
@@ -1099,9 +1117,6 @@ static uint16_t gap_effect_period_for_layer(uint8_t layer, uint16_t base_period)
 }
 
 static hsv_config_t frame_palette_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return (hsv_config_t){210, 96, 90};
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT) {
@@ -1112,9 +1127,6 @@ static hsv_config_t frame_palette_for_layer(uint8_t layer) {
 }
 
 static rgb_effect_mode_t frame_effect_for_layer(uint8_t layer) {
-    if (layer == _WORK) {
-        return RGB_EFFECT_BREATHING;
-    }
 #ifdef VIA_ENABLE
     uint8_t index = via_palette_index_for_layer(layer);
     if (index < VIA_LAYER_SLOT_COUNT && via_user_config.frame_effect[index] < RGB_EFFECT_COUNT) {
@@ -1507,7 +1519,7 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length) {
     uint8_t *channel_id = &data[1];
     uint8_t *value_id_and_data = &data[2];
 
-    if (*channel_id == 0) {
+    if (*channel_id == VIA_CUSTOM_CHANNEL_ID) {
         switch (*command_id) {
             case id_custom_set_value: via_config_set_value(value_id_and_data); break;
             case id_custom_get_value: via_config_get_value(value_id_and_data); break;
@@ -1820,6 +1832,7 @@ static bool layer_mode_key_for_layer(uint8_t layer, uint8_t key_index) {
         case _WORK:
         case _SYS:
         case _DEV:
+        case _GAME:
         case _VSC:
         case _RGB:
         case _PROMPT:
@@ -1841,7 +1854,7 @@ static int8_t sign_i16(int16_t v) {
     return 0;
 }
 
-static uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
+static MAYBE_UNUSED uint8_t clamp_u8_i16(int16_t value, uint8_t min, uint8_t max) {
     if (value < min) return min;
     if (value > max) return max;
     return (uint8_t)value;
@@ -1916,32 +1929,32 @@ static void update_tilt_game_control(uint16_t keycode, bool *held, bool pressed)
     if (pressed == *held) return;
 
     if (pressed) {
-        register_code(keycode);
+        register_code16(keycode);
     } else {
-        unregister_code(keycode);
+        unregister_code16(keycode);
     }
 
     *held = pressed;
 }
 
-static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state) {
+static int8_t adxl345_axis_desired_state(int16_t value, int8_t current_state, uint16_t on_threshold, uint16_t off_threshold) {
     uint16_t magnitude = abs_i16_u16(value);
     int8_t sign = sign_i16(value);
 
     if (current_state == 0) {
-        if (sign == 0 || magnitude < ADXL345_GAME_TILT_ON) return 0;
+        if (sign == 0 || magnitude < on_threshold) return 0;
         return sign;
     }
 
-    if (magnitude <= ADXL345_GAME_TILT_OFF) return 0;
+    if (magnitude <= off_threshold) return 0;
     if (sign == 0 || sign == current_state) return current_state;
 
     // If we cross through zero with enough magnitude, switch immediately.
-    return magnitude >= ADXL345_GAME_TILT_ON ? sign : current_state;
+    return magnitude >= on_threshold ? sign : current_state;
 }
 
-static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since, uint16_t debounce_ms) {
-    int8_t desired = adxl345_axis_desired_state(value, *state);
+static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pending, uint32_t *pending_since, uint16_t debounce_ms, uint16_t on_threshold, uint16_t off_threshold) {
+    int8_t desired = adxl345_axis_desired_state(value, *state, on_threshold, off_threshold);
     if (desired == *state) {
         *pending = *state;
         *pending_since = 0;
@@ -1963,9 +1976,15 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 }
 
 static void update_game_tilt_arrows(void) {
-    bool tilt_active = adxl345_ready && game_tilt_enabled && active_layer_raw() == _DEV;
-    bool nav_tilt_active = tilt_active && game_mode == GAME_MODE_NAV;
-    bool mouse_tilt_active = tilt_active && game_mode == GAME_MODE_MOUSE;
+    uint8_t top_layer = active_layer_raw();
+    // Tilt effects:
+    // - On GAME base layer (_DEV): only in WASD mode (GAME_MODE_MOUSE) and it should emit W/A/S/D.
+    // - On hidden MOUSE layer (_GAME): always emits mouse cursor movement.
+    bool tilt_layer_active = (top_layer == _GAME) || (top_layer == _DEV && game_mode == GAME_MODE_MOUSE);
+    bool tilt_active = adxl345_ready && game_tilt_enabled && tilt_layer_active;
+    bool nav_tilt_active = false;
+    bool wasd_tilt_active = tilt_active && top_layer == _DEV && game_mode == GAME_MODE_MOUSE;
+    bool mouse_tilt_active = tilt_active && top_layer == _GAME;
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;
@@ -1979,10 +1998,46 @@ static void update_game_tilt_arrows(void) {
         tilt_game_x_pending_since = 0;
         tilt_game_y_pending_since = 0;
     } else {
-        uint16_t debounce_ms = mouse_tilt_active ? ADXL345_MOUSE_AXIS_DEBOUNCE_MS : ADXL345_GAME_AXIS_DEBOUNCE_MS;
+        int16_t axis_x = adxl345_game_x;
+        int16_t axis_y = adxl345_game_y;
+        uint16_t debounce_ms = ADXL345_GAME_AXIS_DEBOUNCE_MS;
+        uint16_t on_threshold = ADXL345_GAME_TILT_ON;
+        uint16_t off_threshold = ADXL345_GAME_TILT_OFF;
 
-        tilt_game_x_state = adxl345_axis_update_state(adxl345_game_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms);
-        tilt_game_y_state = adxl345_axis_update_state(adxl345_game_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms);
+        if (mouse_tilt_active) {
+            // IMPORTANT: adxl345_game_x/y are mapped into "game space" (swap/invert).
+            // adxl345_fluid_x/y are kept in raw sensor space for smooth RGB visuals.
+            // For mouse tilt we blend the two, so we must first map the fluid axes
+            // into the same space to avoid sign/axis cancellation.
+            int16_t fluid_x = adxl345_fluid_x;
+            int16_t fluid_y = adxl345_fluid_y;
+
+#if ADXL345_GAME_SWAP_XY
+            int16_t tmp = fluid_x;
+            fluid_x = fluid_y;
+            fluid_y = tmp;
+#endif
+#if ADXL345_GAME_INVERT_X
+            fluid_x = (int16_t)-fluid_x;
+#endif
+#if ADXL345_GAME_INVERT_Y
+            fluid_y = (int16_t)-fluid_y;
+#endif
+
+#if ADXL345_MOUSE_BLEND_DIV <= 1
+            axis_x = fluid_x;
+            axis_y = fluid_y;
+#else
+            axis_x = (int16_t)(((int32_t)adxl345_game_x * (ADXL345_MOUSE_BLEND_DIV - 1) + fluid_x) / ADXL345_MOUSE_BLEND_DIV);
+            axis_y = (int16_t)(((int32_t)adxl345_game_y * (ADXL345_MOUSE_BLEND_DIV - 1) + fluid_y) / ADXL345_MOUSE_BLEND_DIV);
+#endif
+            debounce_ms = ADXL345_MOUSE_AXIS_DEBOUNCE_MS;
+            on_threshold = ADXL345_MOUSE_TILT_ON;
+            off_threshold = ADXL345_MOUSE_TILT_OFF;
+        }
+
+        tilt_game_x_state = adxl345_axis_update_state(axis_x, &tilt_game_x_state, &tilt_game_x_pending, &tilt_game_x_pending_since, debounce_ms, on_threshold, off_threshold);
+        tilt_game_y_state = adxl345_axis_update_state(axis_y, &tilt_game_y_state, &tilt_game_y_pending, &tilt_game_y_pending_since, debounce_ms, on_threshold, off_threshold);
 
         press_up = tilt_game_y_state > 0;
         press_down = tilt_game_y_state < 0;
@@ -1994,6 +2049,11 @@ static void update_game_tilt_arrows(void) {
     update_tilt_game_control(KC_DOWN, &tilt_game_down_held, nav_tilt_active && press_down);
     update_tilt_game_control(KC_LEFT, &tilt_game_left_held, nav_tilt_active && press_left);
     update_tilt_game_control(KC_RGHT, &tilt_game_right_held, nav_tilt_active && press_right);
+
+    update_tilt_game_control(KC_W, &tilt_game_w_held, wasd_tilt_active && press_up);
+    update_tilt_game_control(KC_S, &tilt_game_s_held, wasd_tilt_active && press_down);
+    update_tilt_game_control(KC_A, &tilt_game_a_held, wasd_tilt_active && press_left);
+    update_tilt_game_control(KC_D, &tilt_game_d_held, wasd_tilt_active && press_right);
 
     update_tilt_game_control(MS_UP, &tilt_game_mouse_up_held, mouse_tilt_active && press_up);
     update_tilt_game_control(MS_DOWN, &tilt_game_mouse_down_held, mouse_tilt_active && press_down);
@@ -2175,13 +2235,13 @@ static void adxl345_task(void) {
 #endif
 }
 
-static const char *adxl345_status_label(void) {
+static MAYBE_UNUSED const char *adxl345_status_label(void) {
     return adxl345_ready ? "ADXL:OK" : "ADXL:NO";
 }
 #else
 static void adxl345_init(void) {}
 static void adxl345_task(void) {}
-static const char *adxl345_status_label(void) { return "ADXL:OFF"; }
+static MAYBE_UNUSED const char *adxl345_status_label(void) { return "ADXL:OFF"; }
 #endif
 
 #ifdef RGBLIGHT_ENABLE
@@ -3239,78 +3299,104 @@ static void render_rgb_layer_visuals(void) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_BASE] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_HOME,       KC_BSPC,
-        KC_LEFT,     KC_ENT,      KC_RGHT,
+        KC_LEFT,     LT(_SYS, KC_ENT),      KC_RGHT,
         LCTL(KC_Z),  KC_END,     LCTL(KC_Y)
     ),
+
     [_WINDOW] = LAYOUT(
         TD(TD_LAYER_SELECT), WIN_BRO, WIN_AUX,
         WIN_1,       WIN_2,   WIN_3,
         WIN_4,       WIN_5,   WIN_6
     ),
+
     [_TEXT] = LAYOUT(
         TD(TD_LAYER_SELECT), TXT_ACT, TXT_EDT,
-        TXT_1,       TXT_2,   TXT_3,
+        TXT_1,       LT(_SYS, TXT_2),   TXT_3,
         TXT_4,       TXT_5,   TXT_6
     ),
+
     [_MEDIA] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_MPRV, KC_MNXT,
         KC_VOLD,     KC_MPLY, KC_VOLU,
         KC_MRWD,     KC_MUTE, KC_MFFD
     ),
+
+    [_MEDIA_GAME] = LAYOUT(
+        TD(TD_LAYER_SELECT), KC_L,    KC_K,
+        KC_I,        KC_U,   KC_H,
+        KC_J,        KC_O,   KC_ESC
+    ),
+
     [_RGB] = LAYOUT(
         TD(TD_LAYER_SELECT), RGB_MODE, RGB_TOG,
         RGB_HUEU,    RGB_HUED, RGB_VALU,
         RGB_SATU,    RGB_SATD, RGB_VALD
     ),
+
     [_RGBMOD] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_TRNS, KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_RGBADJ] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_TRNS,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_MARK] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO,
         KC_NO,       KC_NO,   KC_NO
     ),
+
     [_WORK] = LAYOUT(
         TD(TD_LAYER_SELECT), SEL_VSC,   WRK_APP,
         WRK_PULL,    WRK_COMMIT, WRK_PUSH,
         WRK_BRANCH,  WRK_PR,     WRK_SYNC
     ),
+
     [_SYS] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO,
-        KC_NO,       KC_NO,   KC_NO
+        TD(TD_LAYER_SELECT), KC_UP,   KC_PGUP,
+        KC_LEFT,     KC_ENT,  KC_RGHT,
+        KC_HOME,     KC_DOWN, KC_PGDN
     ),
+
     [_DEV] = LAYOUT(
         TD(TD_LAYER_SELECT), GM_NAV,  GM_MOUSE,
         GM_1,        GM_2,    GM_3,
         GM_4,        GM_5,    GM_6
     ),
+
+    [_GAME] = LAYOUT(
+        TD(TD_LAYER_SELECT), MS_BTN2, MS_BTN1,
+        MS_LEFT,             MS_UP,   MS_RGHT,
+        MS_BTN3,             MS_DOWN, GM_TILT
+    ),
+
     [_VSC] = LAYOUT(
         TD(TD_LAYER_SELECT), VSC_BAR, VSC_CHAT,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
+
     [_PROMPT] = LAYOUT(
         TD(TD_LAYER_SELECT), PRM_PICS, PRM_ETSY,
         VSC_1,       VSC_2,   VSC_3,
         VSC_4,       VSC_5,   VSC_6
     ),
+
     [_SELECT] = LAYOUT(
-        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), TD(TD_SEL_TXT_WORK),
-        SEL_MEDIA,   SEL_WORK,           SEL_DEV,
+        TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), SEL_TEXT,
+        TD(TD_SEL_MEDIA_GAME), SEL_WORK, TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
 
 layer_state_t layer_state_set_user(layer_state_t state) {
     static layer_state_t last_state = 0;
+    static uint8_t last_active_layer = _BASE;
     bool select_now = layer_state_cmp(state, _SELECT);
     bool select_before = layer_state_cmp(last_state, _SELECT);
 
@@ -3322,6 +3408,37 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
         selector_target = base;
         select_cursor = slot_for_layer(selector_target);
+    }
+
+    uint8_t active = get_highest_layer(state | default_layer_state);
+    if (active != last_active_layer) {
+        // Changing top layer should always clear transient sub-modes.
+        text_action_held = false;
+        text_edit_held = false;
+        text_selection_pending_copy = false;
+        window_browser_held = false;
+        window_snap_held = false;
+        vsc_mode = VSC_MODE_NONE;
+        rgb_mode_held = false;
+
+        switch (active) {
+            case _TEXT:
+                text_mode = TEXT_MODE_WIN;
+                break;
+            case _VSC:
+                last_vsc_mode = VSC_MODE_NONE;
+                break;
+            case _PROMPT:
+                prompt_mode = PROMPT_MODE_BASE;
+                break;
+            case _DEV:
+                game_mode = GAME_MODE_NAV;
+                break;
+            default:
+                break;
+        }
+
+        last_active_layer = active;
     }
 
     last_state = state;
@@ -3381,9 +3498,14 @@ static void td_select_win_mark_finished(tap_dance_state_t *state, void *user_dat
     select_target_layer(state->count >= 2 ? _MARK : _WINDOW);
 }
 
-static void td_select_txt_work_finished(tap_dance_state_t *state, void *user_data) {
+static void td_select_media_game_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
-    select_target_layer(state->count >= 2 ? _WORK : _TEXT);
+    select_target_layer(state->count >= 2 ? _MEDIA_GAME : _MEDIA);
+}
+
+static void td_select_dev_game_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _GAME : _DEV);
 }
 
 static void td_select_vsc_sys_finished(tap_dance_state_t *state, void *user_data) {
@@ -3416,8 +3538,10 @@ static void td_layer_select_reset(tap_dance_state_t *state, void *user_data) {
 }
 
 tap_dance_action_t tap_dance_actions[] = {
+    [TD_LAYER_SELECT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_layer_select_finished, td_layer_select_reset),
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
-    [TD_SEL_TXT_WORK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_txt_work_finished, NULL),
+    [TD_SEL_MEDIA_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_media_game_finished, NULL),
+    [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 
 };
@@ -3791,6 +3915,10 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
 
+        case _GAME:
+            tap_code(clockwise ? MS_WHLU : MS_WHLD);
+            break;
+
         case _VSC:
         case _SYS:
         case _PROMPT:
@@ -4013,6 +4141,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "GIT");
     } else if (layer == _DEV) {
         snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4076,9 +4206,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "WIN/TXT/VSC 2x");
-        write_line(2, "MARK/WORK/SYS");
-        write_line(3, "MED GIT GAME RGB");
+        write_line(1, "WIN/TXT/MED/GAME 2x");
+        // SYS has been repurposed to NAV; update the SELECT help to reflect this.
+        write_line(2, "MARK/MED+/MOUSE/NAV");
+        write_line(3, "GIT RGB VSC PROMPT");
         return;
     }
 
@@ -4086,7 +4217,8 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MARK TAP");
         write_line(1, "WEB APP SHOP");
         write_line(2, "AI  DEV MAIL");
-        write_line(3, "FILE SYS");
+        // SYS has become NAV; update the last row of the MARK help.
+        write_line(3, "FILE NAV");
         return;
     }
 
@@ -4099,17 +4231,19 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _SYS) {
-        write_line(0, "SYS TAP");
-        write_line(1, "TERM TASK QMK");
-        write_line(2, "GIT USB CONF");
-        write_line(3, "LOG LOCK");
+        // Provide help for the NAV (formerly SYS) layer.  Show the arrow and
+        // paging/home keys available on this layer.
+        write_line(0, "NAV TAP");
+        write_line(1, "SEL  UP  PGUP");
+        write_line(2, "LEFT ENT RGHT");
+        write_line(3, "HOME DN  PGDN");
         return;
     }
 
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
     write_line(0, line);
     write_line(1, "SEL: hold selector");
-    write_line(2, "WIN/TXT/VSC +");
+    write_line(2, "WIN/TXT/MED/MOUSE");
     write_line(3, "2x hidden layer");
 }
 
@@ -4229,6 +4363,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "GIT");
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4286,6 +4422,8 @@ static void render_legend_view(uint8_t layer) {
     } else if (layer == _WINDOW) {
         const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "APP");
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
+    } else if (layer == _GAME) {
+        snprintf(line, sizeof(line), "MOUSE TILT [%s]", game_tilt_enabled ? "ON" : "OFF");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP12: KEYS/MODES/RGB/STATUS");
@@ -4330,9 +4468,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "1x WIN/TXT/VSC");
-        write_line(2, "2x MARK/WORK/SYS");
-        write_line(3, "MED GIT GAME RGB");
+        write_line(1, "1x WIN/TXT/MED/GAME");
+        // Update the second line: SYS has become NAV
+        write_line(2, "2x MARK/MED+/MOUSE");
+        write_line(3, "VSC->NAV / GIT RGB");
         write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
         write_line(6, "");
@@ -4344,7 +4483,8 @@ static void render_tap_view(uint8_t layer) {
         write_line(0, "MARK / BOOKMARKS");
         write_line(1, "SEL  WEB  APP");
         write_line(2, "SHOP AI   DEV");
-        write_line(3, "MAIL FILE SYS");
+        // Reflect that SYS is now NAV in the Mark layer help
+        write_line(3, "MAIL FILE NAV");
         write_line(4, "Tap actions TBD");
         write_line(5, "1x / 2x / Hold");
         write_line(6, "");
@@ -4365,11 +4505,12 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _SYS) {
-        write_line(0, "SYS / TOOLS");
-        write_line(1, "SEL  TERM TASK");
-        write_line(2, "QMK  GIT  USB");
-        write_line(3, "CONF LOG  LOCK");
-        write_line(4, "Danger keys later");
+        // Provide help for the NAV (formerly SYS) layer in the non-OLED build.
+        write_line(0, "NAV / ARROWS");
+        write_line(1, "SEL  UP  PGUP");
+        write_line(2, "LEFT ENT RGHT");
+        write_line(3, "HOME DN  PGDN");
+        write_line(4, "");
         write_line(5, "");
         write_line(6, "");
         write_line(7, "SEL: selector");
@@ -4381,8 +4522,9 @@ static void render_tap_view(uint8_t layer) {
     write_line(1, "SELECT hidden:");
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
-    write_line(4, "VSC 2x = SYS");
-    write_line(5, "");
+    write_line(4, "MED 2x = MED+");
+    write_line(5, "GAME2x=MOUSE NAV");
+    // SYS has been repurposed to NAV; adjust this description accordingly.
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
 }
