@@ -1,0 +1,3 @@
+include:
+  - board: nice_nano
+    shield: settings_reset
