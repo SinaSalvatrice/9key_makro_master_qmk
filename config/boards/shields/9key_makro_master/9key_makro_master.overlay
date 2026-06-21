@@ -8,13 +8,13 @@
  *   RGB:     WS2812 strip, 65 LEDs
  *   OLED:    SSD1306, 128×32, I2C @ 0x3C
  *
- * Pin mapping currently used in this overlay:
- *   Row 0 → P0.06    Col 0 → P0.10
- *   Row 1 → P0.08    Col 1 → P0.11
- *   Row 2 → P0.09    Col 2 → P0.12
- *   Enc A → P0.14    Enc B → P0.15
- *   RGB   → P0.22
- *   SDA   → P0.17    SCL → P0.20
+ * Pin mapping on nice!nano (nRF52840 pro_micro header):
+ *   Row 0 → D4  (P0.20)    Col 0 → D7  (P1.00)
+ *   Row 1 → D5  (P0.22)    Col 1 → D8  (P0.11)
+ *   Row 2 → D6  (P0.24)    Col 2 → D9  (P1.04)
+ *   Enc A → D2  (P0.15)    Enc B → D3  (P0.17)
+ *   RGB   → D1  (P0.06)    SPI MOSI
+ *   SDA   → D18 (P0.02)    SCL → D14 (P0.03)
  */
 
 
@@ -27,7 +27,6 @@
         zmk,kscan = &kscan0;
         zmk,matrix-transform = &default_transform;
         zmk,underglow = &led_strip;
-        zephyr,display = &oled;
     };
 
     default_transform: keymap_transform_0 {
@@ -109,7 +108,6 @@
 
     oled: ssd1306@3c {
         compatible = "solomon,ssd1306fb";
-        status = "okay";
         reg = <0x3c>;
         width = <128>;
         height = <32>;
