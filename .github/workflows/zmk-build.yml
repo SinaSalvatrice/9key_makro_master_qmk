@@ -1,0 +1,20 @@
+name: ZMK Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/zmk-nicenano-3x3
+    paths:
+      - 'build.yaml'
+      - 'config/**'
+      - '.github/workflows/zmk-build.yml'
+  pull_request:
+    paths:
+      - 'build.yaml'
+      - 'config/**'
+      - '.github/workflows/zmk-build.yml'
+
+jobs:
+  build:
+    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@main
