@@ -487,7 +487,7 @@ Recommended config values for the current expanded firmware:
 
 ```c
 #define DYNAMIC_KEYMAP_LAYER_COUNT 14
-#define VIA_EEPROM_CUSTOM_CONFIG_SIZE 128
+#define VIA_EEPROM_CUSTOM_CONFIG_SIZE 192
 #define VIA_FIRMWARE_VERSION 0x0000000B
 ```
 

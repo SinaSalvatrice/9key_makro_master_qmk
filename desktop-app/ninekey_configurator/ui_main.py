@@ -585,6 +585,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 return layer.led
         return LedLayerSettings()
 
+    def _layer_profile(self, firmware_layer_id: int):
+        for layer in self._profile.layers:
+            if layer.id == firmware_layer_id:
+                return layer
+        return None
+
     def _update_keyboard_info_text(self) -> None:
         d = self._definition
         self.info.setText(

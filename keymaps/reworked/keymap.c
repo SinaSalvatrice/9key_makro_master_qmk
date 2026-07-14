@@ -447,21 +447,21 @@ static via_user_config_t via_user_config;
 #endif
 
 // Selector grid in physical key order:
-// BASE WIN TXT / MED PROMPT GAME / VSC RGB GIT
+// BASE WIN TXT / MED GIT GAME / VSC RGB PROMPT
 static select_slot_t select_slots[PAD_KEY_COUNT] = {
     { _BASE,   128, 220, 108, "BASE",   true  },
     { _WINDOW, 176, 240, 112, "WINDOW", true  },
     { _TEXT,    90, 230, 112, "TXT",    true  },
     { _MEDIA,   18, 255, 118, "MEDIA",  true  },
-    { _PROMPT,  14, 255, 124, "PROMPT", true  },
+    { _WORK,    86, 220, 120, "GIT",    true  },
     { _DEV,     32, 255, 118, "GAME",   true  },
     { _VSC,    166, 255, 118, "VSC",    true  },
     { _RGB,    210, 255, 124, "RGB",    true  },
-    { _WORK,    86, 220, 120, "GIT",    true  },
+    { _PROMPT,  14, 255, 124, "PROMPT", true  },
 };
 
 static const uint8_t via_layer_slots[VIA_LAYER_SLOT_COUNT] = {
-    0, 1, 2, 3, 5, 6, 7, 4, 8
+    0, 1, 2, 3, 5, 6, 7, 8, 4
 };
 
 // Order follows via_layer_slots: BASE, WINDOW, TEXT, MEDIA, GAME(old DEV slot), VSC, RGB, PROMPT, GIT.
@@ -665,7 +665,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "PROMPT", "MOUSE", "VSC+", "RGB", "GIT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "GIT", "MOUSE", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -688,7 +688,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
     // description accordingly since SYS has been repurposed as NAV.
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to PROMPT layer", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to GIT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to GIT layer", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -3389,8 +3389,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), SEL_TEXT,
-        TD(TD_SEL_MEDIA_GAME), SEL_PROMPT, TD(TD_SEL_DEV_GAME),
-        TD(TD_SEL_VSC_SYS), SEL_RGB,       SEL_WORK
+        TD(TD_SEL_MEDIA_GAME), SEL_WORK, TD(TD_SEL_DEV_GAME),
+        TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
 
@@ -3586,6 +3586,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         last_key_game_mode = current_game_preview_mode();
         last_key_vsc_mode = current_vsc_preview_mode();
         last_key_prompt_mode = prompt_mode;
+    }
+
+    // Keep selector+R2C2 (bottom-right, zero-based) as a hard path to PROMPT,
+    // even if VIA remaps keycodes on the SELECT layer.
+    if (matrix_select_held && record->event.pressed && record->event.key.row == 2 && record->event.key.col == 2) {
+        prompt_mode = PROMPT_MODE_BASE;
+        select_target_layer(_PROMPT);
+        return false;
     }
 
     switch (keycode) {
