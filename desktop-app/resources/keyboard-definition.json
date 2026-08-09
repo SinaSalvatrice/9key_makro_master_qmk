@@ -1,1 +1,13 @@
-
+{
+    "keyboard": "9key_makro_master",
+    "displayName": "9-Key Macro Master",
+    "vendorId": "0xFEED",
+    "productId": "0x9B01",
+    "rows": 3,
+    "cols": 3,
+    "layers": 9,
+    "encoders": 1,
+    "transport": "raw_hid",
+    "packetSize": 32,
+    "firmware": "qmk"
+}

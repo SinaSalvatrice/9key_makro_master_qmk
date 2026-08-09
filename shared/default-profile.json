@@ -1,133 +1,754 @@
 {
-  "version": "1.0",
-  "name": "Default Profile",
-  "comment": "Default key assignments from firmware keymap.c. Codes are decimal QMK 16-bit values.",
-  "layers": [
-    {
-      "id": 0, "name": "BASE",
-      "keys": [
-        { "code": 22272, "label": "SEL",   "oledLabel": "SEL",  "description": "TD(0) Layer select tap dance" },
-        { "code": 74,    "label": "Home",  "oledLabel": "HOME", "description": "Home key" },
-        { "code": 42,    "label": "⌫",     "oledLabel": "BSPC", "description": "Backspace" },
-        { "code": 80,    "label": "←",     "oledLabel": "LEFT", "description": "Left arrow" },
-        { "code": 19496, "label": "ENT",   "oledLabel": "ENT",  "description": "LT(NAV, Enter) – tap Enter, hold NAV layer" },
-        { "code": 79,    "label": "→",     "oledLabel": "RGHT", "description": "Right arrow" },
-        { "code": 285,   "label": "Undo",  "oledLabel": "UNDO", "description": "Ctrl+Z" },
-        { "code": 77,    "label": "End",   "oledLabel": "END",  "description": "End key" },
-        { "code": 284,   "label": "Redo",  "oledLabel": "REDO", "description": "Ctrl+Y" }
-      ]
-    },
-    {
-      "id": 1, "name": "WIN",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",   "description": "TD(0) Layer select" },
-        { "code": 32340, "label": "BRO",  "oledLabel": "BRO",   "description": "WIN_BRO – hold browser controls" },
-        { "code": 32341, "label": "SNAP", "oledLabel": "SNAP",  "description": "WIN_AUX – hold snap controls" },
-        { "code": 32342, "label": "DSK<", "oledLabel": "DESK<", "description": "WIN_1 – prev desktop" },
-        { "code": 32343, "label": "TASK", "oledLabel": "TASK",  "description": "WIN_2 – task view" },
-        { "code": 32344, "label": "DSK>", "oledLabel": "DESK>", "description": "WIN_3 – next desktop" },
-        { "code": 32345, "label": "WIN<", "oledLabel": "WIN<",  "description": "WIN_4 – prev window" },
-        { "code": 32346, "label": "SHOW", "oledLabel": "SHOW",  "description": "WIN_5 – show desktop" },
-        { "code": 32347, "label": "WIN>", "oledLabel": "WIN>",  "description": "WIN_6 – next window" }
-      ]
-    },
-    {
-      "id": 2, "name": "TXT",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",  "description": "TD(0) Layer select" },
-        { "code": 32352, "label": "ACT",  "oledLabel": "ACT",  "description": "TXT_ACT – toggle text actions" },
-        { "code": 32353, "label": "EDIT", "oledLabel": "EDIT", "description": "TXT_EDT – toggle edit tools" },
-        { "code": 32354, "label": "T1",   "oledLabel": "HOME", "description": "TXT_1 – HOME/COPY/WRD<" },
-        { "code": 19555, "label": "T2",   "oledLabel": "UP",   "description": "LT(NAV,TXT_2) – UP/CUT/DELW" },
-        { "code": 32356, "label": "T3",   "oledLabel": "END",  "description": "TXT_3 – END/PASTE/WRD>" },
-        { "code": 32357, "label": "T4",   "oledLabel": "LEFT", "description": "TXT_4 – LEFT/UNDO/LINE<" },
-        { "code": 32358, "label": "T5",   "oledLabel": "DOWN", "description": "TXT_5 – DOWN/REDO/DELL" },
-        { "code": 32359, "label": "T6",   "oledLabel": "RGHT", "description": "TXT_6 – RGHT/SAVE/LINE>" }
-      ]
-    },
-    {
-      "id": 3, "name": "MED",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",  "description": "TD(0) Layer select" },
-        { "code": 164,   "label": "Prev", "oledLabel": "PREV", "description": "Media: previous track" },
-        { "code": 163,   "label": "Next", "oledLabel": "NEXT", "description": "Media: next track" },
-        { "code": 162,   "label": "Vol-", "oledLabel": "VOL-", "description": "Volume down" },
-        { "code": 167,   "label": "Play", "oledLabel": "PLAY", "description": "Media: play/pause" },
-        { "code": 161,   "label": "Vol+", "oledLabel": "VOL+", "description": "Volume up" },
-        { "code": 166,   "label": "Rew",  "oledLabel": "RWND", "description": "Media: rewind" },
-        { "code": 160,   "label": "Mute", "oledLabel": "MUTE", "description": "Audio mute" },
-        { "code": 165,   "label": "FF",   "oledLabel": "FFWD", "description": "Media: fast forward" }
-      ]
-    },
-    {
-      "id": 4, "name": "MED+",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL", "description": "TD(0) Layer select" },
-        { "code": 15,    "label": "L",    "oledLabel": "L",   "description": "Key: L" },
-        { "code": 14,    "label": "K",    "oledLabel": "K",   "description": "Key: K" },
-        { "code": 12,    "label": "I",    "oledLabel": "I",   "description": "Key: I" },
-        { "code": 24,    "label": "U",    "oledLabel": "U",   "description": "Key: U" },
-        { "code": 11,    "label": "H",    "oledLabel": "H",   "description": "Key: H" },
-        { "code": 13,    "label": "J",    "oledLabel": "J",   "description": "Key: J" },
-        { "code": 18,    "label": "O",    "oledLabel": "O",   "description": "Key: O" },
-        { "code": 41,    "label": "ESC",  "oledLabel": "ESC", "description": "Escape" }
-      ]
-    },
-    {
-      "id": 5, "name": "GAME",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",  "description": "TD(0) Layer select" },
-        { "code": 32331, "label": "NAV",  "oledLabel": "NAV",  "description": "GM_NAV – switch to menu navigation" },
-        { "code": 32332, "label": "WASD", "oledLabel": "WASD", "description": "GM_MOUSE – switch to WASD controls" },
-        { "code": 32334, "label": "G1",   "oledLabel": "ESC",  "description": "GM_1 – ESC/SHFT" },
-        { "code": 32335, "label": "G2",   "oledLabel": "UP",   "description": "GM_2 – UP/W" },
-        { "code": 32336, "label": "G3",   "oledLabel": "ENT",  "description": "GM_3 – ENT/SPC" },
-        { "code": 32337, "label": "G4",   "oledLabel": "LEFT", "description": "GM_4 – LEFT/A" },
-        { "code": 32338, "label": "G5",   "oledLabel": "DOWN", "description": "GM_5 – DOWN/S" },
-        { "code": 32339, "label": "G6",   "oledLabel": "RGHT", "description": "GM_6 – RGHT/D" }
-      ]
-    },
-    {
-      "id": 6, "name": "VSC",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",  "description": "TD(0) Layer select" },
-        { "code": 32360, "label": "NAV",  "oledLabel": "NAV",  "description": "VSC_BAR – hold VSC navigation mode" },
-        { "code": 32361, "label": "AI",   "oledLabel": "AI",   "description": "VSC_CHAT – hold AI prompts" },
-        { "code": 32362, "label": "EXPL", "oledLabel": "EXPL", "description": "VSC_1 – Explorer/File" },
-        { "code": 32363, "label": "SRCH", "oledLabel": "SRCH", "description": "VSC_2 – Search/Symbol/Review" },
-        { "code": 32364, "label": "TERM", "oledLabel": "TERM", "description": "VSC_3 – Terminal/Fix" },
-        { "code": 32365, "label": "SRC",  "oledLabel": "SRC",  "description": "VSC_4 – Source Control/Back/Test" },
-        { "code": 32366, "label": "GIT",  "oledLabel": "GIT",  "description": "VSC_5 – Git/Cmd/Docs" },
-        { "code": 32367, "label": "RUN",  "oledLabel": "RUN",  "description": "VSC_6 – Run/Fwd/Commit" }
-      ]
-    },
-    {
-      "id": 7, "name": "RGB",
-      "keys": [
-        { "code": 22272, "label": "SEL",  "oledLabel": "SEL",  "description": "TD(0) Layer select" },
-        { "code": 32369, "label": "ZONE", "oledLabel": "ZONE", "description": "RGB_MODE – hold RGB zone controls" },
-        { "code": 32370, "label": "ANIM", "oledLabel": "ANIM", "description": "RGB_TOG – cycle RGB animation mode" },
-        { "code": 32371, "label": "HUE+", "oledLabel": "HUE+", "description": "RGB_HUEU – hue up / toggle frame LEDs" },
-        { "code": 32372, "label": "HUE-", "oledLabel": "HUE-", "description": "RGB_HUED – hue down / toggle key LEDs" },
-        { "code": 32373, "label": "VAL+", "oledLabel": "VAL+", "description": "RGB_VALU – brightness up / toggle gap LEDs" },
-        { "code": 32375, "label": "SAT+", "oledLabel": "SAT+", "description": "RGB_SATU – saturation up" },
-        { "code": 32376, "label": "SAT-", "oledLabel": "SAT-", "description": "RGB_SATD – saturation down" },
-        { "code": 32374, "label": "VAL-", "oledLabel": "VAL-", "description": "RGB_VALD – brightness down" }
-      ]
-    },
-    {
-      "id": 8, "name": "MOD",
-      "keys": [
-        { "code": 22272, "label": "SEL",   "oledLabel": "SEL",   "description": "TD(0) Layer select" },
-        { "code": 1,     "label": "▽",     "oledLabel": "TRNS",  "description": "KC_TRNS – transparent" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO – no operation" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" },
-        { "code": 0,     "label": "---",   "oledLabel": "NO",    "description": "KC_NO" }
-      ]
-    }
-  ]
+    "version": "1.0",
+    "name": "Default Profile",
+    "comment": "Default key assignments from firmware keymap.c. Codes are decimal QMK 16-bit values.",
+    "layers": [
+        {
+            "id": 0,
+            "name": "BASE",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select tap dance"
+                },
+                {
+                    "code": 74,
+                    "label": "Home",
+                    "oledLabel": "HOME",
+                    "description": "Home key"
+                },
+                {
+                    "code": 42,
+                    "label": "\u232b",
+                    "oledLabel": "BSPC",
+                    "description": "Backspace"
+                },
+                {
+                    "code": 80,
+                    "label": "\u2190",
+                    "oledLabel": "LEFT",
+                    "description": "Left arrow"
+                },
+                {
+                    "code": 19496,
+                    "label": "ENT",
+                    "oledLabel": "ENT",
+                    "description": "LT(NAV, Enter) \u2013 tap Enter, hold NAV layer"
+                },
+                {
+                    "code": 79,
+                    "label": "\u2192",
+                    "oledLabel": "RGHT",
+                    "description": "Right arrow"
+                },
+                {
+                    "code": 285,
+                    "label": "Undo",
+                    "oledLabel": "UNDO",
+                    "description": "Ctrl+Z"
+                },
+                {
+                    "code": 77,
+                    "label": "End",
+                    "oledLabel": "END",
+                    "description": "End key"
+                },
+                {
+                    "code": 284,
+                    "label": "Redo",
+                    "oledLabel": "REDO",
+                    "description": "Ctrl+Y"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 88,
+                    "hue": 128,
+                    "sat": 220,
+                    "val": 108
+                },
+                "gap": {
+                    "effect": 10,
+                    "speed": 80,
+                    "hue": 128,
+                    "sat": 180,
+                    "val": 28
+                },
+                "frame": {
+                    "effect": 1,
+                    "speed": 92,
+                    "hue": 128,
+                    "sat": 200,
+                    "val": 86
+                }
+            }
+        },
+        {
+            "id": 1,
+            "name": "WIN",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 32340,
+                    "label": "BRO",
+                    "oledLabel": "BRO",
+                    "description": "WIN_BRO \u2013 hold browser controls"
+                },
+                {
+                    "code": 32341,
+                    "label": "SNAP",
+                    "oledLabel": "SNAP",
+                    "description": "WIN_AUX \u2013 hold snap controls"
+                },
+                {
+                    "code": 32342,
+                    "label": "DSK<",
+                    "oledLabel": "DESK<",
+                    "description": "WIN_1 \u2013 prev desktop"
+                },
+                {
+                    "code": 32343,
+                    "label": "TASK",
+                    "oledLabel": "TASK",
+                    "description": "WIN_2 \u2013 task view"
+                },
+                {
+                    "code": 32344,
+                    "label": "DSK>",
+                    "oledLabel": "DESK>",
+                    "description": "WIN_3 \u2013 next desktop"
+                },
+                {
+                    "code": 32345,
+                    "label": "WIN<",
+                    "oledLabel": "WIN<",
+                    "description": "WIN_4 \u2013 prev window"
+                },
+                {
+                    "code": 32346,
+                    "label": "SHOW",
+                    "oledLabel": "SHOW",
+                    "description": "WIN_5 \u2013 show desktop"
+                },
+                {
+                    "code": 32347,
+                    "label": "WIN>",
+                    "oledLabel": "WIN>",
+                    "description": "WIN_6 \u2013 next window"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 104,
+                    "hue": 176,
+                    "sat": 240,
+                    "val": 112
+                },
+                "gap": {
+                    "effect": 7,
+                    "speed": 104,
+                    "hue": 176,
+                    "sat": 220,
+                    "val": 42
+                },
+                "frame": {
+                    "effect": 6,
+                    "speed": 106,
+                    "hue": 176,
+                    "sat": 220,
+                    "val": 90
+                }
+            }
+        },
+        {
+            "id": 2,
+            "name": "TXT",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 32352,
+                    "label": "ACT",
+                    "oledLabel": "ACT",
+                    "description": "TXT_ACT \u2013 toggle text actions"
+                },
+                {
+                    "code": 32353,
+                    "label": "EDIT",
+                    "oledLabel": "EDIT",
+                    "description": "TXT_EDT \u2013 toggle edit tools"
+                },
+                {
+                    "code": 32354,
+                    "label": "T1",
+                    "oledLabel": "HOME",
+                    "description": "TXT_1 \u2013 HOME/COPY/WRD<"
+                },
+                {
+                    "code": 19555,
+                    "label": "T2",
+                    "oledLabel": "UP",
+                    "description": "LT(NAV,TXT_2) \u2013 UP/CUT/DELW"
+                },
+                {
+                    "code": 32356,
+                    "label": "T3",
+                    "oledLabel": "END",
+                    "description": "TXT_3 \u2013 END/PASTE/WRD>"
+                },
+                {
+                    "code": 32357,
+                    "label": "T4",
+                    "oledLabel": "LEFT",
+                    "description": "TXT_4 \u2013 LEFT/UNDO/LINE<"
+                },
+                {
+                    "code": 32358,
+                    "label": "T5",
+                    "oledLabel": "DOWN",
+                    "description": "TXT_5 \u2013 DOWN/REDO/DELL"
+                },
+                {
+                    "code": 32359,
+                    "label": "T6",
+                    "oledLabel": "RGHT",
+                    "description": "TXT_6 \u2013 RGHT/SAVE/LINE>"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 96,
+                    "hue": 90,
+                    "sat": 230,
+                    "val": 112
+                },
+                "gap": {
+                    "effect": 12,
+                    "speed": 96,
+                    "hue": 90,
+                    "sat": 220,
+                    "val": 48
+                },
+                "frame": {
+                    "effect": 17,
+                    "speed": 94,
+                    "hue": 90,
+                    "sat": 210,
+                    "val": 88
+                }
+            }
+        },
+        {
+            "id": 3,
+            "name": "MED",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 164,
+                    "label": "Prev",
+                    "oledLabel": "PREV",
+                    "description": "Media: previous track"
+                },
+                {
+                    "code": 163,
+                    "label": "Next",
+                    "oledLabel": "NEXT",
+                    "description": "Media: next track"
+                },
+                {
+                    "code": 162,
+                    "label": "Vol-",
+                    "oledLabel": "VOL-",
+                    "description": "Volume down"
+                },
+                {
+                    "code": 167,
+                    "label": "Play",
+                    "oledLabel": "PLAY",
+                    "description": "Media: play/pause"
+                },
+                {
+                    "code": 161,
+                    "label": "Vol+",
+                    "oledLabel": "VOL+",
+                    "description": "Volume up"
+                },
+                {
+                    "code": 166,
+                    "label": "Rew",
+                    "oledLabel": "RWND",
+                    "description": "Media: rewind"
+                },
+                {
+                    "code": 160,
+                    "label": "Mute",
+                    "oledLabel": "MUTE",
+                    "description": "Audio mute"
+                },
+                {
+                    "code": 165,
+                    "label": "FF",
+                    "oledLabel": "FFWD",
+                    "description": "Media: fast forward"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 112,
+                    "hue": 18,
+                    "sat": 255,
+                    "val": 118
+                },
+                "gap": {
+                    "effect": 4,
+                    "speed": 108,
+                    "hue": 18,
+                    "sat": 255,
+                    "val": 44
+                },
+                "frame": {
+                    "effect": 1,
+                    "speed": 110,
+                    "hue": 18,
+                    "sat": 255,
+                    "val": 92
+                }
+            }
+        },
+        {
+            "id": 5,
+            "name": "GAME",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 32331,
+                    "label": "NAV",
+                    "oledLabel": "NAV",
+                    "description": "GM_NAV \u2013 switch to menu navigation"
+                },
+                {
+                    "code": 32332,
+                    "label": "WASD",
+                    "oledLabel": "WASD",
+                    "description": "GM_MOUSE \u2013 switch to WASD controls"
+                },
+                {
+                    "code": 32334,
+                    "label": "G1",
+                    "oledLabel": "ESC",
+                    "description": "GM_1 \u2013 ESC/SHFT"
+                },
+                {
+                    "code": 32335,
+                    "label": "G2",
+                    "oledLabel": "UP",
+                    "description": "GM_2 \u2013 UP/W"
+                },
+                {
+                    "code": 32336,
+                    "label": "G3",
+                    "oledLabel": "ENT",
+                    "description": "GM_3 \u2013 ENT/SPC"
+                },
+                {
+                    "code": 32337,
+                    "label": "G4",
+                    "oledLabel": "LEFT",
+                    "description": "GM_4 \u2013 LEFT/A"
+                },
+                {
+                    "code": 32338,
+                    "label": "G5",
+                    "oledLabel": "DOWN",
+                    "description": "GM_5 \u2013 DOWN/S"
+                },
+                {
+                    "code": 32339,
+                    "label": "G6",
+                    "oledLabel": "RGHT",
+                    "description": "GM_6 \u2013 RGHT/D"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 112,
+                    "hue": 32,
+                    "sat": 255,
+                    "val": 118
+                },
+                "gap": {
+                    "effect": 7,
+                    "speed": 108,
+                    "hue": 32,
+                    "sat": 255,
+                    "val": 40
+                },
+                "frame": {
+                    "effect": 1,
+                    "speed": 108,
+                    "hue": 32,
+                    "sat": 255,
+                    "val": 90
+                }
+            }
+        },
+        {
+            "id": 6,
+            "name": "VSC",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 32360,
+                    "label": "NAV",
+                    "oledLabel": "NAV",
+                    "description": "VSC_BAR \u2013 hold VSC navigation mode"
+                },
+                {
+                    "code": 32361,
+                    "label": "AI",
+                    "oledLabel": "AI",
+                    "description": "VSC_CHAT \u2013 hold AI prompts"
+                },
+                {
+                    "code": 32362,
+                    "label": "EXPL",
+                    "oledLabel": "EXPL",
+                    "description": "VSC_1 \u2013 Explorer/File"
+                },
+                {
+                    "code": 32363,
+                    "label": "SRCH",
+                    "oledLabel": "SRCH",
+                    "description": "VSC_2 \u2013 Search/Symbol/Review"
+                },
+                {
+                    "code": 32364,
+                    "label": "TERM",
+                    "oledLabel": "TERM",
+                    "description": "VSC_3 \u2013 Terminal/Fix"
+                },
+                {
+                    "code": 32365,
+                    "label": "SRC",
+                    "oledLabel": "SRC",
+                    "description": "VSC_4 \u2013 Source Control/Back/Test"
+                },
+                {
+                    "code": 32366,
+                    "label": "GIT",
+                    "oledLabel": "GIT",
+                    "description": "VSC_5 \u2013 Git/Cmd/Docs"
+                },
+                {
+                    "code": 32367,
+                    "label": "RUN",
+                    "oledLabel": "RUN",
+                    "description": "VSC_6 \u2013 Run/Fwd/Commit"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 98,
+                    "hue": 166,
+                    "sat": 255,
+                    "val": 118
+                },
+                "gap": {
+                    "effect": 15,
+                    "speed": 110,
+                    "hue": 166,
+                    "sat": 255,
+                    "val": 46
+                },
+                "frame": {
+                    "effect": 1,
+                    "speed": 100,
+                    "hue": 166,
+                    "sat": 240,
+                    "val": 90
+                }
+            }
+        },
+        {
+            "id": 7,
+            "name": "RGB",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select"
+                },
+                {
+                    "code": 32369,
+                    "label": "ZONE",
+                    "oledLabel": "ZONE",
+                    "description": "RGB_MODE \u2013 hold RGB zone controls"
+                },
+                {
+                    "code": 32370,
+                    "label": "ANIM",
+                    "oledLabel": "ANIM",
+                    "description": "RGB_TOG \u2013 cycle RGB animation mode"
+                },
+                {
+                    "code": 32371,
+                    "label": "HUE+",
+                    "oledLabel": "HUE+",
+                    "description": "RGB_HUEU \u2013 hue up / toggle frame LEDs"
+                },
+                {
+                    "code": 32372,
+                    "label": "HUE-",
+                    "oledLabel": "HUE-",
+                    "description": "RGB_HUED \u2013 hue down / toggle key LEDs"
+                },
+                {
+                    "code": 32373,
+                    "label": "VAL+",
+                    "oledLabel": "VAL+",
+                    "description": "RGB_VALU \u2013 brightness up / toggle gap LEDs"
+                },
+                {
+                    "code": 32375,
+                    "label": "SAT+",
+                    "oledLabel": "SAT+",
+                    "description": "RGB_SATU \u2013 saturation up"
+                },
+                {
+                    "code": 32376,
+                    "label": "SAT-",
+                    "oledLabel": "SAT-",
+                    "description": "RGB_SATD \u2013 saturation down"
+                },
+                {
+                    "code": 32374,
+                    "label": "VAL-",
+                    "oledLabel": "VAL-",
+                    "description": "RGB_VALD \u2013 brightness down"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 8,
+                    "speed": 124,
+                    "hue": 210,
+                    "sat": 255,
+                    "val": 124
+                },
+                "gap": {
+                    "effect": 2,
+                    "speed": 130,
+                    "hue": 210,
+                    "sat": 255,
+                    "val": 56
+                },
+                "frame": {
+                    "effect": 8,
+                    "speed": 130,
+                    "hue": 210,
+                    "sat": 255,
+                    "val": 104
+                }
+            }
+        },
+        {
+            "id": 14,
+            "name": "PROMPT",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select tap dance"
+                },
+                {
+                    "code": 32329,
+                    "label": "PICS",
+                    "oledLabel": "PICS",
+                    "description": "Prompt picture tools"
+                },
+                {
+                    "code": 32330,
+                    "label": "ETSY",
+                    "oledLabel": "ETSY",
+                    "description": "Prompt Etsy tools"
+                },
+                {
+                    "code": 32362,
+                    "label": "SUM",
+                    "oledLabel": "SUM",
+                    "description": "Prompt summarize"
+                },
+                {
+                    "code": 32363,
+                    "label": "REVW",
+                    "oledLabel": "REVW",
+                    "description": "Prompt review"
+                },
+                {
+                    "code": 32364,
+                    "label": "FIX",
+                    "oledLabel": "FIX",
+                    "description": "Prompt suggest fix"
+                },
+                {
+                    "code": 32365,
+                    "label": "TEST",
+                    "oledLabel": "TEST",
+                    "description": "Prompt write tests"
+                },
+                {
+                    "code": 32366,
+                    "label": "EXPL",
+                    "oledLabel": "EXPL",
+                    "description": "Prompt explain code"
+                },
+                {
+                    "code": 32367,
+                    "label": "COMMIT",
+                    "oledLabel": "CMMT",
+                    "description": "Prompt commit message"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 94,
+                    "hue": 14,
+                    "sat": 255,
+                    "val": 124
+                },
+                "gap": {
+                    "effect": 4,
+                    "speed": 92,
+                    "hue": 14,
+                    "sat": 255,
+                    "val": 44
+                },
+                "frame": {
+                    "effect": 16,
+                    "speed": 92,
+                    "hue": 14,
+                    "sat": 240,
+                    "val": 92
+                }
+            }
+        },
+        {
+            "id": 11,
+            "name": "INK",
+            "keys": [
+                {
+                    "code": 22272,
+                    "label": "SEL",
+                    "oledLabel": "SEL",
+                    "description": "TD(0) Layer select tap dance"
+                },
+                {
+                    "code": 22,
+                    "label": "S",
+                    "oledLabel": "SELC",
+                    "description": "Select tool"
+                },
+                {
+                    "code": 17,
+                    "label": "N",
+                    "oledLabel": "NODE",
+                    "description": "Node tool"
+                },
+                {
+                    "code": 5,
+                    "label": "B",
+                    "oledLabel": "BEZR",
+                    "description": "Bezier tool"
+                },
+                {
+                    "code": 777,
+                    "label": "C+SF",
+                    "oledLabel": "C+SF",
+                    "description": "Ctrl+Shift+F"
+                },
+                {
+                    "code": 776,
+                    "label": "C+SE",
+                    "oledLabel": "C+SE",
+                    "description": "Ctrl+Shift+E"
+                },
+                {
+                    "code": 783,
+                    "label": "C+SL",
+                    "oledLabel": "C+SL",
+                    "description": "Ctrl+Shift+L"
+                },
+                {
+                    "code": 278,
+                    "label": "C+S",
+                    "oledLabel": "C+S",
+                    "description": "Ctrl+S"
+                },
+                {
+                    "code": 224,
+                    "label": "Ctrl",
+                    "oledLabel": "CTRL",
+                    "description": "Left Control"
+                }
+            ],
+            "led": {
+                "key": {
+                    "effect": 5,
+                    "speed": 108,
+                    "hue": 86,
+                    "sat": 220,
+                    "val": 120
+                },
+                "gap": {
+                    "effect": 3,
+                    "speed": 108,
+                    "hue": 42,
+                    "sat": 255,
+                    "val": 44
+                },
+                "frame": {
+                    "effect": 1,
+                    "speed": 108,
+                    "hue": 210,
+                    "sat": 96,
+                    "val": 90
+                }
+            }
+        }
+    ]
 }
