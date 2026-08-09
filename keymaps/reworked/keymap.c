@@ -114,6 +114,7 @@ enum layers {
     _RGBADJ,
     _MARK,
     _WORK,
+    _WORK_ALT,
     _SYS, // repurposed as NAV layer
     _PROMPT,
     _SELECT,
@@ -191,6 +192,7 @@ enum tap_dance_ids {
     TD_LAYER_SELECT,
     TD_SEL_WIN_MARK,
     TD_SEL_MEDIA_GAME,
+    TD_SEL_WORK_INK,
     TD_SEL_DEV_GAME,
     TD_SEL_VSC_SYS,
 };
@@ -654,7 +656,8 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"SEL",  "MOD",  "I|0",  "FRME", "KEY",  "GAP",  "FREE1", "FREE2", "FREE3"},
     [_RGBADJ] = {"SEL",  "SPD-", "ADJST", "VAL-", "HUE+", "HUE-", "VAL+", "SAT+", "SAT-"},
     [_MARK]   = {"SEL",  "WEB",  "APP",   "SHOP", "AI",   "DEV",  "MAIL", "FILE", "NAV"},
-    [_WORK]   = {"SEL",  "SELC", "NODE",  "BEZR", "C+K",  "C+Z",  "C+Y",  "DUPL", "CTRL"},
+    [_WORK]   = {"SEL",  "SELC", "NODE",  "BEZR", "C+SF", "C+SE", "C+SL", "C+S",  "CTRL"},
+    [_WORK_ALT] = {"SEL", "C+K", "C+Z", "C+Y", "C+D", "RECT", "ELPS", "TEXT", "PATH"},
     // Repurpose the SYS layer as a global navigation (NAV) layer.  The
     // legend strings reflect the new key assignments: arrow keys on the
     // middle row/column plus Page Up/Down and Home/End on the corners.  The
@@ -665,7 +668,7 @@ static const char *const layer_legend[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_GAME]   = {"SEL",  "RCLK", "LCLK",  "LEFT", "UP",   "RGHT", "MCLK", "DOWN", "TILT"},
     [_VSC]    = {"SEL",  "NAV",  "AI",   "EXPL", "SRCH", "TERM", "SRC",  "GIT",  "RUN"},
     [_PROMPT] = {"SEL",  "PICS", "ETSY", "SUM",  "REVW", "FIX",  "TEST", "EXPL", "COMMIT"},
-    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "INK",  "GAME+", "VSC+", "RGB", "PROMPT"},
+    [_SELECT] = {"BASE", "WIN+", "TXT",  "MED+", "INK+", "GAME+", "VSC+", "RGB", "PROMPT"},
 };
 
 static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
@@ -678,7 +681,8 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_RGBMOD] = {"Select layer", "Hold RGB mod layer", "Toggle all RGB groups", "Toggle frame LEDs", "Toggle key LEDs", "Toggle gap LEDs", "Free slot", "Free slot", "Free slot"},
     [_RGBADJ] = {"Select layer", "Speed down", "Hold RGB adjust layer", "Brightness down", "Hue up", "Hue down", "Brightness up", "Saturation up", "Saturation down"},
     [_MARK]   = {"Select layer", "Web shortcuts", "App shortcuts", "Shop shortcuts", "AI shortcuts", "Dev shortcuts", "Mail/calendar", "Folders/files", "Nav shortcuts"},
-    [_WORK]   = {"Select layer", "Select tool", "Node tool", "Bezier tool", "Ctrl+K", "Ctrl+Z", "Ctrl+Y", "Duplicate selection", "Hold Ctrl"},
+    [_WORK]   = {"Select layer", "Select tool", "Node tool", "Bezier tool", "Ctrl+Shift+F", "Ctrl+Shift+E", "Ctrl+Shift+L", "Ctrl+S", "Hold Ctrl"},
+    [_WORK_ALT] = {"Select layer", "Ctrl+K", "Ctrl+Z", "Ctrl+Y", "Ctrl+D", "Rectangle tool", "Ellipse tool", "Text tool", "Object to path"},
     // Update function descriptions for the repurposed NAV layer.  The
     // descriptions mirror the legend above.
     [_SYS]    = {"Select layer", "Arrow up", "Page up", "Arrow left", "Enter", "Arrow right", "Home", "Arrow down", "Page down"},
@@ -688,7 +692,7 @@ static const char *const layer_function[_LAYER_COUNT][PAD_KEY_COUNT] = {
     [_PROMPT] = {"Select layer", "Prompt picture tools", "Prompt Etsy tools", "Prompt summarize", "Prompt review", "Prompt suggest fix", "Prompt write tests", "Prompt explain code", "Prompt commit message"},
     // In the SELECT layer, the seventh key toggles between VSC and NAV.  Update the
     // description accordingly since SYS has been repurposed as NAV.
-    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "Go to INK layer", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
+    [_SELECT] = {"Go to BASE layer", "1x WINDOW / 2x MARK", "Go to TXT layer", "1x MEDIA / 2x MED+", "1x INK / 2x INK2", "1x GAME / 2x MOUSE", "1x VSC / 2x NAV", "Go to RGB layer", "Go to PROMPT layer"},
 };
 
 static const char *layer_name_short(uint8_t l) {
@@ -703,6 +707,7 @@ static const char *layer_name_short(uint8_t l) {
         case _RGBADJ: return "ADJ";
         case _MARK:   return "MARK";
         case _WORK:   return "INK";
+        case _WORK_ALT: return "INK2";
         case _SYS:    return "NAV";
         case _DEV:    return "GAME";
         case _GAME:   return "MOUSE";
@@ -725,6 +730,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _RGBADJ: return "ADJST";
         case _MARK:   return "BOOKMARK";
         case _WORK:   return "INKSCAPE";
+        case _WORK_ALT: return "INK ALT";
         case _SYS:    return "NAV";
         case _DEV:    return "GAME";
         case _GAME:   return "MOUSE";
@@ -738,6 +744,7 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
 static uint8_t canonical_rgb_layer(uint8_t layer) {
     if (layer == _RGBMOD || layer == _RGBADJ) return _RGB;
     if (layer == _MEDIA_GAME) return _MEDIA;
+    if (layer == _WORK_ALT) return _WORK;
     if (layer == _GAME) return _DEV;
     return layer;
 }
@@ -778,6 +785,7 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
         case _WORK:   return encoder_btn_pressed ? "Canvas scroll left/right" : "Canvas scroll up/down";
+        case _WORK_ALT: return encoder_btn_pressed ? "Canvas scroll left/right" : "Canvas scroll up/down";
         case _DEV:    return "Weapon or inventory scroll";
         case _GAME:   return "Mouse wheel up/down";
         case _VSC:    return "VSCode page prev/next";
@@ -3354,8 +3362,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_WORK] = LAYOUT(
         TD(TD_LAYER_SELECT), KC_S,              KC_N,
-        KC_B,                C(KC_K),           C(KC_Z),
-        C(KC_Y),             C(KC_D),           KC_LCTL
+        KC_B,                C(S(KC_F)),        C(S(KC_E)),
+        C(S(KC_L)),          C(KC_S),           KC_LCTL
+    ),
+
+    [_WORK_ALT] = LAYOUT(
+        TD(TD_LAYER_SELECT), C(KC_K),           C(KC_Z),
+        C(KC_Y),             C(KC_D),           KC_R,
+        KC_E,                KC_T,              C(S(KC_C))
     ),
 
     [_SYS] = LAYOUT(
@@ -3390,7 +3404,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_SELECT] = LAYOUT(
         TD(TD_LAYER_SELECT), TD(TD_SEL_WIN_MARK), SEL_TEXT,
-        TD(TD_SEL_MEDIA_GAME), SEL_WORK, TD(TD_SEL_DEV_GAME),
+        TD(TD_SEL_MEDIA_GAME), TD(TD_SEL_WORK_INK), TD(TD_SEL_DEV_GAME),
         TD(TD_SEL_VSC_SYS), SEL_RGB,     SEL_PROMPT
     ),
 };
@@ -3504,6 +3518,11 @@ static void td_select_media_game_finished(tap_dance_state_t *state, void *user_d
     select_target_layer(state->count >= 2 ? _MEDIA_GAME : _MEDIA);
 }
 
+static void td_select_work_ink_finished(tap_dance_state_t *state, void *user_data) {
+    (void)user_data;
+    select_target_layer(state->count >= 2 ? _WORK_ALT : _WORK);
+}
+
 static void td_select_dev_game_finished(tap_dance_state_t *state, void *user_data) {
     (void)user_data;
     select_target_layer(state->count >= 2 ? _GAME : _DEV);
@@ -3542,6 +3561,7 @@ tap_dance_action_t tap_dance_actions[] = {
     [TD_LAYER_SELECT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_layer_select_finished, td_layer_select_reset),
     [TD_SEL_WIN_MARK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_win_mark_finished, NULL),
     [TD_SEL_MEDIA_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_media_game_finished, NULL),
+    [TD_SEL_WORK_INK] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_work_ink_finished, NULL),
     [TD_SEL_DEV_GAME] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_dev_game_finished, NULL),
     [TD_SEL_VSC_SYS]  = ACTION_TAP_DANCE_FN_ADVANCED(NULL, td_select_vsc_sys_finished, NULL),
 
@@ -3888,6 +3908,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _WORK:
+        case _WORK_ALT:
             tap_code(encoder_btn_pressed ? (clockwise ? MS_WHLR : MS_WHLL) : (clockwise ? MS_WHLU : MS_WHLD));
             break;
 
@@ -4148,6 +4169,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "INKSCAPE");
+    } else if (layer == _WORK_ALT) {
+        snprintf(line, sizeof(line), "INK ALT");
     } else if (layer == _DEV) {
         snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
     } else if (layer == _GAME) {
@@ -4215,10 +4238,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "WIN/TXT/MED/GAME 2x");
+        write_line(1, "WIN/TXT/MED/INK 2x");
         // SYS has been repurposed to NAV; update the SELECT help to reflect this.
-        write_line(2, "MARK/MED+/MOUSE/NAV");
-        write_line(3, "INK RGB VSC PROMPT");
+        write_line(2, "MARK/MED+/INK2/GAME");
+        write_line(3, "MOUSE RGB VSC NAV");
         return;
     }
 
@@ -4234,8 +4257,16 @@ static void render_tap_view(uint8_t layer) {
     if (layer == _WORK) {
         write_line(0, "INK TAP");
         write_line(1, "SEL  S    N");
-        write_line(2, "B   C+K  C+Z");
-        write_line(3, "C+Y C+D CTRL");
+        write_line(2, "B  C+SF C+SE");
+        write_line(3, "C+SL C+S CTRL");
+        return;
+    }
+
+    if (layer == _WORK_ALT) {
+        write_line(0, "INK2 TAP");
+        write_line(1, "SEL C+K C+Z");
+        write_line(2, "C+Y C+D RECT");
+        write_line(3, "ELPS TEXT PATH");
         return;
     }
 
@@ -4372,6 +4403,8 @@ static void render_header(uint8_t layer) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
         snprintf(line, sizeof(line), "INKSCAPE");
+    } else if (layer == _WORK_ALT) {
+        snprintf(line, sizeof(line), "INK ALT");
     } else if (layer == _GAME) {
         snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
@@ -4477,11 +4510,11 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "1x WIN/TXT/MED/GAME");
+        write_line(1, "1x WIN/TXT/MED/INK");
         // Update the second line: SYS has become NAV
-        write_line(2, "2x MARK/MED+/MOUSE");
-        write_line(3, "VSC->NAV / INK RGB");
-        write_line(4, "PROMPT on bottom");
+        write_line(2, "2x MARK/MED+/INK2");
+        write_line(3, "GAME->MOUSE VSC->NAV");
+        write_line(4, "RGB + PROMPT bottom");
         write_line(5, "Release SEL to go");
         write_line(6, "");
         write_line(7, "GP12: next page");
@@ -4504,8 +4537,20 @@ static void render_tap_view(uint8_t layer) {
     if (layer == _WORK) {
         write_line(0, "INK / TOOLS");
         write_line(1, "SEL  S    N");
-        write_line(2, "B   C+K  C+Z");
-        write_line(3, "C+Y C+D CTRL");
+        write_line(2, "B  C+SF C+SE");
+        write_line(3, "C+SL C+S CTRL");
+        write_line(4, "Enc: scroll / hold");
+        write_line(5, "");
+        write_line(6, "");
+        write_line(7, "SEL: selector");
+        return;
+    }
+
+    if (layer == _WORK_ALT) {
+        write_line(0, "INK2 / TOOLS");
+        write_line(1, "SEL C+K C+Z");
+        write_line(2, "C+Y C+D RECT");
+        write_line(3, "ELPS TEXT PATH");
         write_line(4, "Enc: scroll / hold");
         write_line(5, "");
         write_line(6, "");
@@ -4532,7 +4577,7 @@ static void render_tap_view(uint8_t layer) {
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
     write_line(4, "MED 2x = MED+");
-    write_line(5, "GAME2x=MOUSE NAV");
+    write_line(5, "INK2 / GAME2=MOUSE");
     // SYS has been repurposed to NAV; adjust this description accordingly.
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
