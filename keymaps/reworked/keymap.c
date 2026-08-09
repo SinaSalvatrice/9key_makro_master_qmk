@@ -702,10 +702,10 @@ static const char *layer_name_short(uint8_t l) {
         case _RGBMOD: return "MOD";
         case _RGBADJ: return "ADJ";
         case _MARK:   return "MARK";
-        case _WORK:   return "GIT";
+        case _WORK:   return "INK";
         case _SYS:    return "NAV";
-        case _DEV:    return "INK";
-        case _GAME:   return "INK2";
+        case _DEV:    return "GAME";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SEL";
@@ -724,10 +724,10 @@ static MAYBE_UNUSED const char *layer_name_long(uint8_t l) {
         case _RGBMOD: return "RGB MOD";
         case _RGBADJ: return "ADJST";
         case _MARK:   return "BOOKMARK";
-        case _WORK:   return "WORK";
+        case _WORK:   return "INKSCAPE";
         case _SYS:    return "NAV";
-        case _DEV:    return "INKSCAPE";
-        case _GAME:   return "INK ALT";
+        case _DEV:    return "GAME";
+        case _GAME:   return "MOUSE";
         case _VSC:    return "VSC";
         case _PROMPT: return "PROMPT";
         case _SELECT: return "SELECT";
@@ -777,8 +777,9 @@ static const char *encoder_function_for_layer(uint8_t layer) {
         case _RGB:    return "RGB brightness +/-";
         case _RGBMOD: return "RGB brightness +/-";
         case _RGBADJ: return "RGB brightness +/-";
-        case _DEV:    return encoder_btn_pressed ? "Canvas scroll left/right" : "Canvas scroll up/down";
-        case _GAME:   return encoder_btn_pressed ? "Canvas scroll left/right" : "Canvas scroll up/down";
+        case _WORK:   return encoder_btn_pressed ? "Canvas scroll left/right" : "Canvas scroll up/down";
+        case _DEV:    return "Weapon or inventory scroll";
+        case _GAME:   return "Mouse wheel up/down";
         case _VSC:    return "VSCode page prev/next";
         case _PROMPT: return "VSCode page prev/next";
         case _SELECT: return encoder_btn_pressed ? "Choose target layer" : "Hold encoder btn first";
@@ -1976,11 +1977,15 @@ static int8_t adxl345_axis_update_state(int16_t value, int8_t *state, int8_t *pe
 }
 
 static void update_game_tilt_arrows(void) {
-    // The former GAME layers are repurposed for Inkscape, so tilt input stays disabled.
-    bool tilt_active = false;
+    uint8_t top_layer = active_layer_raw();
+    // Tilt effects:
+    // - On GAME base layer (_DEV): only in WASD mode (GAME_MODE_MOUSE) and it should emit W/A/S/D.
+    // - On hidden MOUSE layer (_GAME): always emits mouse cursor movement.
+    bool tilt_layer_active = (top_layer == _GAME) || (top_layer == _DEV && game_mode == GAME_MODE_MOUSE);
+    bool tilt_active = adxl345_ready && game_tilt_enabled && tilt_layer_active;
     bool nav_tilt_active = false;
-    bool wasd_tilt_active = false;
-    bool mouse_tilt_active = false;
+    bool wasd_tilt_active = tilt_active && top_layer == _DEV && game_mode == GAME_MODE_MOUSE;
+    bool mouse_tilt_active = tilt_active && top_layer == _GAME;
     bool press_up = false;
     bool press_down = false;
     bool press_left = false;
@@ -3348,9 +3353,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_WORK] = LAYOUT(
-        TD(TD_LAYER_SELECT), SEL_VSC,   WRK_APP,
-        WRK_PULL,    WRK_COMMIT, WRK_PUSH,
-        WRK_BRANCH,  WRK_PR,     WRK_SYNC
+        TD(TD_LAYER_SELECT), KC_S,              KC_N,
+        KC_B,                C(KC_K),           C(KC_Z),
+        C(KC_Y),             C(KC_D),           KC_LCTL
     ),
 
     [_SYS] = LAYOUT(
@@ -3360,15 +3365,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_DEV] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_S,              KC_N,
-        KC_B,                C(KC_K),           C(KC_Z),
-        C(KC_Y),             C(KC_D),           KC_LCTL
+        TD(TD_LAYER_SELECT), GM_NAV,  GM_MOUSE,
+        GM_1,        GM_2,    GM_3,
+        GM_4,        GM_5,    GM_6
     ),
 
     [_GAME] = LAYOUT(
-        TD(TD_LAYER_SELECT), KC_R,    KC_E,
-        KC_T,               C(S(KC_C)), KC_P,
-        KC_D,               KC_HOME,  KC_END
+        TD(TD_LAYER_SELECT), MS_BTN2, MS_BTN1,
+        MS_LEFT,             MS_UP,   MS_RGHT,
+        MS_BTN3,             MS_DOWN, GM_TILT
     ),
 
     [_VSC] = LAYOUT(
@@ -3883,7 +3888,7 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _WORK:
-            tap_code(clockwise ? KC_RGHT : KC_LEFT);
+            tap_code(encoder_btn_pressed ? (clockwise ? MS_WHLR : MS_WHLL) : (clockwise ? MS_WHLU : MS_WHLD));
             break;
 
         case _TEXT:
@@ -3916,11 +3921,11 @@ bool encoder_update_user(uint8_t index, bool clockwise) {
             break;
 
         case _DEV:
-            tap_code(encoder_btn_pressed ? (clockwise ? MS_WHLR : MS_WHLL) : (clockwise ? MS_WHLU : MS_WHLD));
+            tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
 
         case _GAME:
-            tap_code(encoder_btn_pressed ? (clockwise ? MS_WHLR : MS_WHLL) : (clockwise ? MS_WHLU : MS_WHLD));
+            tap_code(clockwise ? MS_WHLU : MS_WHLD);
             break;
 
         case _VSC:
@@ -4142,11 +4147,11 @@ static void render_header(uint8_t layer) {
     } else if (layer == _PROMPT) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
-        snprintf(line, sizeof(line), "GIT");
-    } else if (layer == _DEV) {
         snprintf(line, sizeof(line), "INKSCAPE");
+    } else if (layer == _DEV) {
+        snprintf(line, sizeof(line), "GAME %-5.5s", game_mode_name(game_mode));
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "INK ALT");
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "%-10.10s", "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4210,10 +4215,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "WIN/TXT/MED/INK 2x");
+        write_line(1, "WIN/TXT/MED/GAME 2x");
         // SYS has been repurposed to NAV; update the SELECT help to reflect this.
-        write_line(2, "MARK/MED+/INK2/NAV");
-        write_line(3, "GIT RGB VSC PROMPT");
+        write_line(2, "MARK/MED+/MOUSE/NAV");
+        write_line(3, "INK RGB VSC PROMPT");
         return;
     }
 
@@ -4227,10 +4232,10 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _WORK) {
-        write_line(0, "GIT MODES");
-        write_line(1, "PULL COMMIT PUSH");
-        write_line(2, "BRCH PR   SYNC");
-        write_line(3, "VSC / DESKTOP");
+        write_line(0, "INK TAP");
+        write_line(1, "SEL  S    N");
+        write_line(2, "B   C+K  C+Z");
+        write_line(3, "C+Y C+D CTRL");
         return;
     }
 
@@ -4247,7 +4252,7 @@ static void render_tap_view(uint8_t layer) {
     snprintf(line, sizeof(line), "%s TAP HELP", layer_name_short(layer));
     write_line(0, line);
     write_line(1, "SEL: hold selector");
-    write_line(2, "WIN/TXT/MED/INK2");
+    write_line(2, "WIN/TXT/MED/MOUSE");
     write_line(3, "2x hidden layer");
 }
 
@@ -4366,9 +4371,9 @@ static void render_header(uint8_t layer) {
     } else if (layer == _PROMPT) {
         snprintf(line, sizeof(line), "PROMPT %-4.4s", prompt_mode_name(prompt_mode));
     } else if (layer == _WORK) {
-        snprintf(line, sizeof(line), "GIT");
+        snprintf(line, sizeof(line), "INKSCAPE");
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "INK ALT");
+        snprintf(line, sizeof(line), "MOUSE TLT %s", game_tilt_enabled ? "ON" : "OFF");
     } else if (layer == _WINDOW && window_browser_held) {
         snprintf(line, sizeof(line), "WIN BRO");
     } else if (layer == _WINDOW && window_snap_held) {
@@ -4427,7 +4432,7 @@ static void render_legend_view(uint8_t layer) {
         const char *mode = window_browser_held ? "BRO" : (window_snap_held ? "SNAP" : "APP");
         snprintf(line, sizeof(line), "WIN %s%s", mode, (window_browser_held || window_snap_held) ? " [ON]" : "");
     } else if (layer == _GAME) {
-        snprintf(line, sizeof(line), "INK ALT [TOOLS]");
+        snprintf(line, sizeof(line), "MOUSE TILT [%s]", game_tilt_enabled ? "ON" : "OFF");
     } else {
 #ifdef OLED_TOGGLE_BTN_PIN
         snprintf(line, sizeof(line), "GP12: KEYS/MODES/RGB/STATUS");
@@ -4472,10 +4477,10 @@ static void render_tap_view(uint8_t layer) {
 
     if (layer == _SELECT) {
         write_line(0, "MODES");
-        write_line(1, "1x WIN/TXT/MED/INK");
+        write_line(1, "1x WIN/TXT/MED/GAME");
         // Update the second line: SYS has become NAV
-        write_line(2, "2x MARK/MED+/INK2");
-        write_line(3, "VSC->NAV / GIT RGB");
+        write_line(2, "2x MARK/MED+/MOUSE");
+        write_line(3, "VSC->NAV / INK RGB");
         write_line(4, "PROMPT on bottom");
         write_line(5, "Release SEL to go");
         write_line(6, "");
@@ -4497,11 +4502,11 @@ static void render_tap_view(uint8_t layer) {
     }
 
     if (layer == _WORK) {
-        write_line(0, "GIT / WORK");
-        write_line(1, "SEL  VSC  DESK");
-        write_line(2, "PULL COMMIT PUSH");
-        write_line(3, "BRCH PR   SYNC");
-        write_line(4, "Safe git macros");
+        write_line(0, "INK / TOOLS");
+        write_line(1, "SEL  S    N");
+        write_line(2, "B   C+K  C+Z");
+        write_line(3, "C+Y C+D CTRL");
+        write_line(4, "Enc: scroll / hold");
         write_line(5, "");
         write_line(6, "");
         write_line(7, "SEL: selector");
@@ -4527,7 +4532,7 @@ static void render_tap_view(uint8_t layer) {
     write_line(2, "WIN 2x = MARK");
     write_line(3, "TXT 2x = WORK");
     write_line(4, "MED 2x = MED+");
-    write_line(5, "INK 2x = INK2");
+    write_line(5, "GAME2x=MOUSE NAV");
     // SYS has been repurposed to NAV; adjust this description accordingly.
     write_line(6, "1x normal layer");
     write_line(7, "GP12: next page");
