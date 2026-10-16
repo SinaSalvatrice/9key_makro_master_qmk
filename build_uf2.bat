@@ -2,9 +2,10 @@
 setlocal EnableExtensions EnableDelayedExpansion
 
 set "PROJECT_ROOT=%~dp0"
+set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"
 set "KEYBOARD=9key_makro_master_qmk"
 set "KEYMAP=reworked"
-set "OUTPUT_DIR=%PROJECT_ROOT%build"
+set "OUTPUT_DIR=%PROJECT_ROOT%\build"
 set "OUTPUT_FILE=%OUTPUT_DIR%\%KEYBOARD%_%KEYMAP%.uf2"
 
 if not defined QMK_HOME set "QMK_HOME=%USERPROFILE%\qmk_firmware"
