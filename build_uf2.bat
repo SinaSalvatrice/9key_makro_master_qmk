@@ -60,7 +60,7 @@ echo.
 echo Baue Firmware...
 set "MSYSTEM=MINGW64"
 set "CHERE_INVOKING=1"
-"%QMK_BASH%" --noprofile --norc -c "export PATH=/mingw64/bin:/usr/bin:/opt/qmk/bin:$PATH; cd '%QMK_POSIX%'; qmk compile -kb %KEYBOARD% -km %KEYMAP%"
+"%QMK_BASH%" --noprofile --norc -c "export PATH=/mingw64/bin:/usr/bin:/opt/qmk/bin:$PATH; export SHELL=/usr/bin/bash; cd '%QMK_POSIX%'; qmk compile -kb %KEYBOARD% -km %KEYMAP%"
 set "BUILD_RESULT=%ERRORLEVEL%"
 
 if not "%BUILD_RESULT%"=="0" (
