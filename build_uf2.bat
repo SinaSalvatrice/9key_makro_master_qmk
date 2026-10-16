@@ -9,6 +9,8 @@ set "OUTPUT_DIR=%PROJECT_ROOT%\build"
 set "OUTPUT_FILE=%OUTPUT_DIR%\%KEYBOARD%_%KEYMAP%.uf2"
 
 if not defined QMK_HOME set "QMK_HOME=%USERPROFILE%\qmk_firmware"
+set "QMK_BASH=C:\QMK_MSYS\usr\bin\bash.exe"
+set "CYGPATH=C:\QMK_MSYS\usr\bin\cygpath.exe"
 
 echo.
 echo === 9-Key Macro Master - QMK UF2 Build ===
@@ -26,25 +28,15 @@ if not exist "%QMK_HOME%\Makefile" (
     exit /b 2
 )
 
-rem QMK MSYS toolchain on Windows.
-if exist "C:\QMK_MSYS\opt\qmk\bin" set "PATH=C:\QMK_MSYS\opt\qmk\bin;C:\QMK_MSYS\mingw64\bin;C:\QMK_MSYS\usr\bin;%PATH%"
-
-set "QMK_EXE="
-if exist "%USERPROFILE%\uv\qmkvenv\Scripts\qmk.exe" set "QMK_EXE=%USERPROFILE%\uv\qmkvenv\Scripts\qmk.exe"
-if not defined QMK_EXE if exist "%LOCALAPPDATA%\Programs\Python\Python312\Scripts\qmk.exe" set "QMK_EXE=%LOCALAPPDATA%\Programs\Python\Python312\Scripts\qmk.exe"
-if not defined QMK_EXE (
-    for /f "delims=" %%Q in ('where qmk 2^>nul') do if not defined QMK_EXE set "QMK_EXE=%%Q"
-)
-
-if not defined QMK_EXE (
-    echo ERROR: qmk.exe wurde nicht gefunden.
+if not exist "%QMK_BASH%" (
+    echo ERROR: QMK MSYS wurde nicht gefunden:
+    echo   %QMK_BASH%
     exit /b 3
 )
 
-where arm-none-eabi-gcc >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: arm-none-eabi-gcc wurde nicht gefunden.
-    echo Erwartet wird die QMK-Toolchain unter C:\QMK_MSYS.
+if not exist "%CYGPATH%" (
+    echo ERROR: cygpath wurde nicht gefunden:
+    echo   %CYGPATH%
     exit /b 4
 )
 
@@ -63,15 +55,21 @@ if %ROBOCOPY_RESULT% GEQ 8 (
     exit /b 5
 )
 
+for /f "delims=" %%P in ('"%CYGPATH%" -u "%QMK_HOME%"') do set "QMK_POSIX=%%P"
+if not defined QMK_POSIX (
+    echo ERROR: QMK-Pfad konnte nicht fuer MSYS umgewandelt werden.
+    exit /b 6
+)
+
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 del /q "%OUTPUT_FILE%" >nul 2>&1
 
-pushd "%QMK_HOME%"
 echo.
 echo Baue Firmware...
-"%QMK_EXE%" compile -kb %KEYBOARD% -km %KEYMAP%
+set "MSYSTEM=MINGW64"
+set "CHERE_INVOKING=1"
+"%QMK_BASH%" --noprofile --norc -c "export PATH=/mingw64/bin:/usr/bin:/opt/qmk/bin:$PATH; cd '%QMK_POSIX%'; qmk compile -kb %KEYBOARD% -km %KEYMAP%"
 set "BUILD_RESULT=%ERRORLEVEL%"
-popd
 
 if not "%BUILD_RESULT%"=="0" (
     echo.
@@ -87,13 +85,13 @@ if not exist "%BUILT_UF2%" (
 
 if not exist "%BUILT_UF2%" (
     echo ERROR: Build war erfolgreich, aber die UF2 wurde nicht gefunden.
-    exit /b 6
+    exit /b 7
 )
 
 copy /y "%BUILT_UF2%" "%OUTPUT_FILE%" >nul
 if errorlevel 1 (
     echo ERROR: UF2 konnte nicht in den build-Ordner kopiert werden.
-    exit /b 7
+    exit /b 8
 )
 
 echo.
