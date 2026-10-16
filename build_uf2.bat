@@ -10,7 +10,6 @@ set "OUTPUT_FILE=%OUTPUT_DIR%\%KEYBOARD%_%KEYMAP%.uf2"
 
 if not defined QMK_HOME set "QMK_HOME=%USERPROFILE%\qmk_firmware"
 set "QMK_BASH=C:\QMK_MSYS\usr\bin\bash.exe"
-set "CYGPATH=C:\QMK_MSYS\usr\bin\cygpath.exe"
 
 echo.
 echo === 9-Key Macro Master - QMK UF2 Build ===
@@ -34,12 +33,6 @@ if not exist "%QMK_BASH%" (
     exit /b 3
 )
 
-if not exist "%CYGPATH%" (
-    echo ERROR: cygpath wurde nicht gefunden:
-    echo   %CYGPATH%
-    exit /b 4
-)
-
 set "TARGET=%QMK_HOME%\keyboards\%KEYBOARD%"
 echo Synchronisiere Firmware nach:
 echo   %TARGET%
@@ -55,11 +48,10 @@ if %ROBOCOPY_RESULT% GEQ 8 (
     exit /b 5
 )
 
-for /f "delims=" %%P in ('"%CYGPATH%" -u "%QMK_HOME%"') do set "QMK_POSIX=%%P"
-if not defined QMK_POSIX (
-    echo ERROR: QMK-Pfad konnte nicht fuer MSYS umgewandelt werden.
-    exit /b 6
-)
+rem Windows path C:\foo\bar -> MSYS path /C/foo/bar.
+set "QMK_POSIX=%QMK_HOME:\=/%"
+set "QMK_DRIVE=%QMK_POSIX:~0,1%"
+set "QMK_POSIX=/%QMK_DRIVE%%QMK_POSIX:~2%"
 
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 del /q "%OUTPUT_FILE%" >nul 2>&1
